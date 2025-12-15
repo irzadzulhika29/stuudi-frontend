@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
+@theme {
+  /* =========================
+     Colors
+  ========================== */
+  --color-primary-dark: #1f6fae;
+  --color-primary: #27a8f3;
+  --color-primary-light: #8fd3ff;
+  
+  --color-secondary-dark: #8f1d1d;
+  --color-secondary: #cf2e2e;
+  --color-secondary-light: #f08a8a;
+  
+  --color-neutral-white: #ffffff;
+  --color-neutral-light: #f4f6f8;
+  --color-neutral-gray: #9ca3af;
+  --color-neutral-dark: #1f2937;
+  
+  /* =========================
+     Font Family
+  ========================== */
+  --font-family-sans: "Plus Jakarta Sans", sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* =========================
+     Font
+  ========================== */
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+
+  /* =========================
+     Primary (Blue)
+  ========================== */
+  --primary-dark: #1f6fae;
+  --primary-default: #27a8f3;
+  --primary-light: #8fd3ff;
+
+  /* =========================
+     Secondary (Red)
+  ========================== */
+  --secondary-dark: #8f1d1d;
+  --secondary-default: #cf2e2e;
+  --secondary-light: #f08a8a;
+
+  /* =========================
+     Neutral
+  ========================== */
+  --neutral-white: #ffffff;
+  --neutral-light: #f4f6f8;
+  --neutral-gray: #9ca3af;
+  --neutral-dark: #1f2937;
+
+  /* =========================
+     Text
+  ========================== */
+  --text-primary: var(--neutral-dark);
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-inverse: var(--neutral-white);
+
+  /* =========================
+     Background
+  ========================== */
+  --bg-default: var(--neutral-white);
+  --bg-light: var(--neutral-light);
+  --bg-primary: var(--primary-default);
+  --bg-secondary: var(--secondary-default);
+
+  /* =========================
+     Gradient
+  ========================== */
+  --gradient-blue: linear-gradient(
+    135deg,
+    var(--primary-light),
+    var(--primary-default)
+  );
+
+  --gradient-blue-red: linear-gradient(
+    135deg,
+    var(--primary-default),
+    var(--secondary-default)
+  );
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+
+html {
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+
