@@ -80,6 +80,7 @@ const contactInfo = [
   },
 ];
 
+
 const socialLinks = [
   {
     label: "Instagram",

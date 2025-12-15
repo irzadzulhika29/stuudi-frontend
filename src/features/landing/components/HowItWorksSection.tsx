@@ -182,7 +182,6 @@ export default function HowItWorksSection({ id }: HowItWorksSectionProps) {
         </h2>
       </div>
 
-      {/* Steps Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {steps.map((step, index) => (
           <div
