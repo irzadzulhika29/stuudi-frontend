@@ -14,15 +14,10 @@ export default function CTASection({ id }: CTASectionProps) {
       className="relative overflow-hidden"
     >
       <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-        {/* Left Side - Decorative Blob */}
         <div className="w-full md:w-1/2 flex justify-center md:justify-start relative">
-          {/* The huge blue blob */}
-          {/* <div className="w-64 h-64 md:w-80 md:h-80 bg-[#27A8F3] rounded-full blur-[100px] opacity-60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:static md:translate-x-0 md:translate-y-0" /> */}
-          {/* Fallback space occupied if needed, or just relying on flex spacing */}
           <div className="hidden md:block w-80 h-80" />
         </div>
 
-        {/* Right Side - Content */}
         <div className="w-full md:w-1/2 text-left md:pl-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
             Siap Beralih ke Sistem <br />
