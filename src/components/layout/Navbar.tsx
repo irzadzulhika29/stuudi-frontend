@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import Button from '../ui/Button';
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import Button from "../ui/Button";
 
 const navLinks = [
-  { href: '/', label: 'Beranda' },
-  { href: '/produk', label: 'Produk' },
-  { href: '/tentang-kami', label: 'Tentang Kami' },
+  { href: "/", label: "Beranda" },
+  { href: "/produk", label: "Produk" },
+  { href: "/tentang-kami", label: "Tentang Kami" },
 ];
 
 export default function Navbar() {
@@ -32,15 +32,13 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="desktop-nav items-center gap-8">
+          <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={
-                  pathname === link.href
-                    ? 'nav-link-active'
-                    : 'nav-link'
+                  pathname === link.href ? "nav-link-active" : "nav-link"
                 }
               >
                 {link.label}
@@ -49,7 +47,7 @@ export default function Navbar() {
           </div>
 
           {/* CTA Buttons */}
-          <div className="desktop-nav items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" href="/login" size="sm">
               Login
             </Button>
@@ -60,7 +58,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="mobile-menu-btn p-2 rounded-lg transition-colors hover:bg-neutral-light"
+            className="md:hidden p-2 rounded-lg transition-colors hover:bg-neutral-light"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -91,16 +89,14 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="mobile-menu px-6 pb-4 border-t border-neutral-light">
+          <div className="md:hidden px-6 pb-4 border-t border-neutral-light">
             <div className="flex flex-col gap-3 pt-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={`py-2 ${
-                    pathname === link.href
-                      ? 'nav-link-active'
-                      : 'nav-link'
+                    pathname === link.href ? "nav-link-active" : "nav-link"
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

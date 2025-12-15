@@ -89,5 +89,21 @@ html {
   scroll-behavior: smooth;
 }
 
+@layer components {
+  /* Navigation Links */
+  .nav-link {
+    @apply text-neutral-dark font-medium transition-colors relative hover:text-primary;
+  }
+
+  .nav-link-active {
+    @apply text-neutral-dark font-medium relative;
+  }
+
+  .nav-link-active::after {
+    content: "";
+    @apply absolute bottom-[-4px] left-0 w-full h-[2px] bg-neutral-dark;
+  }
+}
+
 
 
