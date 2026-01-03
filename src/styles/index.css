@@ -1,0 +1,11 @@
+/**
+ * Styles Index
+ * Import this file for all global styles
+ * 
+ * Structure:
+ * - globals.css: Base styles, CSS variables, Tailwind directives
+ * - Per-feature CSS can be created in respective feature folders
+ *   e.g., features/auth/styles/auth.css
+ */
+
+@import "./globals.css";
