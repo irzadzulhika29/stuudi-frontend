@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Stuudi - Platform Pembelajaran & Olimpiade",
+  title: "Arteri - Platform Pembelajaran & Olimpiade",
   description:
     "Platform adaptif berbasis gamifikasi untuk pelatihan tim modern dan penyelenggaraan olimpiade berskala masif.",
   keywords: [
@@ -11,14 +11,20 @@ export const metadata: Metadata = {
     "gamifikasi",
     "pelatihan",
     "pendidikan",
+    "arteri",
   ],
-  authors: [{ name: "Stuudi Team" }],
+  authors: [{ name: "Arteri Team" }],
+  icons: {
+    icon: "/images/logo/ARTERI.webp",
+    apple: "/images/logo/ARTERI.webp",
+  },
   openGraph: {
-    title: "Stuudi - Platform Pembelajaran & Olimpiade",
+    title: "Arteri - Platform Pembelajaran & Olimpiade",
     description:
       "Platform adaptif berbasis gamifikasi untuk pelatihan tim modern dan penyelenggaraan olimpiade berskala masif.",
     type: "website",
     locale: "id_ID",
+    images: ["/images/logo/ARTERI.webp"],
   },
 };
 
