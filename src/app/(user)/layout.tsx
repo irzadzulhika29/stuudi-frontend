@@ -4,6 +4,7 @@ import { LayoutDashboard, BookOpen, Users } from "lucide-react";
 import DashboardLayout from "@/features/user/dashboard/components/DashboardLayout";
 import { Sidebar } from "@/features/user/dashboard/components/Sidebar";
 import { Topbar } from "@/features/user/dashboard/components/Topbar";
+import { CourseNavigationProvider } from "@/features/user/courses/context/CourseNavigationContext";
 
 export default function UserLayout({
   children,
@@ -20,6 +21,7 @@ export default function UserLayout({
       label: "Courses",
       href: "/courses",
       icon: <BookOpen size={20} />,
+      dynamicSubItems: true,
     },
     {
       label: "Team Identity",
@@ -34,11 +36,13 @@ export default function UserLayout({
   };
 
   return (
-    <DashboardLayout
-      sidebar={<Sidebar menuItems={userMenuItems} />}
-      topbar={<Topbar user={user} />}
-    >
-      {children}
-    </DashboardLayout>
+    <CourseNavigationProvider>
+      <DashboardLayout
+        sidebar={<Sidebar menuItems={userMenuItems} />}
+        topbar={<Topbar user={user} />}
+      >
+        {children}
+      </DashboardLayout>
+    </CourseNavigationProvider>
   );
 }

@@ -5,3 +5,4 @@ export { default as Button } from "./ui/Button";
 export { default as Input } from "./ui/Input";
 export { default as SectionWrapper } from "./ui/SectionWrapper";
 export { default as OtpInput } from "./ui/OtpInput";
+export { default as RingOfFireLoader } from "./ui/RingOfFireLoader";
