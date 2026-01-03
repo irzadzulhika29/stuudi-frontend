@@ -4,7 +4,11 @@ import HowItWorksSection from "@/features/public/landing/components/HowItWorksSe
 import TrustedSection from "@/features/public/landing/components/TrustedSection";
 import CTASection from "@/features/public/landing/components/CTASection";
 
-export default function HomePage() {
+import { delay } from "@/shared/utils/delay";
+
+export default async function HomePage() {
+  await delay(1500);
+
   return (
     <>
       <HeroSection />
