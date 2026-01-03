@@ -6,12 +6,20 @@ import { HelpCircle, ChevronRight, Menu } from "lucide-react";
 import { ReactNode } from "react";
 import Image from "next/image";
 import { useSidebar } from "@/features/user/dashboard/context/SidebarContext";
+import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
+
+export type SubItem = {
+  label: string;
+  href: string;
+  isCompleted?: boolean;
+};
 
 export type MenuItem = {
   label: string;
   href: string;
   icon: ReactNode;
-  subItems?: { label: string; href: string; isCompleted?: boolean }[];
+  subItems?: SubItem[];
+  dynamicSubItems?: boolean;
 };
 
 interface SidebarProps {
@@ -22,6 +30,14 @@ interface SidebarProps {
 export function Sidebar({ menuItems, className = "" }: SidebarProps) {
   const pathname = usePathname();
   const { isCollapsed, setIsCollapsed } = useSidebar();
+  const { navigation } = useCourseNavigation();
+
+  const getSubItems = (item: MenuItem): SubItem[] => {
+    if (item.dynamicSubItems && item.href === "/courses") {
+      return navigation.subItems;
+    }
+    return item.subItems || [];
+  };
 
   return (
     <aside
@@ -70,6 +86,7 @@ export function Sidebar({ menuItems, className = "" }: SidebarProps) {
         {menuItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const subItems = getSubItems(item);
 
           return (
             <div key={item.href}>
@@ -96,21 +113,27 @@ export function Sidebar({ menuItems, className = "" }: SidebarProps) {
                 {!isCollapsed && <span className="text-sm">{item.label}</span>}
               </Link>
 
-              {!isCollapsed && isActive && item.subItems && (
+              {!isCollapsed && isActive && subItems.length > 0 && (
                 <div className="ml-9 mt-1 space-y-1 border-l-2 border-neutral-200 pl-3">
-                  {item.subItems.map((sub, idx) => (
-                    <Link
-                      key={idx}
-                      href={sub.href}
-                      className={`block text-sm py-1.5 ${
-                        pathname === sub.href
-                          ? "text-[#B95C2F] font-medium"
-                          : "text-neutral-500 hover:text-[#B95C2F]"
-                      }`}
-                    >
-                      {sub.label}
-                    </Link>
-                  ))}
+                  {subItems.map((sub, idx) => {
+                    const isSubActive = pathname === sub.href;
+                    return (
+                      <Link
+                        key={idx}
+                        href={sub.href}
+                        className={`flex items-center gap-2 text-sm py-1.5 ${
+                          isSubActive
+                            ? "text-[#B95C2F] font-medium"
+                            : "text-neutral-500 hover:text-[#B95C2F]"
+                        }`}
+                      >
+                        {sub.isCompleted && (
+                          <span className="text-green-500">✓</span>
+                        )}
+                        <span className="truncate">{sub.label}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
