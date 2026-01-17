@@ -9,9 +9,11 @@ export default function LoginContainer() {
     <AuthLayout
       title={
         <>
-          Selamat datang, <FireText text="Arterians!" />
+          Selamat datang,{" "}
+          <span className="text-primary-light">Arterians!</span>
         </>
       }
+      subtitle="Masuk untuk melanjutkan pembelajaranmu dan jangan lupa ambil kuis mu hari ini!"
       googleButtonText="Masuk menggunakan google"
       bottomText="Belum punya akun?"
       bottomLinkText="Daftar disini"

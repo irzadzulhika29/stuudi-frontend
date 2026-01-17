@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import "@/styles/pages/not-found.css";
 import { Home } from "lucide-react";
 
 export default function NotFound() {
@@ -72,7 +73,7 @@ export default function NotFound() {
         >
           <Link
             href="/"
-            className="group inline-flex items-center gap-2 bg-gradient-to-r from-secondary-light to-secondary-default hover:from-secondary-default hover:to-primary-light text-white font-semibold px-6 py-3 rounded-full transition-all duration-500 shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 text-sm hover:scale-105"
+            className="group inline-flex items-center gap-2 bg-secondary-light hover:from-secondary-default hover:to-primary-light text-white font-semibold px-6 py-3 rounded-full transition-all duration-500 shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 text-sm hover:scale-105"
           >
             <Home
               size={18}

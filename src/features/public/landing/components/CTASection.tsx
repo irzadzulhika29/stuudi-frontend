@@ -1,5 +1,5 @@
-import SectionWrapper from "@/shared/ui/SectionWrapper";
-import Button from "@/shared/ui/Button";
+import SectionWrapper from "@/shared/components/ui/SectionWrapper";
+import Button from "@/shared/components/ui/Button";
 
 interface CTASectionProps {
   id?: string;

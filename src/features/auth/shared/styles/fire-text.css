@@ -1,0 +1,106 @@
+/* Fire Animation - LAYERED REALISTIC STYLE */
+  
+/* 1. The Core Text (Stable but Bright) */
+.fire-core-text {
+  font-weight: 900;
+  color: #FFA940; /* Slightly toned down orange */
+  text-shadow: 
+    0 0 3px rgba(255, 255, 255, 0.5),
+    0 0 6px rgba(255, 169, 64, 0.4); /* Reduced glow */
+  position: relative;
+  z-index: 2;
+}
+
+/* Fire Ring Animations */
+@keyframes fire-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.4;
+  }
+}
+
+@keyframes fire-flicker {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.4;
+  }
+  25% {
+    transform: scale(1.1) rotate(2deg);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.05) rotate(-1deg);
+    opacity: 0.3;
+  }
+  75% {
+    transform: scale(1.12) rotate(1deg);
+    opacity: 0.45;
+  }
+}
+
+.animate-fire-pulse {
+  animation: fire-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-fire-flicker {
+  animation: fire-flicker 0.8s ease-in-out infinite;
+}
+
+/* 2. The Flame Layer (Distorted & Rising) - Enhanced */
+.fire-distort-layer {
+  font-weight: 900;
+  
+  /* Apply rising vertical distortion filter + Stronger Glow */
+  filter: url(#fire-wind) drop-shadow(0 -6px 8px rgba(255, 140, 0, 0.8)) drop-shadow(0 0 12px rgba(255, 69, 0, 0.6));
+  
+  /* Flame Color Gradient: Brighter White Hot -> Yellow -> Orange -> Red */
+  background: linear-gradient(to top, #FFFF00 0%, #FFD700 20%, #FF8C00 45%, #FF4500 70%, #8B0000 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Rising motion - Faster and more dynamic */
+  transform-origin: bottom center;
+  animation: fire-rise-intense 1.5s ease-in-out infinite alternate, fire-flicker 0.3s ease-in-out infinite;
+}
+
+/* Extra Glow for surrounding atmosphere - Enhanced */
+.fire-core-text::after {
+  content: '';
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  bottom: -12%;
+  top: -12%;
+  background: radial-gradient(circle at center, rgba(255, 140, 0, 0.35) 0%, rgba(255, 100, 0, 0.15) 40%, transparent 70%);
+  z-index: -1;
+  filter: blur(12px);
+  mix-blend-mode: screen;
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes fire-rise-intense {
+  0% {
+    transform: scaleY(1.15) translateY(-4%);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(1.4) translateY(-12%);
+    opacity: 1;
+  }
+}
+
+@keyframes glow-pulse {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
