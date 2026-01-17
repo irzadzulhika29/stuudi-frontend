@@ -1,9 +1,10 @@
 "use client";
 
 import { LayoutDashboard, BookOpen, Users, Shield } from "lucide-react";
-import DashboardLayout from "@/features/user/dashboard/components/DashboardLayout";
-import { Sidebar } from "@/features/user/dashboard/components/Sidebar";
-import { Topbar } from "@/features/user/dashboard/components/Topbar";
+import DashboardLayout from "@/features/user/dashboard/shared/components/DashboardLayout";
+import { Sidebar } from "@/features/user/dashboard/shared/components/Sidebar";
+import { Topbar } from "@/features/user/dashboard/shared/components/Topbar";
+import { CourseNavigationProvider } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
 
 export default function AdminLayout({
   children,
@@ -13,23 +14,18 @@ export default function AdminLayout({
   const adminMenuItems = [
     {
       label: "Dashboard",
-      href: "/admin/dashboard",
+      href: "/dashboard-admin",
       icon: <LayoutDashboard size={20} />,
     },
     {
-      label: "Manage Courses",
-      href: "/admin/courses",
+      label: "Courses",
+      href: "/courses",
       icon: <BookOpen size={20} />,
     },
     {
-      label: "Users",
-      href: "/admin/users",
+      label: "Participant",
+      href: "/participant",
       icon: <Users size={20} />,
-    },
-    {
-      label: "Settings",
-      href: "/admin/settings",
-      icon: <Shield size={20} />,
     },
   ];
 
@@ -41,13 +37,18 @@ export default function AdminLayout({
   };
 
   return (
-    <DashboardLayout
-      sidebar={
-        <Sidebar menuItems={adminMenuItems} className="border-r-neutral-800" />
-      }
-      topbar={<Topbar user={mockAdmin} />}
-    >
-      {children}
-    </DashboardLayout>
+    <CourseNavigationProvider>
+      <DashboardLayout
+        sidebar={
+          <Sidebar
+            menuItems={adminMenuItems}
+            className="border-r-neutral-800"
+          />
+        }
+        topbar={<Topbar user={mockAdmin} />}
+      >
+        {children}
+      </DashboardLayout>
+    </CourseNavigationProvider>
   );
 }

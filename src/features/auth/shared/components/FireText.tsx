@@ -1,5 +1,7 @@
 "use client";
 
+import "@/features/auth/shared/styles/fire-text.css";
+
 interface FireTextProps {
   text: string;
   className?: string;
@@ -16,22 +18,22 @@ export default function FireText({ text, className = "" }: FireTextProps) {
         {text}
       </span>
 
-      <span className="relative z-10 fire-core-text">{text}</span>
+      <span className="relative z-10 text-primary-light">{text}</span>
 
       <svg className="absolute w-0 h-0 overflow-hidden" aria-hidden="true">
         <defs>
           <filter id="fire-wind" x="-20%" y="-50%" width="140%" height="200%">
             <feTurbulence
               type="fractalNoise"
-              baseFrequency="0.02 0.08"
-              numOctaves="3"
+              baseFrequency="0.03 0.1"
+              numOctaves="4"
               seed="5"
               result="noise"
             >
               <animate
                 attributeName="baseFrequency"
-                values="0.02 0.08; 0.02 0.12; 0.02 0.08"
-                dur="2s"
+                values="0.03 0.1; 0.04 0.15; 0.03 0.1"
+                dur="1.2s"
                 repeatCount="indefinite"
               />
             </feTurbulence>
