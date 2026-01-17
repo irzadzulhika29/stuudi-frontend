@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Input from "@/shared/ui/Input";
+import Input from "@/shared/components/ui/Input";
+import Button from "@/shared/components/ui/Button";
 import { usePasswordVisibility } from "../hooks/usePasswordVisibility";
 
 export default function LoginForm() {
@@ -31,12 +32,12 @@ export default function LoginForm() {
         </Link>
       </div>
 
-      <button
+      <Button
         type="submit"
-        className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-lg shadow-secondary/30"
+        className="w-full !rounded-full py-3 shadow-lg shadow-secondary/30"
       >
         Masuk
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import Button from "@/shared/ui/Button";
-import Input from "@/shared/ui/Input";
+import Button from "@/shared/components/ui/Button";
+import Input from "@/shared/components/ui/Input";
+import { useToast } from "@/shared/components/ui/Toast";
 import AuthLayout from "@/features/auth/shared/components/AuthLayout";
-import OtpInput from "@/shared/ui/OtpInput";
+import OtpInput from "@/shared/components/ui/OtpInput";
 import { useRegisterForm } from "@/features/auth/register/hooks/useRegisterForm";
 import { maskEmail } from "@/features/auth/shared/utils/stringUtils";
 
@@ -42,7 +43,7 @@ export default function RegisterSection() {
       title={
         <>
           Bergabunglah bersama kami, <br />
-          <span className="text-black">Calon Stuudoc!</span>
+          <span className="text-black">Arterians!</span>
         </>
       }
       googleButtonText="Daftar menggunakan google"

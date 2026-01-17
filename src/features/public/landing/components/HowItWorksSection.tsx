@@ -1,4 +1,4 @@
-import SectionWrapper from "@/shared/ui/SectionWrapper";
+import SectionWrapper from "@/shared/components/ui/SectionWrapper";
 
 const steps = [
   {

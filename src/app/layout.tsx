@@ -1,30 +1,46 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
+import { ToastProvider } from "@/shared/components/ui/Toast";
+import { AppProvider } from "@/shared/providers";
+
+import { siteConfig } from "@/shared/config/seo";
 
 export const metadata: Metadata = {
-  title: "Arteri - Platform Pembelajaran & Olimpiade",
-  description:
-    "Platform adaptif berbasis gamifikasi untuk pelatihan tim modern dan penyelenggaraan olimpiade berskala masif.",
-  keywords: [
-    "pembelajaran",
-    "olimpiade",
-    "gamifikasi",
-    "pelatihan",
-    "pendidikan",
-    "arteri",
-  ],
-  authors: [{ name: "Arteri Team" }],
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  keywords: siteConfig.keywords,
+  authors: siteConfig.authors,
+  creator: "Arteri Team",
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: siteConfig.url,
+    title: siteConfig.name,
+    description: siteConfig.description,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
+    creator: "@arteriproject",
+  },
   icons: {
     icon: "/images/logo/ARTERI.webp",
     apple: "/images/logo/ARTERI.webp",
-  },
-  openGraph: {
-    title: "Arteri - Platform Pembelajaran & Olimpiade",
-    description:
-      "Platform adaptif berbasis gamifikasi untuk pelatihan tim modern dan penyelenggaraan olimpiade berskala masif.",
-    type: "website",
-    locale: "id_ID",
-    images: ["/images/logo/ARTERI.webp"],
   },
 };
 
@@ -47,7 +63,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased min-h-screen flex flex-col">{children}</body>
+      <body className="antialiased min-h-screen flex flex-col">
+        <AppProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AppProvider>
+      </body>
     </html>
   );
 }

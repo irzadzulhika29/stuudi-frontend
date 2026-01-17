@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Button from "@/shared/ui/Button";
-import Input from "@/shared/ui/Input";
+import Button from "@/shared/components/ui/Button";
+import Input from "@/shared/components/ui/Input";
+import { useToast } from "@/shared/components/ui/Toast";
 import AuthLayout from "@/features/auth/shared/components/AuthLayout";
 import { usePasswordVisibility } from "@/features/auth/shared/hooks/usePasswordVisibility";
 
@@ -18,7 +19,7 @@ export default function LoginSection() {
       title={
         <>
           Selamat datang kembali, <br />
-          <span className="text-black">Stuudoc!</span>
+          <span className="text-black">Arterians!</span>
         </>
       }
       googleButtonText="Masuk menggunakan google"

@@ -1,7 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import React from "react";
-import HeroWrapper from "@/shared/layout/HeroWrapper";
 import Image from "next/image";
+import ProgressBar from "@/shared/components/ui/ProgressBar";
 
 interface AuthLayoutProps {
   title: React.ReactNode;
@@ -11,7 +13,8 @@ interface AuthLayoutProps {
   bottomText?: string;
   bottomLinkText?: string;
   bottomLinkHref?: string;
-  heroImageSrc?: string;
+  currentStep?: number;
+  isLinkDisabled?: boolean;
 }
 
 export default function AuthLayout({
@@ -22,42 +25,32 @@ export default function AuthLayout({
   bottomText,
   bottomLinkText,
   bottomLinkHref,
-  heroImageSrc = "/images/auth/alvaro.svg",
+  currentStep,
+  isLinkDisabled = false,
 }: AuthLayoutProps) {
   return (
-    <HeroWrapper>
-      <div className="max-w-4xl mx-auto flex justify-between gap-12 items-center">
-        <div className="w-full max-w-md mx-auto lg:mx-0">
-          <div className="mb-8">
-            <Link
-              href="/"
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors font-medium"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="mr-2"
-              >
-                <path d="M19 12H5" />
-                <path d="M12 19l-7-7 7-7" />
-              </svg>
-              kembali ke beranda
-            </Link>
+    <div className="min-h-screen flex">
+      <div className="w-full lg:w-[35%] flex flex-col justify-center px-8 lg:px-16 py-12 bg-white">
+        <div className="max-w-[380px] mx-auto w-full">
+          <div className="flex justify-center">
+            <Image
+              src="/images/logo/ARTERI.webp"
+              alt="ARTERI"
+              width={150}
+              height={34}
+              priority
+            />
           </div>
 
-          <div className="text-2xl text-center font-bold text-primary-dark mb-2 leading-tight">
+          {/* Progress Bar - Only show during registration */}
+          {currentStep && <ProgressBar currentStep={currentStep} />}
+
+          <h1 className="text-2xl font-bold text-primary-dark text-center mb-2">
             {title}
-          </div>
+          </h1>
 
           {subtitle && (
-            <p className="text-center text-gray-600 mb-8">{subtitle}</p>
+            <p className="text-center text-gray-600 mb-8 text-sm">{subtitle}</p>
           )}
 
           {children}
@@ -68,7 +61,7 @@ export default function AuthLayout({
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300"></div>
                 </div>
-                <span className="relative z-10 bg-[#F5F7FA] px-2 text-sm text-gray-500 italic">
+                <span className="relative z-10 bg-white px-3 text-sm text-gray-500">
                   atau
                 </span>
               </div>
@@ -79,8 +72,8 @@ export default function AuthLayout({
               >
                 <svg
                   viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
+                  width="20"
+                  height="20"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
@@ -108,37 +101,57 @@ export default function AuthLayout({
           {bottomText && bottomLinkHref && (
             <p className="mt-8 text-center text-sm text-gray-600">
               {bottomText}{" "}
-              <Link
-                href={bottomLinkHref}
-                className="text-[#27A8F3] hover:underline font-medium"
-              >
-                {bottomLinkText}
-              </Link>
+              {isLinkDisabled ? (
+                <span className="text-(--secondary-light) opacity-70 cursor-not-allowed font-medium">
+                  {bottomLinkText}
+                </span>
+              ) : (
+                <Link
+                  href={bottomLinkHref}
+                  className="text-(--secondary-light) hover:text-secondary hover:underline font-medium"
+                >
+                  {bottomLinkText}
+                </Link>
+              )}
             </p>
           )}
         </div>
+      </div>
 
-        <div className="hidden lg:block relative h-[500px] w-[300px]">
-          <div className="absolute inset-0 rounded-3xl overflow-hidden border-4 border-white shadow-2xl">
-            <Image
-              src={heroImageSrc}
-              alt="Auth Hero"
-              fill
-              style={{ objectFit: "cover", objectPosition: "top center" }}
-              priority
-            />
-          </div>
+      <div className="hidden lg:flex lg:w-[65%] relative overflow-hidden">
+        <Image
+          src="/images/auth/bgAuth.webp"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
 
-          <div className="absolute -top-8 -right-8 drop-shadow-2xl transform rotate-12">
-            <Image
-              width={100}
-              height={100}
-              src="/images/auth/shield.svg"
-              alt=""
-            />
+        <div className="absolute left-1/2 top-1/2  -translate-x-72 -translate-y-1/2 flex flex-col items-center justify-center z-10 pl-20 pb-20">
+          <div className="relative">
+            <div className="absolute -top-8 -left-2 animate-float-gentle z-10">
+              <Image
+                src="/images/mascot/chibiflying.webp"
+                alt="Arterians Mascot"
+                width={170}
+                height={170}
+                priority
+              />
+            </div>
+
+            <div className="relative z-0">
+              <Image
+                src="/images/logo/ARTERI.webp"
+                alt="ARTERI"
+                width={380}
+                height={130}
+                className="drop-shadow-2xl"
+                priority
+              />
+            </div>
           </div>
         </div>
       </div>
-    </HeroWrapper>
+    </div>
   );
 }

@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 
-export const metadata = {
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Tentang Kami - Arteri",
   description:
     "Kenali lebih dekat Arteri, platform pembelajaran dan olimpiade pertama di Indonesia.",

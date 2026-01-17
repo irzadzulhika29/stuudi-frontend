@@ -1,8 +1,8 @@
 "use client";
 
-import Button from "@/shared/ui/Button";
+import Button from "@/shared/components/ui/Button";
 import Image from "next/image";
-import HeroWrapper from "@/shared/layout/HeroWrapper";
+import HeroWrapper from "@/shared/components/layout/HeroWrapper";
 
 export default function HeroSection() {
   return (
