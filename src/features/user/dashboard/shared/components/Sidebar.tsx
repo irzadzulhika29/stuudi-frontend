@@ -85,7 +85,14 @@ export function Sidebar({ menuItems, className = "" }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         {menuItems.map((item) => {
           const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+            pathname === item.href ||
+            (pathname.startsWith(`${item.href}/`) &&
+              !menuItems.some(
+                (otherItem) =>
+                  otherItem.href !== item.href &&
+                  otherItem.href.length > item.href.length &&
+                  pathname.startsWith(otherItem.href),
+              ));
           const subItems = getSubItems(item);
 
           return (
