@@ -5,7 +5,7 @@ import { CourseDetailContainer } from "@/features/admin/dashboard/courses/contai
 
 export default function CourseDetailPage() {
   const params = useParams();
-  const courseId = params.courseId as string;
+  const courseId = params.coursesId as string;
 
   return <CourseDetailContainer courseId={courseId} />;
 }

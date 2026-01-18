@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { CourseInfoSidebarProps, Note } from "../types/cTypes";
 import { CoursePeople } from "./smallcomponents/CoursePeople";
-import { CourseNotes } from "./smallcomponents/CourseNotes";
 import { CourseProgress } from "./smallcomponents/CourseProgress";
 
 export function CourseInfoSidebar({
@@ -18,28 +17,6 @@ export function CourseInfoSidebar({
 }: CourseInfoSidebarProps) {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
 
-  const handleAddNote = (content: string) => {
-    const newNote: Note = {
-      id: `note-${Date.now()}`,
-      content,
-      createdAt: new Date().toISOString(),
-    };
-    setNotes((prev) => [newNote, ...prev]);
-  };
-
-  const handleEditNote = (id: string, content: string) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === id
-          ? { ...note, content, updatedAt: new Date().toISOString() }
-          : note,
-      ),
-    );
-  };
-
-  const handleDeleteNote = (id: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id));
-  };
 
   return (
     <div className="space-y-3">

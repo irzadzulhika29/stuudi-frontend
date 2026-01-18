@@ -11,6 +11,7 @@ import {
   courseData,
   courseInfoData,
 } from "@/features/user/dashboard/courses/data/dummyData";
+import { Button } from "@/shared/components/ui";
 
 interface CourseDetailContainerProps {
   courseId: string;
@@ -48,9 +49,16 @@ export function CourseDetailContainer({
             />
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            {courseData.title}
-          </h1>
+          <div className="mb-5 flex justify-between items-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">
+              {courseData.title}
+            </h1>
+            <Link href={`/dashboard-admin/courses/${courseId}/manage/${courseId}`}>
+              <Button className="cursor-pointer" size="md" variant="outline">
+                Manage Course
+              </Button>
+            </Link>
+          </div>
           <p className="text-white/70 leading-relaxed mb-6 md:mb-8 max-w-2xl text-sm">
             {courseData.description}
           </p>
