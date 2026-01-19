@@ -24,7 +24,7 @@ export function ManageTopicList({ courseId, topics }: ManageTopicListProps) {
           className="flex-1"
           href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/material/new`}
         >
-          <Button className="w-full hover:text-gray-800" variant="outline" size="md">
+          <Button className="w-full hover:text-gray-800 hover:bg-white" variant="outline" size="md">
             <Plus className="mr-2" size={20} /> Add New Topic
           </Button>
         </Link>
@@ -33,7 +33,7 @@ export function ManageTopicList({ courseId, topics }: ManageTopicListProps) {
           href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/quiz/new`}
         
         >
-          <Button className="w-full hover:text-gray-800" variant="outline" size="md">
+          <Button className="w-full hover:text-gray-800 hover:bg-white" variant="outline" size="md">
             <Plus className="mr-2" size={20} /> Add Exam
           </Button>
         </Link>

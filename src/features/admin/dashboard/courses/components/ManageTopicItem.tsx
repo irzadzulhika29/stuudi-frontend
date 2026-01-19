@@ -108,7 +108,7 @@ export function ManageTopicItem({
             <Link
               href={`/dashboard-admin/courses/${courseId}/manage/${id}/material/${id}`}
             >
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="!text-primary !border-primary hover:!bg-primary hover:!text-white">
                 Edit
               </Button>
             </Link>
@@ -127,14 +127,14 @@ export function ManageTopicItem({
             <Link
               href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/material/${id}`}
             >
-              <Button variant="outline" size="md" className="text-gray-500 ">
+              <Button variant="outline" size="md" className="!text-primary !border-primary hover:!bg-primary hover:!text-white">
                 <Plus size={18} /> Tambah materi
               </Button>
             </Link>
             <Link
               href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/material/${id}`}
             >
-              <Button variant="outline" size="md" className="text-gray-500">
+              <Button variant="outline" size="md" className="!text-primary !border-primary hover:!bg-primary hover:!text-white">
                 <Plus size={18} /> Tambah kuis
               </Button>
             </Link>

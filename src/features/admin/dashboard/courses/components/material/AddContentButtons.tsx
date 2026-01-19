@@ -40,6 +40,11 @@ export interface QuizContent {
   isMultipleAnswer: boolean;
   points: number;
   options: QuizOption[];
+  imageUrl?: string;
+  correctAnswer?: boolean;
+  expectedAnswer?: string;
+  caseSensitive?: boolean;
+  pairs?: { id: string; left: string; right: string }[];
 }
 
 export type MaterialContent = TextContent | MediaContent | QuizContent;

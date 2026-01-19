@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { ArrowLeft, Plus, Trash2, ChevronLeft } from "lucide-react";
 import { TextContentBox } from "./TextContentBox";
 import { MediaBox } from "./MediaBox";
-import { QuizBox, QuizData, QuizOption } from "./QuizBox";
+import { QuizBox, QuizData } from "./QuizBox";
 import {
   AddContentButtons,
   MaterialContent,
@@ -104,12 +104,7 @@ export function MaterialForm({
         c.id === id && c.type === "quiz"
           ? {
               ...c,
-              question: data.question,
-              questionType: data.questionType,
-              isRequired: data.isRequired,
-              isMultipleAnswer: data.isMultipleAnswer,
-              points: data.points,
-              options: data.options,
+              ...data,
             }
           : c,
       ),
@@ -225,6 +220,11 @@ export function MaterialForm({
                   isMultipleAnswer: content.isMultipleAnswer,
                   points: content.points,
                   options: content.options,
+                  imageUrl: content.imageUrl,
+                  correctAnswer: content.correctAnswer,
+                  expectedAnswer: content.expectedAnswer,
+                  caseSensitive: content.caseSensitive,
+                  pairs: content.pairs,
                 };
                 return (
                   <QuizBox
@@ -271,7 +271,7 @@ export function MaterialForm({
             onAddMedia={addMediaContent}
           />
 
-          {/* Save Button */}
+
           <button
             type="button"
             onClick={handleSave}
