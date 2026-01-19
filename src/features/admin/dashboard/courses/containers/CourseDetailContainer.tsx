@@ -27,7 +27,7 @@ export function CourseDetailContainer({
   }, [courseId, setCourseNav]);
 
   return (
-    <div className="min-h-screen py-4 md:py-6 px-3 md:px-4">
+    <div className="min-h-screen ">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-4 mb-8">

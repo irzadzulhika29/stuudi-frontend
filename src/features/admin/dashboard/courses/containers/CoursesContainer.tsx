@@ -2,6 +2,7 @@
 
 import { Search, Plus } from "lucide-react";
 import { CourseCard } from "@/features/admin/dashboard/courses/components/CourseCard";
+import { DashboardHeader } from "@/features/admin/dashboard/shared/components/DashboardHeader";
 import { useState } from "react";
 import Link from "next/link";
 import { courses } from "@/features/user/dashboard/courses/data/dummyData";
@@ -11,11 +12,11 @@ export function CoursesContainer() {
 
   return (
     <div className="min-h-screen py-6 px-4 overflow-x-hidden">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white mb-2">
-          Course Management
-        </h1>
-      </div>
+      <DashboardHeader
+        title="Course"
+        highlightedText="Management"
+        className="mb-8"
+      />
 
       <div className="flex gap-3 mb-8">
         <div className="flex-1 relative">

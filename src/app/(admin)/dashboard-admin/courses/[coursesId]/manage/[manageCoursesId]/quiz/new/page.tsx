@@ -11,8 +11,6 @@ export default function QuizDetailPage() {
 
   const handleSave = (quizName: string, quizItems: any[]) => {
     console.log("Saving quiz:", { quizName, quizItems });
-    // TODO: Implement save logic with API
-    // Navigate back after save
     router.push(
       `/dashboard-admin/courses/${coursesId}/manage/${manageCoursesId}`,
     );

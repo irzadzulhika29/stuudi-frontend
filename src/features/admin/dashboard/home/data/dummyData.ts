@@ -67,3 +67,4 @@ export const participantData = [
     school: "SMA Negeri 4 Surabaya",
   },
 ];
+

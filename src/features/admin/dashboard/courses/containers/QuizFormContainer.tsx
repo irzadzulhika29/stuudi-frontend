@@ -8,6 +8,10 @@ import {
   QuizData,
   QuizOption,
 } from "@/features/admin/dashboard/courses/components/material";
+import {
+  QuizSettingsPanel,
+  QuizSettings,
+} from "@/features/admin/dashboard/courses/components/quiz";
 import { Button } from "@/shared/components/ui";
 
 export interface QuizItem {
@@ -15,11 +19,17 @@ export interface QuizItem {
   data: QuizData;
 }
 
+export type { QuizSettings };
+
 interface QuizFormContainerProps {
   courseId: string;
   manageCoursesId: string;
   quizName?: string;
-  onSave?: (quizName: string, quizItems: QuizItem[]) => void;
+  onSave?: (
+    quizName: string,
+    quizItems: QuizItem[],
+    settings: QuizSettings,
+  ) => void;
 }
 
 export function QuizFormContainer({
@@ -31,11 +41,15 @@ export function QuizFormContainer({
   const [quizName, setQuizName] = useState(initialQuizName);
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
 
-  // Generate unique ID
+  const [quizSettings, setQuizSettings] = useState<QuizSettings>({
+    randomizeQuestions: false,
+    showAllQuestions: false,
+    displayedQuestionsCount: 10,
+  });
+
   const generateId = () =>
     `quiz-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Add new quiz question
   const addQuizQuestion = useCallback(() => {
     const newQuiz: QuizItem = {
       id: generateId(),
@@ -56,14 +70,12 @@ export function QuizFormContainer({
     setQuizItems((prev) => [...prev, newQuiz]);
   }, []);
 
-  // Update quiz content
   const updateQuizContent = useCallback((id: string, data: QuizData) => {
     setQuizItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, data } : item)),
     );
   }, []);
 
-  // Reorder quiz
   const moveQuiz = useCallback((index: number, direction: "up" | "down") => {
     setQuizItems((prev) => {
       const newItems = [...prev];
@@ -77,24 +89,30 @@ export function QuizFormContainer({
     });
   }, []);
 
-  // Delete quiz
   const deleteQuiz = useCallback((id: string) => {
     setQuizItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  // Handle save
   const handleSave = () => {
     if (onSave) {
-      onSave(quizName, quizItems);
+      onSave(quizName, quizItems, quizSettings);
     } else {
-      console.log("Saving quiz:", { quizName, quizItems });
-      // TODO: Implement save logic with API
+      console.log("Saving quiz:", { quizName, quizItems, quizSettings });
     }
+  };
+
+  const handleSettingsChange = (
+    key: keyof QuizSettings,
+    value: boolean | number,
+  ) => {
+    setQuizSettings((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <div className="sticky top-0 z-10">
         <div className="flex items-center gap-4 mb-8">
           <Link
@@ -107,12 +125,9 @@ export function QuizFormContainer({
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Title */}
         <h1 className="text-3xl font-bold text-white mb-8">Tambah Quiz</h1>
 
-        {/* Quiz Name Input */}
         <div className="space-y-2 mb-8">
           <label className="block text-sm font-medium text-white">
             Nama Quiz
@@ -126,11 +141,9 @@ export function QuizFormContainer({
           />
         </div>
 
-        {/* Quiz Questions Section */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-white">Soal Quiz</h2>
 
-          {/* Quiz Items */}
           <div className="space-y-4">
             {quizItems.map((item, index) => (
               <QuizBox
@@ -147,7 +160,6 @@ export function QuizFormContainer({
             ))}
           </div>
 
-          {/* Add New Question Button */}
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -167,14 +179,14 @@ export function QuizFormContainer({
             </button>
           </div>
 
-          {/* Save Button */}
-          <button
-            type="button"
-            onClick={handleSave}
-            className="w-full py-2 bg-white rounded-full text-gray-500 font-medium text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
-          >
+          <QuizSettingsPanel
+            settings={quizSettings}
+            totalQuestions={quizItems.length}
+            onSettingsChange={handleSettingsChange}
+          />
+          <Button variant="outline" onClick={handleSave} className="w-full  hover:!bg-primary hover:text-white">
             Simpan
-          </button>
+          </Button>
         </div>
       </div>
     </div>
