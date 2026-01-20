@@ -32,6 +32,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // --- TAMBAHAN PENTING ---
+  output: "standalone",
+  // ------------------------
+
   reactCompiler: true,
 
   // Hide Next.js version in response headers
