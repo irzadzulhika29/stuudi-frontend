@@ -19,12 +19,12 @@ export default function AdminLayout({
     },
     {
       label: "Courses",
-      href: "/courses",
+      href: "/dashboard-admin/courses",
       icon: <BookOpen size={20} />,
     },
     {
       label: "Participant",
-      href: "/participant",
+      href: "/dashboard-admin/participant",
       icon: <Users size={20} />,
     },
   ];

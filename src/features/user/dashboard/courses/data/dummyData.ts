@@ -48,6 +48,7 @@ export const courses = [
 export const courseData = {
     id: "1",
     title: "Course Details",
+    image: "/images/courses/class-header.svg",
     description:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum varius, dui nec auctor pellentesque, purus massa pulvinar odio, in lacinia mauris erat eu dolor. Etiam semper, lacus id vulputate blandit, nunc libero imperdiet sem, varius luctus lorem sapien nec ex. Curabitur sollicitudin nisi nec eleifend dignissim.",
     topics: [

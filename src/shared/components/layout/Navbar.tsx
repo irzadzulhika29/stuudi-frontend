@@ -46,10 +46,10 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" href={ROUTES.LOGIN} size="sm">
+            <Button variant="outline" className="!bg-primary !text-neutral-white" href={ROUTES.LOGIN} size="sm">
               Login
             </Button>
-            <Button variant="outline" href={ROUTES.REGISTER} size="sm">
+            <Button className="!text-primary  !border-primary hover:!bg-primary hover:!text-neutral-white" variant="outline" href={ROUTES.REGISTER} size="sm">
               Join us
             </Button>
           </div>
@@ -100,10 +100,10 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-3 border-t border-neutral-light">
-                <Button variant="ghost" href={ROUTES.LOGIN} size="sm">
+                <Button variant="outline" className="!bg-primary !text-neutral-white" href={ROUTES.LOGIN} size="sm">
                   Login
                 </Button>
-                <Button variant="outline" href={ROUTES.REGISTER} size="sm">
+                <Button variant="outline" className="!bg-transparent !border !border-primary !text-primary hover:!bg-primary hover:!text-neutral-white" href={ROUTES.REGISTER} size="sm">
                   Join us
                 </Button>
               </div>

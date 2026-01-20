@@ -19,13 +19,13 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 font-semibold rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center cursor-pointer justify-center gap-2 font-semibold rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
     primary:
       "bg-[#27A8F3] text-white hover:bg-[#1E8FD4] hover:shadow-lg hover:shadow-blue-200",
     outline:
-      "border-2 border-[#27A8F3] text-[#27A8F3] hover:bg-[#27A8F3] hover:text-white",
+      "bg-transparent border-2 border-white text-white hover:border-primary hover:text-primary",
     ghost: "text-[#27A8F3] hover:bg-blue-50",
   };
 
