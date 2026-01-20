@@ -19,10 +19,7 @@ interface UjiPemahamanContainerProps {
   materiId: string;
 }
 
-export function UjiPemahamanContainer({
-  courseId,
-  topicId,
-}: UjiPemahamanContainerProps) {
+export function UjiPemahamanContainer({ courseId, topicId }: UjiPemahamanContainerProps) {
   const { setMateriNav } = useCourseNavigation();
   const [quizStatus, setQuizStatus] = useState<QuizStatus>("start");
 
@@ -32,17 +29,17 @@ export function UjiPemahamanContainer({
     setMateriNav(
       { id: courseId, name: "Course Details" },
       { id: topicId, name: topicData.title },
-      { id: "quiz", name: quizData.title },
+      { id: "quiz", name: quizData.title }
     );
   }, [courseId, topicId, setMateriNav]);
 
   return (
-    <div className="min-h-screen py-4 md:py-6 px-3 md:px-4">
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-        <div className="flex-1 min-w-0">
+    <div className="min-h-screen px-3 py-4 md:px-4 md:py-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="min-w-0 flex-1">
           <Link
-            href={`/dashboard/courses/${courseId}/topic/${topicId}`}
-            className="inline-flex items-center gap-2 text-white/70 mb-4 md:mb-6 transition-colors duration-200 hover:text-white"
+            href={`/courses/${courseId}/topic/${topicId}`}
+            className="mb-4 inline-flex items-center gap-2 text-white/70 transition-colors duration-200 hover:text-white md:mb-6"
           >
             <ChevronLeft size={18} />
             <span className="text-sm">
@@ -51,7 +48,7 @@ export function UjiPemahamanContainer({
           </Link>
 
           {showSidebar && (
-            <div className="lg:hidden mb-6">
+            <div className="mb-6 lg:hidden">
               <CourseInfoSidebar
                 progress={courseInfoData.progress}
                 showPeople={false}
@@ -69,7 +66,7 @@ export function UjiPemahamanContainer({
         </div>
 
         {showSidebar && (
-          <div className="w-64 shrink-0 hidden lg:block">
+          <div className="hidden w-64 shrink-0 lg:block">
             <div className="sticky top-24">
               <CourseInfoSidebar
                 progress={courseInfoData.progress}
