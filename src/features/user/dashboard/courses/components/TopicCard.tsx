@@ -29,9 +29,7 @@ export function TopicCard({
   status,
   isExpanded: defaultExpanded = false,
 }: TopicCardProps) {
-  const [isExpanded, setIsExpanded] = useState(
-    status === "locked" ? false : defaultExpanded,
-  );
+  const [isExpanded, setIsExpanded] = useState(status === "locked" ? false : defaultExpanded);
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
 
@@ -49,7 +47,7 @@ export function TopicCard({
   const getStatusBadge = () => {
     if (isLocked) {
       return (
-        <span className="px-4 py-1.5 bg-neutral-400 text-white text-xs font-medium rounded-full flex items-center gap-1.5">
+        <span className="flex items-center gap-1.5 rounded-full bg-neutral-400 px-4 py-1.5 text-xs font-medium text-white">
           <Lock size={12} />
           Terkunci
         </span>
@@ -57,14 +55,14 @@ export function TopicCard({
     }
     if (status === "completed" || isAllCompleted) {
       return (
-        <span className="px-4 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-full">
+        <span className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white">
           Selesai
         </span>
       );
     }
     if (status === "in-progress") {
       return (
-        <span className="px-4 py-1.5 bg-primary-light text-white text-xs font-medium rounded-full">
+        <span className="bg-primary-light rounded-full px-4 py-1.5 text-xs font-medium text-white">
           Lanjutkan
         </span>
       );
@@ -85,47 +83,43 @@ export function TopicCard({
   };
 
   return (
-    <div
-      className={`rounded-xl overflow-hidden shadow-sm ${
-        isLocked ? "opacity-70" : ""
-      }`}
-    >
+    <div className={`overflow-hidden rounded-xl shadow-sm ${isLocked ? "opacity-70" : ""}`}>
       <div
-        className={`bg-white p-5 border-l-4 transition-colors duration-200 ${
+        className={`border-l-4 bg-white p-5 transition-colors duration-200 ${
           isLocked
-            ? "border-neutral-400 cursor-not-allowed"
+            ? "cursor-not-allowed border-neutral-400"
             : "border-primary-light cursor-pointer hover:bg-neutral-50"
         }`}
         onClick={handleCardClick}
       >
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             {isLocked ? (
-              <span className="text-lg font-semibold text-neutral-400 mb-1.5 block cursor-not-allowed">
+              <span className="mb-1.5 block cursor-not-allowed text-lg font-semibold text-neutral-400">
                 {title}
               </span>
             ) : (
               <Link
-                href={`/dashboard/courses/${courseId}/topic/${id}`}
+                href={`/courses/${courseId}/topic/${id}`}
                 onClick={handleTitleClick}
-                className="text-lg font-semibold text-primary-dark mb-1.5 hover:text-primary-light transition-colors duration-200 block"
+                className="text-primary-dark hover:text-primary-light mb-1.5 block text-lg font-semibold transition-colors duration-200"
               >
                 {title}
               </Link>
             )}
             <p
-              className={`text-sm leading-relaxed line-clamp-2 ${
+              className={`line-clamp-2 text-sm leading-relaxed ${
                 isLocked ? "text-neutral-400" : "text-neutral-500"
               }`}
             >
               {description}
             </p>
           </div>
-          <div className="flex items-center gap-2.5 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-2.5">
             {getStatusBadge()}
             {!isLocked && (
               <div
-                className={`w-8 h-8 rounded-full bg-primary-light text-white flex items-center justify-center transition-all duration-300 ${
+                className={`bg-primary-light flex h-8 w-8 items-center justify-center rounded-full text-white transition-all duration-300 ${
                   isExpanded ? "rotate-0" : "rotate-180"
                 }`}
               >
@@ -143,24 +137,17 @@ export function TopicCard({
             maxHeight: isExpanded ? `${contentHeight}px` : "0px",
           }}
         >
-          <div
-            ref={contentRef}
-            className="bg-white/10 backdrop-blur-sm border-t border-white/20"
-          >
+          <div ref={contentRef} className="border-t border-white/20 bg-white/10 backdrop-blur-sm">
             {materials.map((material, index) => (
               <Link
                 key={material.id}
-                href={`/dashboard/courses/${courseId}/topic/${id}/materi/${material.id}`}
-                className={`flex items-center justify-between px-5 py-3.5 transition-all duration-200 hover:bg-primary-light/20 ${
-                  index !== materials.length - 1
-                    ? "border-b border-white/10"
-                    : ""
+                href={`/courses/${courseId}/topic/${id}/materi/${material.id}`}
+                className={`hover:bg-primary-light/20 flex items-center justify-between px-5 py-3.5 transition-all duration-200 ${
+                  index !== materials.length - 1 ? "border-b border-white/10" : ""
                 }`}
               >
-                <span className="text-white text-sm">{material.title}</span>
-                {material.isCompleted && (
-                  <Check className="text-white" size={18} />
-                )}
+                <span className="text-sm text-white">{material.title}</span>
+                {material.isCompleted && <Check className="text-white" size={18} />}
               </Link>
             ))}
           </div>

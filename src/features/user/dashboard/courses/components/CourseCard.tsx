@@ -16,20 +16,8 @@ function CircularProgress({ progress }: { progress: number }) {
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 32 32"
-      className="transform -rotate-90"
-    >
-      <circle
-        cx="16"
-        cy="16"
-        r={radius}
-        fill="none"
-        stroke="#E5E5E5"
-        strokeWidth="4"
-      />
+    <svg width="32" height="32" viewBox="0 0 32 32" className="-rotate-90 transform">
+      <circle cx="16" cy="16" r={radius} fill="none" stroke="#E5E5E5" strokeWidth="4" />
       <circle
         cx="16"
         cy="16"
@@ -45,17 +33,11 @@ function CircularProgress({ progress }: { progress: number }) {
   );
 }
 
-export function CourseCard({
-  id,
-  title,
-  thumbnail,
-  studentCount,
-  progress,
-}: CourseCardProps) {
+export function CourseCard({ id, title, thumbnail, studentCount, progress }: CourseCardProps) {
   return (
-    <Link href={`/dashboard/courses/${id}`}>
-      <div className="bg-white rounded-2xl overflow-hidden hover:-translate-y-2 hover:shadow-lg hover:shadow-secondary transition-all duration-300 cursor-pointer p-4">
-        <div className="relative h-32 bg-secondary-light overflow-hidden rounded-xl">
+    <Link href={`/courses/${id}`}>
+      <div className="hover:shadow-secondary cursor-pointer overflow-hidden rounded-2xl bg-white p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-lg">
+        <div className="bg-secondary-light relative h-32 overflow-hidden rounded-xl">
           <Image
             src={thumbnail || "/images/dummycardimage.svg"}
             alt={title}
@@ -64,8 +46,8 @@ export function CourseCard({
           />
         </div>
 
-        <div className="pt-4 space-y-4">
-          <h3 className="font-bold text-xl text-neutral-900">{title}</h3>
+        <div className="space-y-4 pt-4">
+          <h3 className="text-xl font-bold text-neutral-900">{title}</h3>
 
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1.5 text-neutral-500">
@@ -73,13 +55,11 @@ export function CourseCard({
               <span>{studentCount} students</span>
             </div>
 
-            <div className="flex items-center gap-2 text-secondary-default font-medium">
+            <div className="text-secondary-default flex items-center gap-2 font-medium">
               <CircularProgress progress={progress} />
               <span>
                 <span className="font-bold">{progress}%</span>
-                <span className="text-neutral-500 font-normal ml-1">
-                  progress
-                </span>
+                <span className="ml-1 font-normal text-neutral-500">progress</span>
               </span>
             </div>
           </div>

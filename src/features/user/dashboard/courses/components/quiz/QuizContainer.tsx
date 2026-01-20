@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Button from "@/shared/components/ui/Button";
 import { Modal } from "@/shared/components/ui/Modal";
 import { QuizData, QuizState } from "../../types/cTypes";
 import { QuizStart } from "./QuizStart";
@@ -16,12 +15,7 @@ interface QuizContainerProps {
   onStatusChange?: (status: "start" | "in-progress" | "summary") => void;
 }
 
-export function QuizContainer({
-  quiz,
-  courseId,
-  topicId,
-  onStatusChange,
-}: QuizContainerProps) {
+export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizContainerProps) {
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [state, setState] = useState<QuizState>({
@@ -79,15 +73,13 @@ export function QuizContainer({
 
       setState((prev) => ({
         ...prev,
-        answers: prev.answers.map((a, i) =>
-          i === prev.currentQuestion ? selectedOption : a,
-        ),
+        answers: prev.answers.map((a, i) => (i === prev.currentQuestion ? selectedOption : a)),
         correctCount: isCorrect ? prev.correctCount + 1 : prev.correctCount,
         questionTimes: [...prev.questionTimes, questionTime],
       }));
       setShowFeedback(true);
     },
-    [questionStartTime, quiz.questions, state.currentQuestion],
+    [questionStartTime, quiz.questions, state.currentQuestion]
   );
 
   const handleNext = useCallback(() => {
@@ -122,31 +114,24 @@ export function QuizContainer({
   };
 
   const handleBack = () => {
-    router.push(`/dashboard/courses/${courseId}/topic/${topicId}`);
+    router.push(`/courses/${courseId}/topic/${topicId}`);
   };
 
   const handleContinue = () => {
-    router.push(`/dashboard/courses/${courseId}/topic/${topicId}`);
+    router.push(`/courses/${courseId}/topic/${topicId}`);
   };
 
   const averageTime =
     state.questionTimes.length > 0
-      ? state.questionTimes.reduce((a, b) => a + b, 0) /
-        state.questionTimes.length
+      ? state.questionTimes.reduce((a, b) => a + b, 0) / state.questionTimes.length
       : 0;
 
-  const expEarned = Math.round(
-    (state.correctCount / quiz.questions.length) * 500,
-  );
+  const expEarned = Math.round((state.correctCount / quiz.questions.length) * 500);
 
   return (
-    <div className="py-4 md:py-6 px-3 md:px-4">
+    <div className="px-3 py-4 md:px-4 md:py-6">
       {state.status === "start" && (
-        <QuizStart
-          quiz={quiz}
-          onStart={handleStart}
-          onContinue={handleContinue}
-        />
+        <QuizStart quiz={quiz} onStart={handleStart} onContinue={handleContinue} />
       )}
 
       {state.status === "in-progress" && (
@@ -181,20 +166,20 @@ export function QuizContainer({
         title="Mulai Quiz?"
         size="sm"
       >
-        <p className="text-neutral-600 mb-6">
-          Apakah kamu yakin ingin memulai quiz? Timer akan dimulai setelah kamu
-          menekan tombol mulai.
+        <p className="mb-6 text-neutral-600">
+          Apakah kamu yakin ingin memulai quiz? Timer akan dimulai setelah kamu menekan tombol
+          mulai.
         </p>
         <div className="flex gap-3">
           <button
             onClick={() => setShowConfirmModal(false)}
-            className="flex-1 py-2.5 border border-neutral-200 text-neutral-600 font-medium rounded-lg hover:bg-neutral-50 transition-colors"
+            className="flex-1 rounded-lg border border-neutral-200 py-2.5 font-medium text-neutral-600 transition-colors hover:bg-neutral-50"
           >
             Batal
           </button>
           <button
             onClick={handleConfirmStart}
-            className="flex-1 py-2.5 bg-primary-dark text-white font-medium rounded-lg hover:bg-primary-dark/90 transition-colors"
+            className="bg-primary-dark hover:bg-primary-dark/90 flex-1 rounded-lg py-2.5 font-medium text-white transition-colors"
           >
             Mulai Sekarang
           </button>

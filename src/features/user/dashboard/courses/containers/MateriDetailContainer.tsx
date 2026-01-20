@@ -18,11 +18,7 @@ interface MateriDetailContainerProps {
   materiId: string;
 }
 
-export function MateriDetailContainer({
-  courseId,
-  topicId,
-  materiId,
-}: MateriDetailContainerProps) {
+export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDetailContainerProps) {
   const { setMateriNav } = useCourseNavigation();
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
@@ -30,17 +26,17 @@ export function MateriDetailContainer({
     setMateriNav(
       { id: courseId, name: "Course Details" },
       { id: topicId, name: topicData.title },
-      { id: materiId, name: materiData.title },
+      { id: materiId, name: materiData.title }
     );
   }, [courseId, topicId, materiId, setMateriNav]);
 
   return (
-    <div className="min-h-screen py-4 md:py-6 px-3 md:px-4">
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-        <div className="flex-1 min-w-0">
+    <div className="min-h-screen px-3 py-4 md:px-4 md:py-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="min-w-0 flex-1">
           <Link
-            href={`/dashboard/courses/${courseId}/topic/${topicId}`}
-            className="inline-flex items-center gap-2 text-white/70 mb-4 md:mb-6 transition-colors duration-200 hover:text-white"
+            href={`/courses/${courseId}/topic/${topicId}`}
+            className="mb-4 inline-flex items-center gap-2 text-white/70 transition-colors duration-200 hover:text-white md:mb-6"
           >
             <ChevronLeft size={18} />
             <span className="text-sm">
@@ -48,7 +44,7 @@ export function MateriDetailContainer({
             </span>
           </Link>
 
-          <div className="lg:hidden mb-6">
+          <div className="mb-6 lg:hidden">
             <CourseInfoSidebar
               progress={courseInfoData.progress}
               showPeople={false}
@@ -57,20 +53,14 @@ export function MateriDetailContainer({
           </div>
 
           <div className="p-5">
-            <h1 className="text-xl md:text-2xl font-bold text-white mb-3">
-              {materiData.title}
-            </h1>
-            <p className="text-white/80 text-sm leading-relaxed">
-              {materiData.description}
-            </p>
+            <h1 className="mb-3 text-xl font-bold text-white md:text-2xl">{materiData.title}</h1>
+            <p className="text-sm leading-relaxed text-white/80">{materiData.description}</p>
           </div>
 
           <div className="p-5 md:p-6">
             {materiData.sections.map((section, index) => (
               <div key={index} className="mb-6">
-                <h2 className="text-lg font-bold text-white mb-4">
-                  {section.title}
-                </h2>
+                <h2 className="mb-4 text-lg font-bold text-white">{section.title}</h2>
                 <div
                   className="text-white/70"
                   dangerouslySetInnerHTML={{ __html: section.content }}
@@ -80,18 +70,16 @@ export function MateriDetailContainer({
           </div>
 
           {materiData.quiz && (
-            <div className="bg-white/10 backdrop-blur-sm p-5 md:p-6 rounded-xl">
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-sm font-medium text-white">
-                  {materiData.quiz.title}
-                </span>
-                <span className="text-xs text-red-500 bg-white rounded-full px-2 py-1 font-medium">
+            <div className="rounded-xl bg-white/10 p-5 backdrop-blur-sm md:p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <span className="text-sm font-medium text-white">{materiData.quiz.title}</span>
+                <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-red-500">
                   Required
                 </span>
               </div>
 
-              <div className="p-5 mb-6">
-                <div className="relative w-full aspect-3/2 rounded-lg overflow-hidden mb-4">
+              <div className="mb-6 p-5">
+                <div className="relative mb-4 aspect-3/2 w-full overflow-hidden rounded-lg">
                   <Image
                     src="/images/quiz-image.webp"
                     alt="Quiz illustration"
@@ -99,15 +87,13 @@ export function MateriDetailContainer({
                     className="object-cover"
                   />
                 </div>
-                <p className="text-white font-medium mb-4">
-                  {materiData.quiz.question}
-                </p>
+                <p className="mb-4 font-medium text-white">{materiData.quiz.question}</p>
 
                 <div className="space-y-3">
                   {materiData.quiz.options.map((option, index) => (
                     <label
                       key={index}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
                         selectedOption === index
                           ? "border-primary-light bg-primary-light/5"
                           : "border-neutral-200 hover:border-neutral-300"
@@ -118,7 +104,7 @@ export function MateriDetailContainer({
                         name="quiz-option"
                         checked={selectedOption === index}
                         onChange={() => setSelectedOption(index)}
-                        className="w-4 h-4 text-primary-light accent-primary-light"
+                        className="text-primary-light accent-primary-light h-4 w-4"
                       />
                       <span className="text-sm text-white">{option}</span>
                     </label>
@@ -126,7 +112,7 @@ export function MateriDetailContainer({
                 </div>
               </div>
 
-              <button className="w-full bg-primary text-white font-medium py-3 rounded-full hover:bg-primary-dark/90 transition-colors">
+              <button className="bg-primary hover:bg-primary-dark/90 w-full rounded-full py-3 font-medium text-white transition-colors">
                 Submit
               </button>
             </div>
@@ -135,15 +121,15 @@ export function MateriDetailContainer({
           {/* Continue Button */}
           <div className="mt-6">
             <Link
-              href={`/dashboard/courses/${courseId}/topic/${topicId}`}
-              className="block w-full bg-secondary text-white font-medium py-3 rounded-full text-center hover:bg-secondary-dark transition-colors"
+              href={`/courses/${courseId}/topic/${topicId}`}
+              className="bg-secondary hover:bg-secondary-dark block w-full rounded-full py-3 text-center font-medium text-white transition-colors"
             >
               Continue to the next lesson
             </Link>
           </div>
         </div>
 
-        <div className="w-64 shrink-0 hidden lg:block">
+        <div className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-24">
             <CourseInfoSidebar
               progress={courseInfoData.progress}
