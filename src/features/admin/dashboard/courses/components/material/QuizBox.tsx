@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDownIcon, Image } from "lucide-react";
+import { useState, useRef } from "react";
+import { ChevronDownIcon, Image, X } from "lucide-react";
 import { MaterialContentBox } from "./MaterialContentBox";
 import { ToggleSwitch } from "@/shared/components/ui";
 import {
@@ -21,11 +21,10 @@ export interface QuizData {
   points: number;
   options: QuizOption[];
   imageUrl?: string;
-  // Additional fields for other question types
-  correctAnswer?: boolean; // for true/false
-  expectedAnswer?: string; // for short answer
-  caseSensitive?: boolean; // for short answer
-  pairs?: MatchingPair[]; // for matching
+  correctAnswer?: boolean;
+  expectedAnswer?: string;
+  caseSensitive?: boolean;
+  pairs?: MatchingPair[];
 }
 
 interface QuizBoxProps {
@@ -51,6 +50,33 @@ export function QuizBox({
 }: QuizBoxProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Mohon pilih file gambar yang valid");
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Ukuran file maksimal 2MB");
+        return;
+      }
+      const imageUrl = URL.createObjectURL(file);
+      onChange(id, { ...data, imageUrl });
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (data.imageUrl) {
+      URL.revokeObjectURL(data.imageUrl);
+    }
+    onChange(id, { ...data, imageUrl: undefined });
+  };
 
   const questionTypes = [
     { value: "multiple_choice", label: "Multiple Choice" },
@@ -66,7 +92,6 @@ export function QuizBox({
   const handleTypeChange = (
     type: "multiple_choice" | "true_false" | "short_answer" | "matching",
   ) => {
-    // Initialize default values based on type
     let updatedData = { ...data, questionType: type };
 
     if (type === "true_false" && data.correctAnswer === undefined) {
@@ -119,7 +144,6 @@ export function QuizBox({
     onChange(id, { ...data, pairs });
   };
 
-  // Render the appropriate question component based on type
   const renderQuestionContent = () => {
     switch (data.questionType) {
       case "multiple_choice":
@@ -193,9 +217,7 @@ export function QuizBox({
       className="bg-gray-200"
     >
       <div className="space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
-          {/* Question Type Dropdown */}
           <div className="relative">
             <button
               type="button"
@@ -270,14 +292,48 @@ export function QuizBox({
                 placeholder="Masukkan pertanyaan di sini..."
                 className="flex-1 px-4 py-3 bg-neutral-light border border-neutral-gray/20 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 transition-all"
               />
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
               <button
                 type="button"
-                className="p-3 bg-neutral-light border border-neutral-gray/20 rounded-lg hover:border-primary/30 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+                className={`p-3 bg-neutral-light border rounded-lg hover:border-primary/30 transition-colors ${
+                  data.imageUrl
+                    ? "border-primary/50 bg-primary/5"
+                    : "border-neutral-gray/20"
+                }`}
                 title="Tambah gambar"
               >
-                <Image className="w-5 h-5 text-neutral-gray" />
+                <Image
+                  className={`w-5 h-5 ${data.imageUrl ? "text-primary" : "text-neutral-gray"}`}
+                />
               </button>
             </div>
+
+            {/* Image Preview */}
+            {data.imageUrl && (
+              <div className="relative inline-block">
+                <img
+                  src={data.imageUrl}
+                  alt="Gambar soal"
+                  className="max-w-full max-h-48 rounded-lg border border-neutral-gray/20 object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
+                  title="Hapus gambar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Render question-type specific content */}
             {renderQuestionContent()}
