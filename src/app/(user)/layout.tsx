@@ -6,26 +6,22 @@ import { Sidebar } from "@/features/user/dashboard/shared/components/Sidebar";
 import { Topbar } from "@/features/user/dashboard/shared/components/Topbar";
 import { CourseNavigationProvider } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
 
-export default function UserLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function UserLayout({ children }: { children: React.ReactNode }) {
   const userMenuItems = [
     {
       label: "Dashboard",
-      href: "/dashboard/home",
+      href: "/dashboard",
       icon: <LayoutDashboard size={20} />,
     },
     {
       label: "Courses",
-      href: "/dashboard/courses",
+      href: "/courses",
       icon: <BookOpen size={20} />,
       dynamicSubItems: true,
     },
     {
       label: "Team Identity",
-      href: "/dashboard/team",
+      href: "/team",
       icon: <Users size={20} />,
     },
   ];

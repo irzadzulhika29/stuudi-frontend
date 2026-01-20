@@ -15,20 +15,8 @@ export default function MateriDetailPage() {
   const isUjiPemahaman = UJI_PEMAHAMAN_IDS.includes(materiId);
 
   if (isUjiPemahaman) {
-    return (
-      <UjiPemahamanContainer
-        courseId={courseId}
-        topicId={topicId}
-        materiId={materiId}
-      />
-    );
+    return <UjiPemahamanContainer courseId={courseId} topicId={topicId} materiId={materiId} />;
   }
 
-  return (
-    <MateriDetailContainer
-      courseId={courseId}
-      topicId={topicId}
-      materiId={materiId}
-    />
-  );
+  return <MateriDetailContainer courseId={courseId} topicId={topicId} materiId={materiId} />;
 }
