@@ -27,17 +27,15 @@ const securityHeaders = [
   },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+    value: "camera=(self), microphone=(self), geolocation=(), browsing-topics=()",
   },
 ];
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
 
-  // Hide Next.js version in response headers
   poweredByHeader: false,
 
-  // Security headers
   async headers() {
     return [
       {

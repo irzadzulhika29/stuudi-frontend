@@ -1,53 +1,53 @@
 @import "tailwindcss";
 
 @theme {
-  --color-base: #F5F5F5;
-  
+  --color-base: #f5f5f5;
+
   --color-primary-dark: #180905;
-  --color-primary: #7A2E03;
-  --color-primary-light: #B95C2F;
-  
-  --color-secondary-dark: #B95C2F;
-  --color-secondary: #D77211;
-  --color-secondary-light: #EA7D17;
-  
-  --color-error: #F44336;
-  --color-warning: #FFC107;
-  --color-success: #4CAF50;
-  
+  --color-primary: #7a2e03;
+  --color-primary-light: #b95c2f;
+
+  --color-secondary-dark: #b95c2f;
+  --color-secondary: #d77211;
+  --color-secondary-light: #ea7d17;
+
+  --color-error: #f44336;
+  --color-warning: #ffc107;
+  --color-success: #4caf50;
+
   --color-neutral-white: #ffffff;
-  --color-neutral-light: #F5F5F5;
+  --color-neutral-light: #f5f5f5;
   --color-neutral-gray: #9ca3af;
   --color-neutral-dark: #1f2937;
-  
-  --color-gradient-1: #EA7D17;
-  --color-gradient-2: #D77211;
-  --color-gradient-3: #B95C2F;
-  --color-gradient-4: #7A2E03;
+
+  --color-gradient-1: #ea7d17;
+  --color-gradient-2: #d77211;
+  --color-gradient-3: #b95c2f;
+  --color-gradient-4: #7a2e03;
   --color-gradient-5: #180905;
-  
+
   --font-family-sans: "Plus Jakarta Sans", sans-serif;
 }
 
 :root {
   --font-sans: "Plus Jakarta Sans", sans-serif;
 
-  --base: #F5F5F5;
+  --base: #f5f5f5;
 
   --primary-dark: #180905;
-  --primary-default: #7A2E03;
-  --primary-light: #B95C2F;
+  --primary-default: #7a2e03;
+  --primary-light: #b95c2f;
 
-  --secondary-dark: #B95C2F;
-  --secondary-default: #D77211;
-  --secondary-light: #EA7D17;
+  --secondary-dark: #b95c2f;
+  --secondary-default: #d77211;
+  --secondary-light: #ea7d17;
 
-  --error: #F44336;
-  --warning: #FFC107;
-  --success: #4CAF50;
+  --error: #f44336;
+  --warning: #ffc107;
+  --success: #4caf50;
 
   --neutral-white: #ffffff;
-  --neutral-light: #F5F5F5;
+  --neutral-light: #f5f5f5;
   --neutral-gray: #9ca3af;
   --neutral-dark: #1f2937;
 
@@ -64,24 +64,16 @@
 
   --gradient-arteri: linear-gradient(
     180deg,
-    #EA7D17 18%,
-    #D77211 34%,
-    #B95C2F 54%,
-    #7A2E03 75%,
+    #ea7d17 18%,
+    #d77211 34%,
+    #b95c2f 54%,
+    #7a2e03 75%,
     #180905 100%
   );
 
-  --gradient-blue: linear-gradient(
-    135deg,
-    var(--primary-light),
-    var(--primary-default)
-  );
+  --gradient-blue: linear-gradient(135deg, var(--primary-light), var(--primary-default));
 
-  --gradient-blue-red: linear-gradient(
-    135deg,
-    var(--primary-default),
-    var(--secondary-default)
-  );
+  --gradient-blue-red: linear-gradient(135deg, var(--primary-default), var(--secondary-default));
 }
 
 html {
@@ -90,16 +82,16 @@ html {
 
 @layer components {
   .nav-link {
-    @apply text-neutral-dark font-medium transition-colors relative hover:text-primary;
+    @apply text-neutral-dark hover:text-primary relative font-medium transition-colors;
   }
 
   .nav-link-active {
-    @apply text-neutral-dark font-medium relative;
+    @apply text-neutral-dark relative font-medium;
   }
 
   .nav-link-active::after {
     content: "";
-    @apply absolute bottom-[-4px] left-0 w-full h-[2px] bg-neutral-dark;
+    @apply bg-neutral-dark absolute bottom-[-4px] left-0 h-[2px] w-full;
   }
 }
 /* Modal Animations */
@@ -129,4 +121,69 @@ html {
 
 .animate-scale-in {
   animation: scale-in 0.2s ease-out;
+}
+
+/* Custom Scrollbar - Primary/Secondary Theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-default) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--primary-default);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-default);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--secondary-light);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Light theme scrollbar for light backgrounds */
+.scrollbar-light {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.scrollbar-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
 }
