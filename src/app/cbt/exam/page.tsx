@@ -1,33 +1,60 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { ExamContainer } from "@/features/user/cbt/containers/ExamContainer";
 
 function ExamContent() {
   const searchParams = useSearchParams();
   const examCode = searchParams.get("code");
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Exam in Progress</h1>
-        <p className="mb-8 text-xl text-neutral-400">
-          Code: <span className="text-secondary">{examCode}</span>
-        </p>
-        <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-white/5 p-8">
-          <p className="mb-4">
-            Ini adalah halaman placeholder untuk ujian. Di sini nanti akan ada soal-soal, timer, dan
-            fitur ujian lainnya.
-          </p>
-          <div className="flex animate-pulse justify-center space-x-4">
-            <div className="bg-secondary h-2 w-2 rounded-full"></div>
-            <div className="bg-secondary h-2 w-2 rounded-full"></div>
-            <div className="bg-secondary h-2 w-2 rounded-full"></div>
-          </div>
-        </div>
+  useEffect(() => {
+    let mediaStream: MediaStream | null = null;
+
+    const initCamera = async () => {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 },
+          audio: false,
+        });
+        setStream(mediaStream);
+      } catch (err) {
+        console.error("Failed to get camera:", err);
+      }
+    };
+
+    initCamera();
+
+    return () => {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const requestFullscreen = async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        }
+      } catch (err) {
+        console.error("Fullscreen error:", err);
+      }
+    };
+    requestFullscreen();
+  }, []);
+
+  if (!examCode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-white">Kode ujian tidak valid</p>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <ExamContainer stream={stream} />;
 }
 
 export default function CBTExamPage() {

@@ -10,6 +10,7 @@ function CheckContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const examCode = searchParams.get("code");
+  const examName = "Ujian Tengah Semester - Matematika Dasar";
 
   const handleChecksComplete = () => {
     router.push(`/cbt/exam?code=${examCode}`);
@@ -44,16 +45,14 @@ function CheckContent() {
           </Link>
           <div className="h-6 w-px bg-white/20"></div>
           <div>
-            <span className="block text-xs text-neutral-400">Kode Ujian</span>
-            <span className="text-secondary-light font-mono font-bold tracking-wider">
-              {examCode}
-            </span>
+            <span className="block text-xs text-neutral-400">Nama Ujian</span>
+            <span className="font-semibold text-white">{examName}</span>
           </div>
         </div>
       </div>
 
       <div className="animate-fade-in-up relative z-0 mt-16 w-full">
-        <SystemCheckContainer onChecksComplete={handleChecksComplete} />
+        <SystemCheckContainer examName={examName} onChecksComplete={handleChecksComplete} />
       </div>
     </div>
   );

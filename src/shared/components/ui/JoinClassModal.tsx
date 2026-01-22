@@ -1,0 +1,100 @@
+"use client";
+
+import { useState } from "react";
+import { X, ChevronRight, Plus } from "lucide-react";
+
+interface JoinClassModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  showAddClass?: boolean;
+  onJoinClass?: (code: string) => void;
+  onAddClass?: () => void;
+}
+
+export function JoinClassModal({
+  isOpen,
+  onClose,
+  showAddClass = false,
+  onJoinClass,
+  onAddClass,
+}: JoinClassModalProps) {
+  const [enrollCode, setEnrollCode] = useState("");
+
+  if (!isOpen) return null;
+
+  const handleSubmit = () => {
+    if (enrollCode.trim() && onJoinClass) {
+      onJoinClass(enrollCode.trim());
+      setEnrollCode("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="animate-fade-in absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="animate-scale-in relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 p-1 text-neutral-400 transition-colors hover:text-neutral-600"
+        >
+          <X size={24} />
+        </button>
+
+        <h2 className="mb-2 text-2xl font-bold text-neutral-800">Join kelas?</h2>
+        <p className="mb-6 text-neutral-500">Silakan masukkan kode enroll</p>
+
+        <button
+          onClick={handleSubmit}
+          className="border-secondary text-secondary hover:bg-secondary/5 group flex w-full items-center justify-between rounded-full border-2 px-6 py-4 transition-colors"
+        >
+          <input
+            type="text"
+            value={enrollCode}
+            onChange={(e) => setEnrollCode(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Masukkan kode enroll"
+            className="text-secondary placeholder-secondary/70 flex-1 bg-transparent outline-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <ChevronRight
+            size={24}
+            className="text-secondary transition-transform group-hover:translate-x-1"
+          />
+        </button>
+
+        {showAddClass && (
+          <>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-neutral-200"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-white px-4 text-sm text-neutral-400">atau</span>
+              </div>
+            </div>
+
+            <button
+              onClick={onAddClass}
+              className="border-secondary text-secondary hover:bg-secondary/5 group flex w-full items-center justify-between rounded-full border-2 px-6 py-4 transition-colors"
+            >
+              <span className="font-medium">Tambah kelas</span>
+              <Plus
+                size={24}
+                className="text-secondary transition-transform group-hover:rotate-90"
+              />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

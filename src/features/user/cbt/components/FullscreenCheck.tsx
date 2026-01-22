@@ -1,6 +1,7 @@
 "use client";
 
 import { Maximize, CheckCircle2 } from "lucide-react";
+import Button from "@/shared/components/ui/Button";
 
 interface FullscreenCheckProps {
   isFullscreen: boolean;
@@ -10,77 +11,55 @@ interface FullscreenCheckProps {
 export function FullscreenCheck({ isFullscreen, onRequestFullscreen }: FullscreenCheckProps) {
   return (
     <div
-      className={`relative h-full overflow-hidden rounded-3xl p-1 transition-all duration-500 ${
+      className={`relative overflow-hidden rounded-xl p-px transition-all duration-300 ${
         isFullscreen
-          ? "bg-gradient-to-br from-green-500/50 to-emerald-600/50 shadow-[0_0_40px_rgba(16,185,129,0.2)]"
-          : "border border-white/10 bg-gradient-to-br from-white/10 to-white/5 hover:border-white/30"
+          ? "bg-linear-to-r from-green-500/50 to-emerald-600/50"
+          : "bg-linear-to-r from-white/10 to-white/5"
       } `}
     >
-      <div className="flex h-full flex-col items-center rounded-[22px] bg-neutral-900/90 p-6 text-center backdrop-blur-xl sm:p-8">
-        {/* Icon Header */}
-        <div className="relative mb-6">
-          <div
-            className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-500 ${
-              isFullscreen
-                ? "bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30"
-                : "bg-white/10 text-white/50"
-            } `}
-          >
-            {isFullscreen ? (
-              <CheckCircle2 size={32} className="text-white" />
-            ) : (
-              <Maximize size={32} />
-            )}
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h3 className="mb-2 text-2xl font-bold">Mode Layar Penuh</h3>
-          <p className="mx-auto max-w-xs text-sm leading-relaxed text-white/50">
-            Wajib diaktifkan untuk menjaga fokus dan mencegah perpindahan window aplikasi.
-          </p>
-        </div>
-
-        {/* Visual Decoration Area */}
+      <div className="flex items-center gap-4 rounded-[11px] bg-neutral-900/95 p-4 backdrop-blur-xl">
+        {/* Icon */}
         <div
-          className={`relative mb-8 flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl ${
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
             isFullscreen
-              ? "border border-green-500/20 bg-green-500/5"
-              : "border border-white/10 bg-white/5"
+              ? "bg-linear-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/20"
+              : "bg-white/10 text-white/50"
           } `}
         >
           {isFullscreen ? (
-            <div className="animate-fade-in flex flex-col items-center gap-3 text-green-400">
-              <div className="relative flex h-12 w-16 items-center justify-center rounded-lg border-2 border-green-500/50 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                <CheckCircle2 size={24} className="text-green-500" />
-              </div>
-              <span className="text-xs font-bold tracking-widest uppercase">Active Mode</span>
-            </div>
+            <CheckCircle2 size={24} className="text-white" />
           ) : (
-            <div className="flex flex-col items-center gap-3 text-white/20">
-              <div className="flex h-12 w-16 items-center justify-center rounded-lg border-2 border-dashed border-current">
-                <Maximize size={24} />
-              </div>
-              <span className="text-xs font-bold tracking-widest uppercase">Inactive</span>
-            </div>
+            <Maximize size={24} />
           )}
         </div>
 
-        {/* Action Button */}
-        <div className="mt-auto w-full">
+        {/* Text */}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-white">Mode Layar Penuh</h3>
+          <p className="text-xs text-white/50">Wajib aktif untuk menjaga fokus ujian</p>
+        </div>
+
+        {/* Action */}
+        <div className="shrink-0">
           {!isFullscreen ? (
-            <button
+            <Button
+              variant="primary"
+              size="xs"
               onClick={onRequestFullscreen}
-              className={`from-primary to-primary-light hover:shadow-primary/30 flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r px-6 py-4 font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
+              icon={<Maximize size={16} />}
+              iconPosition="left"
             >
-              <Maximize size={20} />
-              <span>Aktifkan Fullscreen</span>
-            </button>
+              Aktifkan
+            </Button>
           ) : (
-            <div className="flex w-full items-center justify-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 px-6 py-4 font-bold text-green-400">
-              <CheckCircle2 size={20} />
-              <span>Sudah Aktif</span>
-            </div>
+            <Button
+              variant="success"
+              size="xs"
+              icon={<CheckCircle2 size={16} />}
+              iconPosition="left"
+            >
+              Aktif
+            </Button>
           )}
         </div>
       </div>
