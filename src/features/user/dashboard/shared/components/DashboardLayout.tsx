@@ -17,7 +17,7 @@ function DashboardContent({ children, sidebar, topbar }: DashboardLayoutProps) {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="min-h-screen relative">
+    <div className="relative min-h-screen">
       <div className="fixed inset-0 z-0">
         <Image
           src="/images/bgGlobal.webp"
@@ -29,30 +29,22 @@ function DashboardContent({ children, sidebar, topbar }: DashboardLayoutProps) {
         <div className="absolute inset-0 bg-black/5" />
       </div>
 
-      <div className="relative z-10">{sidebar}</div>
+      <div className="relative z-50">{sidebar}</div>
 
       <div className="relative z-40">{topbar}</div>
 
       <main
-        className={`
-          relative z-10 pt-16 min-h-screen overflow-x-hidden
-          transition-all duration-300
-          ${isCollapsed ? "ml-20" : "ml-56"}
-        `}
+        className={`relative z-10 min-h-screen overflow-x-hidden pt-16 transition-all duration-300 ${isCollapsed ? "ml-20" : "ml-56"} `}
       >
         <div className="flex-1 p-8">
-          <div className="max-w-7xl mx-auto w-full h-full">{children}</div>
+          <div className="mx-auto h-full w-full max-w-7xl">{children}</div>
         </div>
       </main>
     </div>
   );
 }
 
-export default function DashboardLayout({
-  children,
-  sidebar,
-  topbar,
-}: DashboardLayoutProps) {
+export default function DashboardLayout({ children, sidebar, topbar }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <DashboardContent sidebar={sidebar} topbar={topbar}>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Camera, CheckCircle2, Loader2, Video } from "lucide-react";
+import Button from "@/shared/components/ui/Button";
 
 interface CameraCheckProps {
   isCameraActive: boolean;
@@ -31,43 +32,19 @@ export function CameraCheck({
 
   return (
     <div
-      className={`relative h-full overflow-hidden rounded-3xl p-1 transition-all duration-500 ${
+      className={`relative overflow-hidden rounded-xl p-px transition-all duration-300 ${
         isCameraActive
-          ? "bg-gradient-to-br from-green-500/50 to-emerald-600/50 shadow-[0_0_40px_rgba(16,185,129,0.2)]"
-          : "border border-white/10 bg-gradient-to-br from-white/10 to-white/5 hover:border-white/30"
+          ? "bg-linear-to-r from-green-500/50 to-emerald-600/50"
+          : "bg-linear-to-r from-white/10 to-white/5"
       } `}
     >
-      <div className="flex h-full flex-col items-center rounded-[22px] bg-neutral-900/90 p-6 text-center backdrop-blur-xl sm:p-8">
-        {/* Icon Header */}
-        <div className="relative mb-6">
-          <div
-            className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-500 ${
-              isCameraActive
-                ? "bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30"
-                : "bg-white/10 text-white/50"
-            } `}
-          >
-            {isCameraActive ? (
-              <CheckCircle2 size={32} className="text-white" />
-            ) : (
-              <Video size={32} />
-            )}
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h3 className="mb-2 text-2xl font-bold">Akses Kamera</h3>
-          <p className="mx-auto max-w-xs text-sm leading-relaxed text-white/50">
-            Diperlukan untuk verifikasi identitas dan pengawasan real-time.
-          </p>
-        </div>
-
-        {/* Video Preview Area */}
+      <div className="flex items-center gap-4 rounded-[11px] bg-neutral-900/95 p-4 backdrop-blur-xl">
+        {/* Video Preview / Icon */}
         <div
-          className={`relative mb-8 aspect-video w-full overflow-hidden rounded-xl transition-all duration-500 ${
+          className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-lg transition-all duration-300 ${
             isCameraActive
-              ? "shadow-2xl ring-2 ring-green-500/50"
-              : "border-2 border-dashed border-white/10 bg-black/40"
+              ? "ring-2 ring-green-500/50"
+              : "border border-dashed border-white/20 bg-white/5"
           } `}
         >
           {isCameraActive ? (
@@ -79,46 +56,49 @@ export function CameraCheck({
                 muted
                 className="h-full w-full scale-x-[-1] transform object-cover"
               />
-              <div className="absolute top-3 right-3 flex animate-pulse items-center gap-1.5 rounded-full bg-red-600/80 px-3 py-1 text-[10px] font-bold tracking-wider text-white uppercase shadow-lg backdrop-blur-md">
-                <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+              <div className="absolute top-1.5 right-1.5 flex animate-pulse items-center gap-1 rounded-full bg-red-600/90 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-white uppercase">
+                <span className="h-1 w-1 rounded-full bg-white"></span>
                 REC
               </div>
             </>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/20">
-              <Camera size={48} className="opacity-50" />
-              <span className="uppercse text-sm font-medium tracking-wide">
-                Preview Tidak Tersedia
-              </span>
+            <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-white/30">
+              <Camera size={24} />
+              <span className="text-[10px]">Preview</span>
             </div>
           )}
         </div>
 
-        {/* Action Button */}
-        <div className="mt-auto w-full">
+        {/* Text */}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-white">Akses Kamera</h3>
+          <p className="text-xs text-white/50">Untuk verifikasi identitas dan pengawasan</p>
+        </div>
+
+        {/* Action */}
+        <div className="shrink-0">
           {!isCameraActive ? (
-            <button
+            <Button
+              variant="secondary"
+              size="xs"
               onClick={handleCreateRequest}
               disabled={isLoading}
-              className={`from-secondary to-secondary-light hover:shadow-secondary/30 flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r px-6 py-4 font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100`}
+              icon={
+                isLoading ? <Loader2 className="animate-spin" size={16} /> : <Video size={16} />
+              }
+              iconPosition="left"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  <span>Menghubungkan...</span>
-                </>
-              ) : (
-                <>
-                  <Camera size={20} />
-                  <span>Izinkan Kamera</span>
-                </>
-              )}
-            </button>
+              {isLoading ? "Loading..." : "Izinkan"}
+            </Button>
           ) : (
-            <div className="flex w-full items-center justify-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 px-6 py-4 font-bold text-green-400">
-              <CheckCircle2 size={20} />
-              <span>Akses Diberikan</span>
-            </div>
+            <Button
+              variant="success"
+              size="xs"
+              icon={<CheckCircle2 size={16} />}
+              iconPosition="left"
+            >
+              Aktif
+            </Button>
           )}
         </div>
       </div>

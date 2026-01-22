@@ -7,7 +7,7 @@ export default function UserDashboardPage() {
   const countdown = { months: 0, weeks: 0, days: 0 };
 
   return (
-    <div className="relative flex min-h-[calc(100vh-8rem)] flex-col items-center justify-start overflow-x-hidden pt-4">
+    <div className="relative flex min-h-[calc(100vh-8rem)] flex-col items-center justify-start pt-4">
       <div className="relative z-10 flex w-full flex-col items-center text-center">
         <div className="mb-6 ml-4 w-full px-2 text-left md:px-4">
           <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
@@ -16,7 +16,7 @@ export default function UserDashboardPage() {
           <p className="text-lg text-white/60">Mau belajar apa hari ini?</p>
         </div>
 
-        <div className="mb-8 flex flex-col items-center">
+        <div className="mb-8 flex w-full flex-col items-center">
           <div className="relative mb-4 h-32 w-64">
             <Image
               src="/images/logo/ARTERI.webp"
@@ -39,22 +39,26 @@ export default function UserDashboardPage() {
 
         <ExamCodeInput />
 
-        <TeamTable />
+        <div className="relative z-10 w-full">
+          <TeamTable />
+        </div>
 
-        <div className="absolute -right-10 bottom-0 z-20 hidden h-80 w-80 lg:block">
+        <div className="pointer-events-none absolute bottom-16 -left-16 z-0 hidden h-90 w-90 lg:block">
           <Image
             src="/images/mascot/chiby.webp"
             alt="Mascot Left"
-            fill
+            width={320}
+            height={320}
             className="object-contain object-bottom"
           />
         </div>
 
-        <div className="absolute bottom-0 -left-10 z-20 hidden h-80 w-80 lg:block">
+        <div className="pointer-events-none absolute -right-16 bottom-16 z-0 hidden h-90 w-90 lg:block">
           <Image
             src="/images/mascot/chiby.webp"
             alt="Mascot Right"
-            fill
+            width={320}
+            height={320}
             className="scale-x-[-1] object-contain object-bottom"
           />
         </div>

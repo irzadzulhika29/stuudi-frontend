@@ -24,18 +24,12 @@ export default function LoginForm() {
       />
 
       <div className="flex justify-end">
-        <Link
-          href="/forgot-password"
-          className="text-sm text-secondary hover:underline"
-        >
+        <Link href="/forgot-password" className="text-secondary text-sm hover:underline">
           Lupa Password?
         </Link>
       </div>
 
-      <Button
-        type="submit"
-        className="w-full !rounded-full py-3 shadow-lg shadow-secondary/30"
-      >
+      <Button type="submit" variant="primary" className="w-full">
         Masuk
       </Button>
     </form>

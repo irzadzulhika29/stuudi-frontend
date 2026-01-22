@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import Button from "@/shared/components/ui/Button";
+import { QuestionCard } from "@/features/user/cbt/components/QuestionCard";
 import { useCourseNavigation } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
 import { CourseInfoSidebar } from "@/features/user/dashboard/courses/components/CourseInfoSidebar";
 import {
@@ -70,7 +71,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
           </div>
 
           {materiData.quiz && (
-            <div className="rounded-xl bg-white/10 p-5 backdrop-blur-sm md:p-6">
+            <div className="rounded-xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm md:p-6">
               <div className="mb-6 flex items-center justify-between">
                 <span className="text-sm font-medium text-white">{materiData.quiz.title}</span>
                 <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-red-500">
@@ -78,54 +79,32 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
                 </span>
               </div>
 
-              <div className="mb-6 p-5">
-                <div className="relative mb-4 aspect-3/2 w-full overflow-hidden rounded-lg">
-                  <Image
-                    src="/images/quiz-image.webp"
-                    alt="Quiz illustration"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <p className="mb-4 font-medium text-white">{materiData.quiz.question}</p>
+              <QuestionCard
+                question={materiData.quiz}
+                selectedAnswer={
+                  selectedOption !== null ? materiData.quiz.options[selectedOption].label : null
+                }
+                onSelectAnswer={(answer) => {
+                  const idx = materiData.quiz!.options.findIndex((opt) => opt.label === answer);
+                  if (idx !== -1) setSelectedOption(idx);
+                }}
+              />
 
-                <div className="space-y-3">
-                  {materiData.quiz.options.map((option, index) => (
-                    <label
-                      key={index}
-                      className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
-                        selectedOption === index
-                          ? "border-primary-light bg-primary-light/5"
-                          : "border-neutral-200 hover:border-neutral-300"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="quiz-option"
-                        checked={selectedOption === index}
-                        onChange={() => setSelectedOption(index)}
-                        className="text-primary-light accent-primary-light h-4 w-4"
-                      />
-                      <span className="text-sm text-white">{option}</span>
-                    </label>
-                  ))}
-                </div>
+              <div className="mt-6">
+                <Button className="w-full">Submit</Button>
               </div>
-
-              <button className="bg-primary hover:bg-primary-dark/90 w-full rounded-full py-3 font-medium text-white transition-colors">
-                Submit
-              </button>
             </div>
           )}
 
           {/* Continue Button */}
           <div className="mt-6">
-            <Link
+            <Button
               href={`/courses/${courseId}/topic/${topicId}`}
-              className="bg-secondary hover:bg-secondary-dark block w-full rounded-full py-3 text-center font-medium text-white transition-colors"
+              variant="secondary"
+              className="w-full"
             >
               Continue to the next lesson
-            </Link>
+            </Button>
           </div>
         </div>
 
