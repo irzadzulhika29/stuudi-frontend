@@ -29,22 +29,27 @@ export const CoursePeople = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const remainingParticipants = totalParticipants - participants.length;
 
-  const canManageParticipants = onAddParticipant && onRemoveParticipant;
+  // Default handlers jika tidak diberikan
+  const handleAddParticipant = onAddParticipant || ((student: AvailableStudent) => {
+    console.log("Add participant:", student);
+  });
+
+  const handleRemoveParticipant = onRemoveParticipant || ((participantId: string) => {
+    console.log("Remove participant:", participantId);
+  });
 
   return (
     <section>
       <div className="bg-white rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-primary-dark text-sm">Peoples</h3>
-          {canManageParticipants && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="p-1.5 text-neutral-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-              title="Manage participants"
-            >
-              <Settings size={16} />
-            </button>
-          )}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="p-1.5 text-neutral-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+            title="Manage participants"
+          >
+            <Settings size={16} />
+          </button>
         </div>
 
         <div className="mb-3">
@@ -85,16 +90,14 @@ export const CoursePeople = ({
         </div>
       </div>
 
-      {canManageParticipants && (
-        <ManageParticipantsModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          participants={participants}
-          availableStudents={availableStudents}
-          onAddParticipant={onAddParticipant}
-          onRemoveParticipant={onRemoveParticipant}
-        />
-      )}
+      <ManageParticipantsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        participants={participants}
+        availableStudents={availableStudents}
+        onAddParticipant={handleAddParticipant}
+        onRemoveParticipant={handleRemoveParticipant}
+      />
     </section>
   );
 };
