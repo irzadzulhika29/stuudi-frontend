@@ -3,10 +3,12 @@
 import { Search, Plus } from "lucide-react";
 import { CourseCard } from "@/features/user/dashboard/courses/components/CourseCard";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { courses } from "@/features/user/dashboard/courses/data/dummyData";
 
 export function CoursesContainer() {
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
   return (
     <div className="min-h-screen py-6 px-4 overflow-x-hidden">
@@ -30,7 +32,10 @@ export function CoursesContainer() {
           />
         </div>
 
-        <button className="bg-secondary-light hover:bg-secondary-default text-white p-3 rounded-full transition-colors shadow-lg">
+        <button
+          onClick={() => router.push("/dashboard-admin/courses/create")}
+          className="bg-secondary-light hover:bg-secondary-default text-white p-3 rounded-full transition-colors shadow-lg"
+        >
           <Plus size={24} />
         </button>
       </div>

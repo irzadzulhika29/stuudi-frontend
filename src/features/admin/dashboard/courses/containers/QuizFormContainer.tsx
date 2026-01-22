@@ -45,6 +45,7 @@ export function QuizFormContainer({
     randomizeQuestions: false,
     showAllQuestions: false,
     displayedQuestionsCount: 10,
+    protector: false,
   });
 
   const generateId = () =>

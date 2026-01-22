@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { CourseInfoSidebarProps, Note } from "../types/cTypes";
 import { CoursePeople } from "./smallcomponents/CoursePeople";
-import { CourseProgress } from "./smallcomponents/CourseProgress";
 
 export function CourseInfoSidebar({
   progress,
@@ -20,7 +19,6 @@ export function CourseInfoSidebar({
 
   return (
     <div className="space-y-3">
-      <CourseProgress progress={progress} />
 
       {showPeople && teachers.length > 0 && (
         <CoursePeople

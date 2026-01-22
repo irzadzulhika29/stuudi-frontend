@@ -10,7 +10,6 @@ import { cheatingReportData } from "@/features/admin/dashboard/home/data/dummyDa
 const columns: TableColumn[] = [
   { key: "rank", header: "Rank" },
   { key: "team", header: "Team" },
-  { key: "score", header: "Score" },
   { key: "school", header: "School" },
   {
     key: "detail",

@@ -54,7 +54,7 @@ export function CourseDetailContainer({
               {courseData.title}
             </h1>
             <Link href={`/dashboard-admin/courses/${courseId}/manage/${courseId}`}>
-              <Button className="cursor-pointer" size="md" variant="outline">
+              <Button className="cursor-pointer !bg-white !text-primary hover:!border-none !border-none hover:!bg-neutral-light" size="md" variant="outline">
                 Manage Course
               </Button>
             </Link>

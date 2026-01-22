@@ -1,6 +1,6 @@
 import { Edit2, ChevronUp, ChevronDown } from "lucide-react";
 
-export interface MaterialCardProps {
+export interface TopicCardProps {
   id: string;
   title: string;
   isCompleted: boolean;
@@ -12,7 +12,7 @@ export interface MaterialCardProps {
   onEdit?: () => void;
 }
 
-export function MaterialCard({
+export function TopicCard({
   id,
   title,
   isCompleted,
@@ -22,7 +22,7 @@ export function MaterialCard({
   onMoveUp,
   onMoveDown,
   onEdit,
-}: MaterialCardProps) {
+}: TopicCardProps) {
   const isFirst = index === 0;
   const isLast = index === totalItems - 1;
 
