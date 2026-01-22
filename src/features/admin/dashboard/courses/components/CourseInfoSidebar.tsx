@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CourseInfoSidebarProps, Note } from "../types/cTypes";
 import { CoursePeople } from "./smallcomponents/CoursePeople";
+import { CourseEnrollCode } from "./smallcomponents/CourseEnrollCode";
 
 export function CourseInfoSidebar({
   progress,
@@ -13,12 +14,14 @@ export function CourseInfoSidebar({
   notes: initialNotes = [],
   showPeople = true,
   showLastAccessed = true,
+  enrollCode,
 }: CourseInfoSidebarProps) {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
 
 
   return (
     <div className="space-y-3">
+      {enrollCode && <CourseEnrollCode enrollCode={enrollCode} />}
 
       {showPeople && teachers.length > 0 && (
         <CoursePeople

@@ -4,6 +4,7 @@ export interface Teacher {
 }
 
 export interface Participant {
+    id: string;
     name: string;
     avatar?: string;
 }
@@ -16,6 +17,7 @@ export interface CourseInfoSidebarProps {
     notes?: Note[];
     showPeople?: boolean;
     showLastAccessed?: boolean;
+    enrollCode?: string;
 }
 
 export interface Note {
