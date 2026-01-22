@@ -32,7 +32,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  reactCompiler: true,
+  output: "standalone",
 
   poweredByHeader: false,
 

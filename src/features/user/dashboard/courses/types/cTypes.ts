@@ -4,6 +4,7 @@ export interface Teacher {
 }
 
 export interface Participant {
+    id: string;
     name: string;
     avatar?: string;
 }

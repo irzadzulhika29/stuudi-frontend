@@ -14,20 +14,32 @@ interface Topic {
 interface ManageTopicListProps {
   courseId: string;
   topics: Topic[];
+  onAddNewTopic?: () => void;
 }
 
-export function ManageTopicList({ courseId, topics }: ManageTopicListProps) {
+export function ManageTopicList({ courseId, topics, onAddNewTopic }: ManageTopicListProps) {
   return (
     <div className="space-y-6">
       <div className="flex gap-4 mb-8">
-        <Link
-          className="flex-1"
-          href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/material/new`}
-        >
-          <Button className="w-full hover:text-gray-800 hover:bg-white" variant="outline" size="md">
+        {onAddNewTopic ? (
+          <Button
+            className="flex-1 hover:text-gray-800 hover:bg-white"
+            variant="outline"
+            size="md"
+            onClick={onAddNewTopic}
+          >
             <Plus className="mr-2" size={20} /> Add New Topic
           </Button>
-        </Link>
+        ) : (
+          <Link
+            className="flex-1"
+            href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/material/new`}
+          >
+            <Button className="w-full hover:text-gray-800 hover:bg-white" variant="outline" size="md">
+              <Plus className="mr-2" size={20} /> Add New Topic
+            </Button>
+          </Link>
+        )}
         <Link
         className="flex-1"
           href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/quiz/new`}

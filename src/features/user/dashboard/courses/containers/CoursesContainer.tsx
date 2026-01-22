@@ -3,6 +3,7 @@
 import { Search, Plus } from "lucide-react";
 import { CourseCard } from "@/features/user/dashboard/courses/components/CourseCard";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { courses } from "@/features/user/dashboard/courses/data/dummyData";
 import { JoinClassModal } from "@/shared/components/ui/JoinClassModal";
 

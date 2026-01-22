@@ -1,4 +1,4 @@
-﻿import { AdminStatsCard } from "@/features/admin/dashboard/home/components/AdminStatsCard";
+import { AdminStatsCard } from "@/features/admin/dashboard/home/components/AdminStatsCard";
 
 const statsCards = [
   {
@@ -6,6 +6,7 @@ const statsCards = [
     value: "216",
     footer: "+50% this week",
     footerClassName: "text-emerald-500",
+    href: "/dashboard-admin/participant",
   },
   {
     title: "Disqualified Participants",

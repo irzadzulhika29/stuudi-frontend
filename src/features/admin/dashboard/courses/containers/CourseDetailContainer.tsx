@@ -54,7 +54,7 @@ export function CourseDetailContainer({
               {courseData.title}
             </h1>
             <Link href={`/dashboard-admin/courses/${courseId}/manage/${courseId}`}>
-              <Button className="cursor-pointer" size="md" variant="outline">
+              <Button className="cursor-pointer !bg-white !text-primary hover:!border-none !border-none hover:!bg-neutral-light" size="md" variant="outline">
                 Manage Course
               </Button>
             </Link>
@@ -64,7 +64,7 @@ export function CourseDetailContainer({
           </p>
 
           <div className="lg:hidden mb-6">
-            <CourseInfoSidebar {...courseInfoData} />
+            <CourseInfoSidebar {...courseInfoData} enrollCode="STD-2026-XYZ" />
           </div>
 
           <div className="space-y-3">
@@ -85,7 +85,7 @@ export function CourseDetailContainer({
 
         <div className="w-64 shrink-0 hidden lg:block">
           <div className="sticky top-24">
-            <CourseInfoSidebar {...courseInfoData} />
+            <CourseInfoSidebar {...courseInfoData} enrollCode="STD-2026-XYZ" />
           </div>
         </div>
       </div>

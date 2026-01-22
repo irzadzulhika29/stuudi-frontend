@@ -93,14 +93,18 @@ export const courseData = {
 };
 
 export const courseInfoData = {
-  progress: {
-    current: 200,
-    total: 2500,
-  },
-  teachers: [{ name: "Dian Pratiwi" }, { name: "Dian Pratiwi" }],
-  participants: [{ name: "Dian Pratiwi" }, { name: "Dian Pratiwi" }, { name: "Dian Pratiwi" }],
-  totalParticipants: 103,
-  lastAccessed: "Sunday, 28 Dec 2025",
+    progress: {
+        current: 200,
+        total: 2500,
+    },
+    teachers: [{ name: "Dian Pratiwi" }, { name: "Budi Santoso" }],
+    participants: [
+        { id: "p1", name: "Andi Wijaya" },
+        { id: "p2", name: "Siti Rahayu" },
+        { id: "p3", name: "Rizki Pratama" },
+    ],
+    totalParticipants: 103,
+    lastAccessed: "Sunday, 28 Dec 2025",
 };
 
 export const topicData = {

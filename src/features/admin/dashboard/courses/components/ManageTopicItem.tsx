@@ -11,7 +11,7 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/shared/components/ui";
 import Link from "next/link";
-import { MaterialCard } from "./smallcomponents/MaterialCard";
+import { TopicCard } from "./smallcomponents/TopicCard";
 
 export interface Material {
   id: string;
@@ -105,13 +105,7 @@ export function ManageTopicItem({
             <button className="text-neutral-300 hover:text-red-500 transition-colors p-2">
               <Trash2 size={20} />
             </button>
-            <Link
-              href={`/dashboard-admin/courses/${courseId}/manage/${id}/material/${id}`}
-            >
-              <Button variant="outline" size="sm" className="!text-primary !border-primary hover:!bg-primary hover:!text-white">
-                Edit
-              </Button>
-            </Link>
+           
           </div>
         </div>
       </div>
@@ -142,7 +136,7 @@ export function ManageTopicItem({
 
           <div className="space-y-2 bg-neutral-100/50 rounded-xl p-2">
             {orderedMaterials.map((material, index) => (
-              <MaterialCard
+              <TopicCard
                 key={material.id}
                 id={material.id}
                 title={material.title}
