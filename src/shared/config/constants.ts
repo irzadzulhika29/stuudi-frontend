@@ -3,7 +3,7 @@ export const APP_NAME = "Arteri";
 export const ROUTES = {
   HOME: "/",
   LOGIN: "/login",
-  REGISTER: "/register",
+
   PRODUK: "/produk",
   TENTANG_KAMI: "/tentang-kami",
   FAQ: "/faq",
@@ -14,28 +14,32 @@ export const ROUTES = {
   TEAM: "/team",
 
   ADMIN_DASHBOARD: "/admin/dashboard",
+  ADMIN_COURSES: "/admin/courses",
+  ADMIN_TEAM: "/admin/team",
 } as const;
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: "/auth/login",
-    REGISTER: "/auth/register-elearning",
-    SEND_OTP: "/auth/register-elearning/otp",
-    VERIFY_OTP: "/auth/register-elearning/verify-otp",
-    COMPLETE_REGISTRATION: "/auth/register-elearning/complete",
-    LOGOUT: "/auth/logout",
+    LOGIN: "/auth/login-elearning",
+
     ME: "/auth/me",
   },
   COURSES: {
+    ALL: (page: number, per_page: number, search: string) =>
+      `/courses/browse?page=${page}&per_page=${per_page}&search=${search}`,
+    MY: "student/courses",
     LIST: "/courses",
-    DETAIL: (id: string) => `/courses/${id}`,
+    DETAIL: (id: string) => `student/courses/${id}`,
+    Topic: (id: string) => `student/courses/${id}/topics`,
+    ContentDetail: (id: string) => `student/content/${id}`,
   },
   TEAM: {
-    INFO: "/team",
+    INFO: "/elearning/team-details",
   },
 } as const;
 
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: "access_token",
   REFRESH_TOKEN: "refresh_token",
+  USER: "user_data",
 } as const;

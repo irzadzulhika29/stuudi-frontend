@@ -1,42 +1,34 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/reset-password",
-    "/",
-];
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password", "/"];
 
 const AUTH_ROUTES = ["/login", "/register"];
 
 export function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl;
 
-    const token = request.cookies.get("access_token")?.value;
+  const token = request.cookies.get("access_token")?.value;
 
-    const isPublicRoute = PUBLIC_ROUTES.some(
-        (route) => pathname === route || pathname.startsWith("/api/")
-    );
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith("/api/")
+  );
 
-    const isAuthRoute = AUTH_ROUTES.some((route) => pathname === route);
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname === route);
 
-    // if (!token && !isPublicRoute) {
-    //     const loginUrl = new URL("/login", request.url);
-    //     loginUrl.searchParams.set("redirect", pathname);
-    //     return NextResponse.redirect(loginUrl);
-    // }
+  if (!token && !isPublicRoute) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
-    if (token && isAuthRoute) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+  if (token && isAuthRoute) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
-    return NextResponse.next();
+  return NextResponse.next();
 }
 
 export const config = {
-    matcher: [
-        "/((?!_next/static|_next/image|favicon.ico|images|fonts|api).*)",
-    ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|images|fonts|api).*)"],
 };
