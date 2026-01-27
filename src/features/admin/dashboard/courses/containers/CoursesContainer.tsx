@@ -1,12 +1,13 @@
 "use client";
 
 import { Search, Plus } from "lucide-react";
-import { CourseCard } from "@/features/admin/dashboard/courses/components/CourseCard";
+import { CourseCard } from "@/shared/components/courses";
 import { DashboardHeader } from "@/features/admin/dashboard/shared/components/DashboardHeader";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTeachingCourses } from "@/features/admin/dashboard/courses/hooks/useTeachingCourses";
 import { JoinClassModal } from "@/shared/components/ui/JoinClassModal";
+import { CourseListSkeleton } from "@/features/user/dashboard/courses/components/CourseListSkeleton";
 
 export function CoursesContainer() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,13 +21,13 @@ export function CoursesContainer() {
   console.log("isError:", isError);
 
   const filteredCourses = useMemo(() => {
-    if (!data?.courses) return [];
-    if (!searchQuery.trim()) return data.courses;
+    const courses = data?.courses ?? [];
+    if (!searchQuery.trim()) return courses;
 
-    return data.courses.filter((course) =>
+    return courses.filter((course) =>
       course.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [data?.courses, searchQuery]);
+  }, [data, searchQuery]);
 
   const handleJoinClass = (code: string) => {
     console.log("Admin joining class with code:", code);
@@ -66,11 +67,7 @@ export function CoursesContainer() {
           </button>
         </div>
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-          </div>
-        )}
+        {isLoading && <CourseListSkeleton count={6} />}
 
         {isError && (
           <div className="rounded-xl bg-red-500/20 p-4 text-center text-white">
@@ -79,7 +76,7 @@ export function CoursesContainer() {
         )}
 
         {!isLoading && !isError && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
                 <CourseCard
@@ -89,6 +86,7 @@ export function CoursesContainer() {
                   thumbnail={course.image_url}
                   studentCount={course.student_count}
                   progress={0}
+                  basePath="/dashboard-admin/courses"
                 />
               ))
             ) : (

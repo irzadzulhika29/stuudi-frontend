@@ -1,13 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import {
-  Plus,
-  Type,
-  FileQuestion,
-  Image as ImageIcon,
-  Trash2,
-} from "lucide-react";
+import { Type, FileQuestion, Image as ImageIcon } from "lucide-react";
 
 // Types
 export type ContentType = "text" | "media" | "quiz";
@@ -31,6 +24,8 @@ export interface QuizOption {
   isCorrect: boolean;
 }
 
+export type QuizDifficulty = "easy" | "medium" | "hard";
+
 export interface QuizContent {
   id: string;
   type: "quiz";
@@ -38,7 +33,7 @@ export interface QuizContent {
   questionType: "multiple_choice" | "true_false" | "short_answer" | "matching";
   isRequired: boolean;
   isMultipleAnswer: boolean;
-  points: number;
+  difficulty: QuizDifficulty;
   options: QuizOption[];
   imageUrl?: string;
   correctAnswer?: boolean;
@@ -55,35 +50,31 @@ interface AddContentButtonsProps {
   onAddMedia: () => void;
 }
 
-export function AddContentButtons({
-  onAddText,
-  onAddQuiz,
-  onAddMedia,
-}: AddContentButtonsProps) {
+export function AddContentButtons({ onAddText, onAddQuiz, onAddMedia }: AddContentButtonsProps) {
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mt-6">
+    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
       <button
         type="button"
         onClick={onAddText}
-        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-transparent text-white border border-white  font-medium rounded-2xl hover:opacity-90 transition-all shadow-md hover:shadow-lg"
+        className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white bg-transparent px-6 py-3 font-medium text-white shadow-md transition-all hover:opacity-90 hover:shadow-lg"
       >
-        <Type className="w-5 h-5" />
+        <Type className="h-5 w-5" />
         <span>Add Text</span>
       </button>
       <button
         type="button"
         onClick={onAddQuiz}
-        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-transparent text-white border border-white  font-medium rounded-2xl hover:opacity-90 transition-all shadow-md hover:shadow-lg"
+        className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white bg-transparent px-6 py-3 font-medium text-white shadow-md transition-all hover:opacity-90 hover:shadow-lg"
       >
-        <FileQuestion className="w-5 h-5" />
+        <FileQuestion className="h-5 w-5" />
         <span>Add Quiz Box</span>
       </button>
       <button
         type="button"
         onClick={onAddMedia}
-        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-transparent text-white border border-white  font-medium rounded-2xl hover:opacity-90 transition-all shadow-md hover:shadow-lg"
+        className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white bg-transparent px-6 py-3 font-medium text-white shadow-md transition-all hover:opacity-90 hover:shadow-lg"
       >
-        <ImageIcon className="w-5 h-5" />
+        <ImageIcon className="h-5 w-5" />
         <span>Add Media Box</span>
       </button>
     </div>

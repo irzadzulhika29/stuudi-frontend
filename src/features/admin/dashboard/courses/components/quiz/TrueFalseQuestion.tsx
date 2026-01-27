@@ -1,38 +1,36 @@
 "use client";
 
-import { TrueFalseQuestionProps } from "./types";
+import { TrueFalseQuestionProps, QuizDifficulty } from "./types";
 
 export function TrueFalseQuestion({
-  id,
-  question,
-  points,
-  isRequired,
+  difficulty,
   correctAnswer,
-  onQuestionChange,
-  onPointsChange,
+  onDifficultyChange,
   onCorrectAnswerChange,
 }: TrueFalseQuestionProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-primary">
+          <span className="text-primary text-sm font-medium">
             Pilih Jawaban Benar<span className="text-error">*</span>
           </span>
           <span className="text-neutral-gray">|</span>
         </div>
 
-        {/* Points Input */}
+        {/* Difficulty Select */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-neutral-dark">Atur poin</span>
-          <input
-            type="number"
-            value={points}
-            onChange={(e) => onPointsChange(parseInt(e.target.value) || 0)}
-            className="w-16 px-3 py-1.5 border border-neutral-gray/30 rounded-lg focus:outline-none focus:border-primary text-sm text-center"
-            min={0}
-          />
+          <span className="text-neutral-dark text-sm">Kesulitan</span>
+          <select
+            value={difficulty}
+            onChange={(e) => onDifficultyChange(e.target.value as QuizDifficulty)}
+            className="border-neutral-gray/30 focus:border-primary text-neutral-dark rounded-lg border bg-white px-3 py-1.5 text-sm focus:outline-none"
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
         </div>
       </div>
 
@@ -42,22 +40,20 @@ export function TrueFalseQuestion({
         <button
           type="button"
           onClick={() => onCorrectAnswerChange(true)}
-          className={`flex-1 flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
+          className={`flex flex-1 items-center gap-3 rounded-lg border-2 p-4 transition-all ${
             correctAnswer
               ? "border-primary bg-primary/10"
               : "border-neutral-gray/20 hover:border-primary/50"
           }`}
         >
           <div
-            className={`w-5 h-5 flex items-center justify-center rounded-full border-2 transition-all ${
-              correctAnswer
-                ? "bg-primary border-primary"
-                : "bg-white border-neutral-gray/50"
+            className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
+              correctAnswer ? "bg-primary border-primary" : "border-neutral-gray/50 bg-white"
             }`}
           >
             {correctAnswer && (
               <svg
-                className="w-3 h-3 text-white"
+                className="h-3 w-3 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -71,9 +67,7 @@ export function TrueFalseQuestion({
               </svg>
             )}
           </div>
-          <span
-            className={`font-medium ${correctAnswer ? "text-primary" : "text-neutral-dark"}`}
-          >
+          <span className={`font-medium ${correctAnswer ? "text-primary" : "text-neutral-dark"}`}>
             Benar (True)
           </span>
         </button>
@@ -82,22 +76,20 @@ export function TrueFalseQuestion({
         <button
           type="button"
           onClick={() => onCorrectAnswerChange(false)}
-          className={`flex-1 flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
+          className={`flex flex-1 items-center gap-3 rounded-lg border-2 p-4 transition-all ${
             !correctAnswer
               ? "border-primary bg-primary/10"
               : "border-neutral-gray/20 hover:border-primary/50"
           }`}
         >
           <div
-            className={`w-5 h-5 flex items-center justify-center rounded-full border-2 transition-all ${
-              !correctAnswer
-                ? "bg-primary border-primary"
-                : "bg-white border-neutral-gray/50"
+            className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
+              !correctAnswer ? "bg-primary border-primary" : "border-neutral-gray/50 bg-white"
             }`}
           >
             {!correctAnswer && (
               <svg
-                className="w-3 h-3 text-white"
+                className="h-3 w-3 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -111,9 +103,7 @@ export function TrueFalseQuestion({
               </svg>
             )}
           </div>
-          <span
-            className={`font-medium ${!correctAnswer ? "text-primary" : "text-neutral-dark"}`}
-          >
+          <span className={`font-medium ${!correctAnswer ? "text-primary" : "text-neutral-dark"}`}>
             Salah (False)
           </span>
         </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ChevronDownIcon, Image, X } from "lucide-react";
+import { ChevronDownIcon, Image as ImageIcon, X } from "lucide-react";
 import { MaterialContentBox } from "./MaterialContentBox";
 import { ToggleSwitch } from "@/shared/components/ui";
 import {
@@ -13,12 +13,14 @@ import {
   MatchingPair,
 } from "../quiz";
 
+import { QuizDifficulty } from "./AddContentButtons";
+
 export interface QuizData {
   question: string;
   questionType: "multiple_choice" | "true_false" | "short_answer" | "matching";
   isRequired: boolean;
   isMultipleAnswer: boolean;
-  points: number;
+  difficulty: QuizDifficulty;
   options: QuizOption[];
   imageUrl?: string;
   correctAnswer?: boolean;
@@ -48,7 +50,7 @@ export function QuizBox({
   canMoveUp,
   canMoveDown,
 }: QuizBoxProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded] = useState(true);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,22 +92,29 @@ export function QuizBox({
   };
 
   const handleTypeChange = (
-    type: "multiple_choice" | "true_false" | "short_answer" | "matching",
+    type: "multiple_choice" | "true_false" | "short_answer" | "matching"
   ) => {
-    let updatedData = { ...data, questionType: type };
+    let updatedData: QuizData = { ...data, questionType: type };
 
     if (type === "true_false" && data.correctAnswer === undefined) {
-      updatedData.correctAnswer = true;
+      updatedData = { ...updatedData, correctAnswer: true };
     }
     if (type === "short_answer") {
-      if (data.expectedAnswer === undefined) updatedData.expectedAnswer = "";
-      if (data.caseSensitive === undefined) updatedData.caseSensitive = false;
+      if (data.expectedAnswer === undefined) {
+        updatedData = { ...updatedData, expectedAnswer: "" };
+      }
+      if (data.caseSensitive === undefined) {
+        updatedData = { ...updatedData, caseSensitive: false };
+      }
     }
     if (type === "matching" && (!data.pairs || data.pairs.length === 0)) {
-      updatedData.pairs = [
-        { id: `pair-${Date.now()}-1`, left: "", right: "" },
-        { id: `pair-${Date.now()}-2`, left: "", right: "" },
-      ];
+      updatedData = {
+        ...updatedData,
+        pairs: [
+          { id: `${id}-pair-1`, left: "", right: "" },
+          { id: `${id}-pair-2`, left: "", right: "" },
+        ],
+      };
     }
 
     onChange(id, updatedData);
@@ -116,8 +125,8 @@ export function QuizBox({
     onChange(id, { ...data, isRequired: !data.isRequired });
   };
 
-  const handlePointsChange = (points: number) => {
-    onChange(id, { ...data, points: Math.max(0, points) });
+  const handleDifficultyChange = (difficulty: QuizDifficulty) => {
+    onChange(id, { ...data, difficulty });
   };
 
   const handleOptionsChange = (options: QuizOption[]) => {
@@ -151,12 +160,12 @@ export function QuizBox({
           <MultipleChoiceQuestion
             id={id}
             question={data.question}
-            points={data.points}
+            difficulty={data.difficulty}
             isRequired={data.isRequired}
             options={data.options}
             isMultipleAnswer={data.isMultipleAnswer}
             onQuestionChange={handleQuestionChange}
-            onPointsChange={handlePointsChange}
+            onDifficultyChange={handleDifficultyChange}
             onOptionsChange={handleOptionsChange}
             onMultipleAnswerToggle={handleMultipleAnswerToggle}
           />
@@ -166,11 +175,11 @@ export function QuizBox({
           <TrueFalseQuestion
             id={id}
             question={data.question}
-            points={data.points}
+            difficulty={data.difficulty}
             isRequired={data.isRequired}
             correctAnswer={data.correctAnswer ?? true}
             onQuestionChange={handleQuestionChange}
-            onPointsChange={handlePointsChange}
+            onDifficultyChange={handleDifficultyChange}
             onCorrectAnswerChange={handleCorrectAnswerChange}
           />
         );
@@ -179,12 +188,12 @@ export function QuizBox({
           <ShortAnswerQuestion
             id={id}
             question={data.question}
-            points={data.points}
+            difficulty={data.difficulty}
             isRequired={data.isRequired}
             expectedAnswer={data.expectedAnswer ?? ""}
             caseSensitive={data.caseSensitive ?? false}
             onQuestionChange={handleQuestionChange}
-            onPointsChange={handlePointsChange}
+            onDifficultyChange={handleDifficultyChange}
             onExpectedAnswerChange={handleExpectedAnswerChange}
             onCaseSensitiveToggle={handleCaseSensitiveToggle}
           />
@@ -194,11 +203,11 @@ export function QuizBox({
           <MatchingQuestion
             id={id}
             question={data.question}
-            points={data.points}
+            difficulty={data.difficulty}
             isRequired={data.isRequired}
             pairs={data.pairs ?? []}
             onQuestionChange={handleQuestionChange}
-            onPointsChange={handlePointsChange}
+            onDifficultyChange={handleDifficultyChange}
             onPairsChange={handlePairsChange}
           />
         );
@@ -222,10 +231,10 @@ export function QuizBox({
             <button
               type="button"
               onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-              className="flex bg-white items-center gap-2 px-3 py-1.5 rounded-xl hover:border-primary/50 transition-colors"
+              className="hover:border-primary/50 flex items-center gap-2 rounded-xl bg-white px-3 py-1.5 transition-colors"
             >
               <svg
-                className="w-4 h-4 text-primary"
+                className="text-primary h-4 w-4"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -238,29 +247,22 @@ export function QuizBox({
                 />
               </svg>
               <span className="text-sm text-black">
-                {
-                  questionTypes.find((t) => t.value === data.questionType)
-                    ?.label
-                }
+                {questionTypes.find((t) => t.value === data.questionType)?.label}
               </span>
-              <ChevronDownIcon className="w-4 h-4 text-neutral-gray" />
+              <ChevronDownIcon className="text-neutral-gray h-4 w-4" />
             </button>
             {showTypeDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-neutral-gray/20 py-1 z-10">
+              <div className="border-neutral-gray/20 absolute top-full left-0 z-10 mt-1 w-48 rounded-lg border bg-white py-1 shadow-lg">
                 {questionTypes.map((type) => (
                   <button
                     key={type.value}
                     type="button"
                     onClick={() =>
                       handleTypeChange(
-                        type.value as
-                          | "multiple_choice"
-                          | "true_false"
-                          | "short_answer"
-                          | "matching",
+                        type.value as "multiple_choice" | "true_false" | "short_answer" | "matching"
                       )
                     }
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-neutral-light transition-colors ${
+                    className={`hover:bg-neutral-light w-full px-4 py-2 text-left text-sm transition-colors ${
                       data.questionType === type.value
                         ? "text-primary font-medium"
                         : "text-neutral-dark"
@@ -290,7 +292,7 @@ export function QuizBox({
                 value={data.question}
                 onChange={(e) => handleQuestionChange(e.target.value)}
                 placeholder="Masukkan pertanyaan di sini..."
-                className="flex-1 px-4 py-3 bg-neutral-light border border-neutral-gray/20 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 transition-all"
+                className="bg-neutral-light border-neutral-gray/20 focus:border-primary focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 flex-1 rounded-lg border px-4 py-3 transition-all focus:ring-2 focus:outline-none"
               />
               {/* Hidden file input */}
               <input
@@ -303,15 +305,13 @@ export function QuizBox({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={`p-3 bg-neutral-light border rounded-lg hover:border-primary/30 transition-colors ${
-                  data.imageUrl
-                    ? "border-primary/50 bg-primary/5"
-                    : "border-neutral-gray/20"
+                className={`bg-neutral-light hover:border-primary/30 rounded-lg border p-3 transition-colors ${
+                  data.imageUrl ? "border-primary/50 bg-primary/5" : "border-neutral-gray/20"
                 }`}
                 title="Tambah gambar"
               >
-                <Image
-                  className={`w-5 h-5 ${data.imageUrl ? "text-primary" : "text-neutral-gray"}`}
+                <ImageIcon
+                  className={`h-5 w-5 ${data.imageUrl ? "text-primary" : "text-neutral-gray"}`}
                 />
               </button>
             </div>
@@ -319,18 +319,19 @@ export function QuizBox({
             {/* Image Preview */}
             {data.imageUrl && (
               <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={data.imageUrl}
                   alt="Gambar soal"
-                  className="max-w-full max-h-48 rounded-lg border border-neutral-gray/20 object-contain"
+                  className="border-neutral-gray/20 max-h-48 max-w-full rounded-lg border object-contain"
                 />
                 <button
                   type="button"
                   onClick={handleRemoveImage}
-                  className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
+                  className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white shadow-md transition-colors hover:bg-red-600"
                   title="Hapus gambar"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             )}

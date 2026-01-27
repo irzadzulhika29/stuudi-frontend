@@ -13,9 +13,11 @@ export const ROUTES = {
   COURSES: "/courses",
   TEAM: "/team",
 
-  ADMIN_DASHBOARD: "/admin/dashboard",
-  ADMIN_COURSES: "/admin/courses",
-  ADMIN_TEAM: "/admin/team",
+  ADMIN_DASHBOARD: "/dashboard-admin",
+  ADMIN_COURSES: "/dashboard-admin/courses",
+  ADMIN_TEAM: "/dashboard-admin/participants",
+  ADMIN_DISQUALIFIEDTEAM: "/dashboard-admin/disqualified-participants",
+  ADMIN_CHEATING: "/dashboard-admin/cheating-report",
 } as const;
 
 export const API_ENDPOINTS = {
@@ -37,6 +39,17 @@ export const API_ENDPOINTS = {
   TEACHER: {
     COURSES: "teacher/courses",
     ADD_COURSE: "teacher/add-course",
+    UPDATE_COURSE: (id: string) => `teacher/courses/${id}`,
+    DELETE_COURSE: (id: string) => `teacher/courses/${id}`,
+    COURSE_DETAIL: (id: string) => `student/courses/${id}`,
+    ADD_TOPIC: (courseId: string) => `teacher/courses/${courseId}/topics`,
+    // Content (Material)
+    ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
+    // Blocks
+    ADD_TEXT_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/text`,
+    ADD_MEDIA_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/media`,
+    ADD_QUIZ_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/quiz`,
+    ADD_QUIZ_QUESTION: (blockId: string) => `teacher/blocks/${blockId}/questions`,
   },
   TEAM: {
     INFO: "/elearning/team-details",
