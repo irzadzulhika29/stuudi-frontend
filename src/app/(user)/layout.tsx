@@ -5,6 +5,7 @@ import DashboardLayout from "@/features/user/dashboard/shared/components/Dashboa
 import { Sidebar } from "@/features/user/dashboard/shared/components/Sidebar";
 import { Topbar } from "@/features/user/dashboard/shared/components/Topbar";
 import { CourseNavigationProvider } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
+import { useUser } from "@/features/auth/shared/hooks/useUser";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const userMenuItems = [
@@ -26,16 +27,25 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     },
   ];
 
-  const user = {
-    name: "Khaizuran Alvaro",
-    role: "Participant",
+  const { data: user } = useUser();
+
+  const getDisplayName = () => {
+    if (user?.first_name) return `${user.first_name} ${user.last_name}`;
+    if (user?.email) return user.email.split("@")[0];
+    return "User";
+  };
+
+  const topbarUser = {
+    name: getDisplayName(),
+    role: user?.user_type || "Participant",
+    avatar: user?.avatar,
   };
 
   return (
     <CourseNavigationProvider>
       <DashboardLayout
         sidebar={<Sidebar menuItems={userMenuItems} />}
-        topbar={<Topbar user={user} />}
+        topbar={<Topbar user={topbarUser} />}
       >
         {children}
       </DashboardLayout>

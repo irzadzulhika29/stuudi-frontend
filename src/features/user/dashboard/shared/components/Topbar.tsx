@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useSidebar } from "@/features/user/dashboard/shared/context/SidebarContext";
 import { NotificationDropdown } from "./NotificationDropdown";
 import Image from "next/image";
+import { useLogout } from "@/features/auth/shared/hooks/useLogout";
 
 interface TopbarProps {
   user?: {
@@ -17,6 +18,7 @@ interface TopbarProps {
 export function Topbar({ user }: TopbarProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const { isCollapsed } = useSidebar();
+  const { mutate: logout, isPending } = useLogout();
 
   return (
     <header
@@ -59,9 +61,13 @@ export function Topbar({ user }: TopbarProps) {
                 Settings
               </button>
               <hr className="my-1 border-neutral-100" />
-              <button className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 transition-colors hover:bg-red-50">
+              <button
+                onClick={() => logout()}
+                disabled={isPending}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50"
+              >
                 <LogOut size={16} />
-                Logout
+                {isPending ? "Keluar..." : "Keluar"}
               </button>
             </div>
           )}

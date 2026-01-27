@@ -1,17 +1,26 @@
+"use client";
+
 import { TeamTable } from "@/features/user/dashboard/home/components/TeamTable";
 import { ExamCodeInput } from "@/features/user/dashboard/home/components/ExamCodeInput";
 import Image from "next/image";
+import { useUser } from "@/features/auth/shared/hooks/useUser";
 
 export default function UserDashboardPage() {
-  const userName = "";
+  const { data: user, isLoading } = useUser();
   const countdown = { months: 0, weeks: 0, days: 0 };
+
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center text-white">Loading...</div>;
+  }
+
+  const displayName = user?.email.split("@")[0] || "User";
 
   return (
     <div className="relative flex min-h-[calc(100vh-8rem)] flex-col items-center justify-start pt-4">
       <div className="relative z-10 flex w-full flex-col items-center text-center">
         <div className="mb-6 ml-4 w-full px-2 text-left md:px-4">
           <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
-            Selamat Datang, <span className="text-secondary">{userName || "User"}!</span>
+            Selamat Datang, <span className="text-secondary">{displayName}!</span>
           </h1>
           <p className="text-lg text-white/60">Mau belajar apa hari ini?</p>
         </div>
