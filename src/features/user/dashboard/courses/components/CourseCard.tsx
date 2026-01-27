@@ -8,6 +8,8 @@ interface CourseCardProps {
   thumbnail?: string;
   studentCount: number;
   progress: number;
+  isEnrolled?: boolean;
+  onClick?: () => void;
 }
 
 function CircularProgress({ progress }: { progress: number }) {
@@ -33,38 +35,59 @@ function CircularProgress({ progress }: { progress: number }) {
   );
 }
 
-export function CourseCard({ id, title, thumbnail, studentCount, progress }: CourseCardProps) {
-  return (
-    <Link href={`/courses/${id}`}>
-      <div className="hover:shadow-secondary cursor-pointer overflow-hidden rounded-2xl bg-white p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-lg">
-        <div className="bg-secondary-light relative h-32 overflow-hidden rounded-xl">
-          <Image
-            src={thumbnail || "/images/dummycardimage.svg"}
-            alt={title}
-            fill
-            className="object-cover"
-          />
+export function CourseCard({
+  id,
+  title,
+  thumbnail,
+  studentCount,
+  progress,
+  isEnrolled,
+  onClick,
+}: CourseCardProps) {
+  const CardContent = (
+    <div
+      onClick={onClick}
+      className={`hover:shadow-secondary relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl bg-white p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-lg`}
+    >
+      {isEnrolled && (
+        <div className="bg-secondary-default/90 absolute top-4 right-4 z-10 rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-sm">
+          Enrolled
         </div>
+      )}
 
-        <div className="space-y-4 pt-4">
-          <h3 className="text-xl font-bold text-neutral-900">{title}</h3>
+      <div className="bg-secondary-light relative h-32 shrink-0 overflow-hidden rounded-xl">
+        <Image
+          src={thumbnail || "/images/dummycardimage.svg"}
+          alt={title}
+          fill
+          className="object-cover"
+        />
+      </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-1.5 text-neutral-500">
-              <Users size={16} />
-              <span>{studentCount} students</span>
-            </div>
+      <div className="flex flex-1 flex-col space-y-4 pt-4">
+        <h3 className="line-clamp-2 min-h-[3.5rem] text-xl font-bold text-neutral-900">{title}</h3>
 
-            <div className="text-secondary-default flex items-center gap-2 font-medium">
-              <CircularProgress progress={progress} />
-              <span>
-                <span className="font-bold">{progress}%</span>
-                <span className="ml-1 font-normal text-neutral-500">progress</span>
-              </span>
-            </div>
+        <div className="mt-auto flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1.5 text-neutral-500">
+            <Users size={16} />
+            <span>{studentCount || 0} students</span>
+          </div>
+
+          <div className="text-secondary-default flex items-center gap-2 font-medium">
+            <CircularProgress progress={progress} />
+            <span>
+              <span className="font-bold">{progress}%</span>
+              <span className="ml-1 font-normal text-neutral-500">progress</span>
+            </span>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
+
+  if (isEnrolled) {
+    return <Link href={`/courses/${id}`}>{CardContent}</Link>;
+  }
+
+  return CardContent;
 }

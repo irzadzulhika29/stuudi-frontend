@@ -3,18 +3,31 @@
 import { Search, Plus } from "lucide-react";
 import { CourseCard } from "@/features/user/dashboard/courses/components/CourseCard";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { courses } from "@/features/user/dashboard/courses/data/dummyData";
 import { JoinClassModal } from "@/shared/components/ui/JoinClassModal";
+import EmptyState from "@/shared/components/ui/EmptyState";
+import { CourseListSkeleton } from "../components/CourseListSkeleton";
+import { useMyCourses } from "../hooks/useMyCourses";
+import { useEnrollCourse } from "../hooks/useEnrollCourse";
 
 export function CoursesContainer() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { data, isLoading } = useMyCourses();
+  const { mutate: enroll, isPending: isEnrolling } = useEnrollCourse();
 
   const handleJoinClass = (code: string) => {
-    console.log("Joining class with code:", code);
-    setShowJoinModal(false);
+    enroll(code, {
+      onSuccess: () => {
+        setShowJoinModal(false);
+      },
+    });
   };
+
+  const courses = data?.courses || [];
+  const filteredCourses = searchQuery
+    ? courses.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : courses;
 
   return (
     <>
@@ -42,22 +55,50 @@ export function CoursesContainer() {
           <button
             onClick={() => setShowJoinModal(true)}
             className="bg-secondary-light hover:bg-secondary-default rounded-full p-3 text-white shadow-lg transition-colors"
+            title="Tambah Kelas"
           >
             <Plus size={24} />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {courses.map((course) => (
-            <CourseCard key={course.id} {...course} />
-          ))}
-        </div>
+        {isLoading ? (
+          <CourseListSkeleton count={6} />
+        ) : filteredCourses.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredCourses.map((course) => (
+              <CourseCard
+                key={course.course_id}
+                id={course.course_id}
+                title={course.name}
+                thumbnail={course.image_url}
+                studentCount={course.student_count}
+                progress={course.progress_percentage}
+                isEnrolled={true}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title={searchQuery ? "Tidak ditemukan" : "Belum ada kelas"}
+            description={
+              searchQuery
+                ? `Tidak ada kelas yang cocok dengan "${searchQuery}"`
+                : "Yuk tambah kelas pertamamu dengan klik tombol +"
+            }
+            actionLabel="Tambah Kelas"
+            actionIcon={<Plus size={20} />}
+            onAction={() => setShowJoinModal(true)}
+            imageSrc="/images/mascot/chiby.webp"
+            className="text-white"
+          />
+        )}
       </div>
 
       <JoinClassModal
         isOpen={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         onJoinClass={handleJoinClass}
+        isLoading={isEnrolling}
       />
     </>
   );

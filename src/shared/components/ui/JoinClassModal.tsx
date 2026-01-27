@@ -9,6 +9,8 @@ interface JoinClassModalProps {
   showAddClass?: boolean;
   onJoinClass?: (code: string) => void;
   onAddClass?: () => void;
+  isLoading?: boolean;
+  initialCode?: string;
 }
 
 export function JoinClassModal({
@@ -17,8 +19,19 @@ export function JoinClassModal({
   showAddClass = false,
   onJoinClass,
   onAddClass,
+  isLoading = false,
+  initialCode = "",
 }: JoinClassModalProps) {
   const [enrollCode, setEnrollCode] = useState("");
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+
+  // React-approved pattern: adjust state during render instead of useEffect
+  if (isOpen && !prevIsOpen) {
+    setEnrollCode(initialCode || "");
+    setPrevIsOpen(true);
+  } else if (!isOpen && prevIsOpen) {
+    setPrevIsOpen(false);
+  }
 
   if (!isOpen) return null;
 
@@ -54,21 +67,27 @@ export function JoinClassModal({
 
         <button
           onClick={handleSubmit}
-          className="border-secondary text-secondary hover:bg-secondary/5 group flex w-full items-center justify-between rounded-full border-2 px-6 py-4 transition-colors"
+          disabled={isLoading}
+          className="border-secondary text-secondary hover:bg-secondary/5 group flex w-full items-center justify-between rounded-full border-2 px-6 py-4 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <input
             type="text"
             value={enrollCode}
             onChange={(e) => setEnrollCode(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Masukkan kode enroll"
-            className="text-secondary placeholder-secondary/70 flex-1 bg-transparent outline-none"
+            disabled={isLoading}
+            placeholder={isLoading ? "Mendaftar..." : "Masukkan kode enroll"}
+            className="text-secondary placeholder-secondary/70 flex-1 bg-transparent outline-none disabled:cursor-not-allowed"
             onClick={(e) => e.stopPropagation()}
           />
-          <ChevronRight
-            size={24}
-            className="text-secondary transition-transform group-hover:translate-x-1"
-          />
+          {isLoading ? (
+            <div className="border-secondary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+          ) : (
+            <ChevronRight
+              size={24}
+              className="text-secondary transition-transform group-hover:translate-x-1"
+            />
+          )}
         </button>
 
         {showAddClass && (

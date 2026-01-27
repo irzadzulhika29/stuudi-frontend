@@ -28,10 +28,11 @@ export const API_ENDPOINTS = {
     ALL: (page: number, per_page: number, search: string) =>
       `/courses/browse?page=${page}&per_page=${per_page}&search=${search}`,
     MY: "student/courses",
+    ENROLL: "student/enroll",
     LIST: "/courses",
     DETAIL: (id: string) => `student/courses/${id}`,
     Topic: (id: string) => `student/courses/${id}/topics`,
-    ContentDetail: (id: string) => `student/content/${id}`,
+    CONTENTDETAILS: (id: string) => `student/content/${id}`,
   },
   TEACHER: {
     COURSES: "teacher/courses",
