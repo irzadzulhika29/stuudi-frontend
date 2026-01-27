@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useCallback,
-} from "react";
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 
 export interface CourseNavItem {
   label: string;
@@ -26,11 +20,8 @@ export interface CourseNavigationState {
 
 interface CourseNavigationContextType {
   navigation: CourseNavigationState;
-  setCourseNav: (course: { id: string; name: string }) => void;
-  setTopicNav: (
-    course: { id: string; name: string },
-    topic: { id: string; name: string }
-  ) => void;
+  setCourseNav: (course: { id: string; name: string }, basePath?: string) => void;
+  setTopicNav: (course: { id: string; name: string }, topic: { id: string; name: string }) => void;
   setMateriNav: (
     course: { id: string; name: string },
     topic: { id: string; name: string },
@@ -43,36 +34,29 @@ const initialState: CourseNavigationState = {
   subItems: [],
 };
 
-const CourseNavigationContext = createContext<
-  CourseNavigationContextType | undefined
->(undefined);
+const CourseNavigationContext = createContext<CourseNavigationContextType | undefined>(undefined);
 
-export function CourseNavigationProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const [navigation, setNavigation] =
-    useState<CourseNavigationState>(initialState);
+export function CourseNavigationProvider({ children }: { children: ReactNode }) {
+  const [navigation, setNavigation] = useState<CourseNavigationState>(initialState);
 
-  const setCourseNav = useCallback((course: { id: string; name: string }) => {
-    setNavigation({
-      courseId: course.id,
-      courseName: course.name,
-      subItems: [
-        {
-          label: course.name,
-          href: `/courses/${course.id}`,
-        },
-      ],
-    });
-  }, []);
+  const setCourseNav = useCallback(
+    (course: { id: string; name: string }, basePath: string = "/courses") => {
+      setNavigation({
+        courseId: course.id,
+        courseName: course.name,
+        subItems: [
+          {
+            label: course.name,
+            href: `${basePath}/${course.id}`,
+          },
+        ],
+      });
+    },
+    []
+  );
 
   const setTopicNav = useCallback(
-    (
-      course: { id: string; name: string },
-      topic: { id: string; name: string }
-    ) => {
+    (course: { id: string; name: string }, topic: { id: string; name: string }) => {
       setNavigation({
         courseId: course.id,
         courseName: course.name,
@@ -141,9 +125,7 @@ export function CourseNavigationProvider({
 export function useCourseNavigation() {
   const context = useContext(CourseNavigationContext);
   if (!context) {
-    throw new Error(
-      "useCourseNavigation must be used within CourseNavigationProvider"
-    );
+    throw new Error("useCourseNavigation must be used within CourseNavigationProvider");
   }
   return context;
 }

@@ -1,39 +1,54 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { ChevronLeft, Trash2, Folder, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCourseNavigation } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
 import { ManageTopicList } from "@/features/admin/dashboard/courses/components/CourseDetailAdmin";
 import { CourseInfoSidebar } from "@/features/admin/dashboard/courses/components/CourseInfoSidebar";
-import {
-  courseData as initialCourseData,
-  courseInfoData,
-} from "@/features/user/dashboard/courses/data/dummyData";
-import { Button, Input } from "@/shared/components/ui";
-import { Modal } from "@/shared/components/ui/Modal";
+import { useTeachingCourseDetails } from "../hooks/useTeachingCourseDetails";
+import { useAddTopic } from "../hooks/useAddTopic";
+import { useUpdateCourse } from "../hooks/useUpdateCourse";
+import { useDeleteCourse } from "../hooks/useDeleteCourse";
+import { Button } from "@/shared/components/ui";
+import { CourseDetailSkeleton } from "@/features/user/dashboard/courses/components/CourseDetailSkeleton";
+import { AddTopicModal } from "../components/AddTopicModal";
+import { CourseEditForm } from "../components/CourseEditForm";
+import { ManagementHeader } from "../components/ManagementHeader";
 
 interface ManageCourseContainerProps {
   courseId: string;
 }
 
-export function ManageCourseContainer({
-  courseId,
-}: ManageCourseContainerProps) {
+export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) {
+  const router = useRouter();
   const { setCourseNav } = useCourseNavigation();
-  const [courseName, setCourseName] = useState(initialCourseData.title);
-  const [description, setDescription] = useState(initialCourseData.description);
+  const { data: course, isLoading, isError } = useTeachingCourseDetails(courseId);
+  const addTopicMutation = useAddTopic(courseId);
+  const updateCourseMutation = useUpdateCourse(courseId);
+  const deleteCourseMutation = useDeleteCourse();
+
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [isAddTopicModalOpen, setIsAddTopicModalOpen] = useState(false);
-  const [newTopicName, setNewTopicName] = useState("");
-  const [newTopicDescription, setNewTopicDescription] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Local state for form editing
+  const [prevCourse, setPrevCourse] = useState<typeof course | null>(null);
+  const [courseName, setCourseName] = useState("");
+  const [description, setDescription] = useState("");
+
+  // React-approved pattern: adjust state during render
+  if (course && course !== prevCourse) {
+    setCourseName(course.name);
+    setDescription(course.description);
+    setPrevCourse(course);
+  }
 
   useEffect(() => {
-    setCourseNav({ id: courseId, name: "Manage Course" });
-  }, [courseId, setCourseNav]);
+    if (course) {
+      setCourseNav({ id: courseId, name: course.name }, "/dashboard-admin/courses");
+    }
+  }, [course, courseId, setCourseNav]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,13 +65,6 @@ export function ManageCourseContainer({
   const handleRemoveThumbnail = () => {
     setThumbnailPreview(null);
     setThumbnailFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleThumbnailClick = () => {
-    fileInputRef.current?.click();
   };
 
   const handleOpenAddTopicModal = () => {
@@ -65,188 +73,162 @@ export function ManageCourseContainer({
 
   const handleCloseAddTopicModal = () => {
     setIsAddTopicModalOpen(false);
-    setNewTopicName("");
-    setNewTopicDescription("");
   };
 
-  const handleAddTopic = () => {
-    // TODO: Implement actual add topic logic
-    console.log("Adding topic:", { name: newTopicName, description: newTopicDescription });
-    handleCloseAddTopicModal();
+  const handleAddTopic = (title: string, description: string) => {
+    addTopicMutation.mutate(
+      {
+        title,
+        description,
+      },
+      {
+        onSuccess: () => {
+          handleCloseAddTopicModal();
+        },
+      }
+    );
   };
+
+  const handleApplyEdit = () => {
+    console.log("Applying edit...");
+    console.log("Data:", { name: courseName, description: description, photo: thumbnailFile });
+
+    updateCourseMutation.mutate(
+      {
+        name: courseName,
+        description: description,
+        photo: thumbnailFile,
+      },
+      {
+        onSuccess: (data) => {
+          console.log("Update success:", data);
+          setThumbnailFile(null);
+          // Redirect to course detail
+          router.push(`/dashboard-admin/courses/${courseId}`);
+        },
+        onError: (error) => {
+          console.error("Update failed:", error);
+          console.error("Error response:", error.response?.data);
+        },
+      }
+    );
+  };
+
+  const handleDeleteCourse = () => {
+    if (
+      window.confirm(
+        "Apakah Anda yakin ingin menghapus course ini? Tindakan ini tidak dapat dibatalkan."
+      )
+    ) {
+      deleteCourseMutation.mutate(courseId, {
+        onSuccess: () => {
+          alert("Course berhasil dihapus.");
+          router.push("/dashboard-admin/courses");
+        },
+        onError: (error) => {
+          console.error("Failed to delete course:", error);
+          alert("Gagal menghapus course. Silakan coba lagi.");
+        },
+      });
+    }
+  };
+
+  if (isLoading) {
+    return <CourseDetailSkeleton />;
+  }
+
+  if (isError || !course) {
+    return (
+      <div className="flex h-screen items-center justify-center text-white">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold">Gagal memuat kursus</h2>
+          <Link href="/dashboard-admin/courses">
+            <Button className="mt-4" variant="secondary">
+              Kembali ke Courses
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const sidebarProps = {
+    progress: {
+      current: course.progress?.current_exp || 0,
+      total: course.progress?.total_exp || 100,
+    },
+    teachers: course.teachers?.map((t) => ({ name: t.name })) || [],
+    participants: course.participants?.map((p) => ({ id: p.user_id, name: p.name })) || [],
+    totalParticipants: course.total_participants || 0,
+    lastAccessed: course.last_accessed || undefined,
+    enrollCode: course.enrollment_code,
+  };
+
+  // Transform topics for ManageTopicList
+  const transformedTopics =
+    course.topics?.map((topic) => ({
+      id: topic.topic_id,
+      title: topic.title,
+      description: topic.description,
+      status: topic.status,
+      materials:
+        topic.contents?.map((m) => ({
+          id: m.content_id,
+          title: m.title,
+          type: (m.type === "materi" ? "material" : "quiz") as "material" | "quiz",
+          duration: "",
+          isCompleted: m.is_completed,
+        })) || [],
+    })) || [];
 
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-4 mb-8">
-            <Link
-              href={`/dashboard-admin/courses/${courseId}`}
-              className="w-10 h-10 bg-[#FF9D00] rounded-full flex items-center justify-center text-white hover:bg-[#E68E00] transition-colors"
-            >
-              <ChevronLeft size={24} />
-            </Link>
-            <span className="text-white text-lg">Course/Course Details</span>
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="min-w-0 flex-1">
+          <ManagementHeader
+            courseId={courseId}
+            onDelete={handleDeleteCourse}
+            onSave={handleApplyEdit}
+            isDeleting={deleteCourseMutation.isPending}
+            isSaving={updateCourseMutation.isPending}
+          />
+
+          <CourseEditForm
+            name={courseName}
+            onNameChange={setCourseName}
+            description={description}
+            onDescriptionChange={setDescription}
+            thumbnailFile={thumbnailFile}
+            thumbnailPreview={thumbnailPreview}
+            onThumbnailChange={handleThumbnailChange}
+            onThumbnailRemove={handleRemoveThumbnail}
+          />
+
+          <div className="mb-6 lg:hidden">
+            <CourseInfoSidebar {...sidebarProps} />
           </div>
 
-          {/* Header Actions */}
-          <div className="flex justify-end mb-6 gap-3">
-            <button className="text-white/80 hover:text-white transition-colors p-2">
-              <Trash2 size={24} />
-            </button>
-            <Button
-              variant="outline"
-              className="text-white border-white bg-transparent hover:bg-white hover:text-black rounded-full px-8"
-            >
-              Apply edit
-            </Button>
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-6 mb-8">
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">
-                Nama Courses
-              </label>
-              <div className="bg-white p-1 rounded-xl">
-                <Input
-                  value={courseName}
-                  onChange={(e) => setCourseName(e.target.value)}
-                  className="bg-transparent border-none focus:ring-0 placeholder:text-white/50"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">
-                Deskripsi Courses
-              </label>
-              <div className="bg-white p-1 rounded-xl">
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-5 py-3 rounded-xl bg-transparent border-none focus:outline-none resize-none h-32 placeholder:text-white/50"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">
-                Thumbnail Course
-              </label>
-              <div className="relative">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailChange}
-                  className="hidden"
-                />
-                <div
-                  onClick={handleThumbnailClick}
-                  className="bg-white p-1 rounded-xl cursor-pointer"
-                >
-                  <Input
-                    placeholder={thumbnailFile?.name || "Pilih File"}
-                    rightIcon={<Folder size={20} />}
-                    className="bg-transparent border-none focus:ring-0 placeholder:text-black cursor-pointer"
-                    readOnly
-                  />
-                </div>
-              </div>
-              
-              {/* Thumbnail Preview */}
-              {thumbnailPreview && (
-                <div className="relative mt-4 inline-block">
-                  <div className="relative w-64 h-40 rounded-xl overflow-hidden border-2 border-white/20">
-                    <Image
-                      src={thumbnailPreview}
-                      alt="Thumbnail preview"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveThumbnail}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:hidden mb-6">
-            <CourseInfoSidebar {...courseInfoData} />
-          </div>
-
-          <div className="">
+          <div>
             <ManageTopicList
               courseId={courseId}
-              topics={initialCourseData.topics}
+              topics={transformedTopics}
               onAddNewTopic={handleOpenAddTopicModal}
             />
           </div>
         </div>
 
-        <div className="w-64 shrink-0 hidden lg:block">
+        <div className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-24">
-            <CourseInfoSidebar {...courseInfoData} />
+            <CourseInfoSidebar {...sidebarProps} />
           </div>
         </div>
       </div>
 
-      <Modal
+      <AddTopicModal
         isOpen={isAddTopicModalOpen}
         onClose={handleCloseAddTopicModal}
-        title="Tambah Topic Baru"
-        size="xl"
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-neutral-700">
-              Nama Topic
-            </label>
-            <Input
-              value={newTopicName}
-              onChange={(e) => setNewTopicName(e.target.value)}
-              placeholder="Masukkan nama topic"
-              className="w-full"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-neutral-700">
-              Deskripsi Topic
-            </label>
-            <textarea
-              value={newTopicDescription}
-              onChange={(e) => setNewTopicDescription(e.target.value)}
-              placeholder="Masukkan deskripsi topic"
-              className="w-full px-4 py-3 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#FF9D00] focus:border-transparent resize-none h-32"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={handleCloseAddTopicModal}
-              className="px-6"
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={handleAddTopic}
-              className="px-6 bg-[#D77211] hover:bg-[#C06010]"
-              disabled={!newTopicName.trim()}
-            >
-              Tambah Topic
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        onAdd={handleAddTopic}
+      />
     </div>
   );
 }

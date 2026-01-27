@@ -13,7 +13,15 @@ export const useLogin = () => {
     mutationFn: (data: LoginRequest) => authService.login(data),
     onSuccess: (data) => {
       console.log("Login successful", data);
-      router.push(ROUTES.DASHBOARD);
+      console.log("User type from API:", data.user_type);
+
+      // Role-based redirect: students go to /dashboard, teachers go to /dashboard-admin
+      const userType = data.user_type?.toLowerCase();
+      const isStudent = userType === "student" || userType === "siswa";
+      const redirectPath = isStudent ? ROUTES.DASHBOARD : ROUTES.ADMIN_DASHBOARD;
+
+      console.log("Is student:", isStudent, "| Redirecting to:", redirectPath);
+      router.push(redirectPath);
     },
     onError: (error) => {
       console.error("Login failed", error);
