@@ -1,3 +1,3 @@
 export const env = {
-  BASE_API: process.env.NEXT_PUBLIC_BASE_API || "http://localhost:8080/api/v1",
+  BASE_API: process.env.NEXT_PUBLIC_BASE_API || "https://backend.arterilearning.com/api/v1/",
 } as const;
