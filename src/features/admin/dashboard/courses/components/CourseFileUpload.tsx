@@ -1,15 +1,14 @@
 import { Folder } from "lucide-react";
-import { InputHTMLAttributes } from "react";
+import { InputHTMLAttributes, forwardRef } from "react";
 
 interface CourseFileUploadProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
 }
 
-export function CourseFileUpload({
-  label,
-  className = "",
-  ...props
-}: CourseFileUploadProps) {
+export const CourseFileUpload = forwardRef<
+  HTMLInputElement,
+  CourseFileUploadProps
+>(function CourseFileUpload({ label, className = "", ...props }, ref) {
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-white">{label}</label>
@@ -21,6 +20,7 @@ export function CourseFileUpload({
           Pilih File
         </div>
         <input
+          ref={ref}
           type="file"
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           {...props}
@@ -28,4 +28,4 @@ export function CourseFileUpload({
       </div>
     </div>
   );
-}
+});

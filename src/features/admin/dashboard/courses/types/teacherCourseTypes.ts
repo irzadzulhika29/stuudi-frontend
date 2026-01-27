@@ -22,3 +22,26 @@ export interface TeachingCoursesResponse {
   data: TeachingCoursesData;
 }
 
+export interface AddCourseRequest {
+  name: string;
+  description: string;
+  photo: File;
+}
+
+export interface AddCourseData {
+  course_id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  enrollment_code: string;
+}
+
+export interface AddCourseResponse {
+  status: {
+    code: number;
+    isSuccess: boolean;
+  };
+  message: string;
+  data: AddCourseData;
+}
+

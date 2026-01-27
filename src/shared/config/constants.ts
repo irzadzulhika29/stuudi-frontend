@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
   },
   TEACHER: {
     COURSES: "teacher/courses",
+    ADD_COURSE: "teacher/add-course",
   },
   TEAM: {
     INFO: "/elearning/team-details",
