@@ -33,6 +33,9 @@ export const API_ENDPOINTS = {
     Topic: (id: string) => `student/courses/${id}/topics`,
     ContentDetail: (id: string) => `student/content/${id}`,
   },
+  TEACHER: {
+    COURSES: "teacher/courses",
+  },
   TEAM: {
     INFO: "/elearning/team-details",
   },

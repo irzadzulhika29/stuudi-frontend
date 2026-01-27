@@ -3,15 +3,30 @@
 import { Search, Plus } from "lucide-react";
 import { CourseCard } from "@/features/admin/dashboard/courses/components/CourseCard";
 import { DashboardHeader } from "@/features/admin/dashboard/shared/components/DashboardHeader";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { courses } from "@/features/user/dashboard/courses/data/dummyData";
+import { useTeachingCourses } from "@/features/admin/dashboard/courses/hooks/useTeachingCourses";
 import { JoinClassModal } from "@/shared/components/ui/JoinClassModal";
 
 export function CoursesContainer() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showJoinModal, setShowJoinModal] = useState(false);
   const router = useRouter();
+
+  const { data, isLoading, isError } = useTeachingCourses();
+
+  console.log("Teaching Courses Data:", data);
+  console.log("isLoading:", isLoading);
+  console.log("isError:", isError);
+
+  const filteredCourses = useMemo(() => {
+    if (!data?.courses) return [];
+    if (!searchQuery.trim()) return data.courses;
+
+    return data.courses.filter((course) =>
+      course.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [data?.courses, searchQuery]);
 
   const handleJoinClass = (code: string) => {
     console.log("Admin joining class with code:", code);
@@ -51,11 +66,38 @@ export function CoursesContainer() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
-          {courses.map((course) => (
-            <CourseCard key={course.id} {...course} />
-          ))}
-        </div>
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+          </div>
+        )}
+
+        {isError && (
+          <div className="rounded-xl bg-red-500/20 p-4 text-center text-white">
+            Gagal memuat data courses. Silakan coba lagi.
+          </div>
+        )}
+
+        {!isLoading && !isError && (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+            {filteredCourses.length > 0 ? (
+              filteredCourses.map((course) => (
+                <CourseCard
+                  key={course.course_id}
+                  id={course.course_id}
+                  title={course.name}
+                  thumbnail={course.image_url}
+                  studentCount={course.student_count}
+                  progress={0}
+                />
+              ))
+            ) : (
+              <div className="col-span-full py-12 text-center text-white/60">
+                {searchQuery ? "Tidak ada kelas yang ditemukan." : "Belum ada kelas."}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <JoinClassModal
