@@ -34,7 +34,6 @@ function CheckContent() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
-      {/* Top Bar with Exam Code */}
       <div className="fixed top-0 left-0 z-10 flex w-full items-center justify-between border-b border-white/10 bg-white/5 p-6 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <Link

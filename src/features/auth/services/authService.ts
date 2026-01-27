@@ -1,6 +1,7 @@
 import { api } from "@/shared/api/api";
 import { API_ENDPOINTS, STORAGE_KEYS } from "@/shared/config";
 import { ApiResponse, LoginRequest, LoginResponse, AuthUser } from "../shared/types/authTypes";
+import { decodeJwt, JwtPayload } from "@/shared/utils/jwt";
 
 const setTokens = (token: string) => {
   if (typeof window !== "undefined") {
@@ -23,11 +24,14 @@ export const authService = {
 
     setTokens(result.token);
 
+    const decoded = decodeJwt<JwtPayload>(result.token);
+
     if (typeof window !== "undefined") {
       const userData: AuthUser = {
-        id: "local-user",
+        id: decoded?.UserID || "local-user",
         email: data.email,
         user_type: result.user_type,
+        roleName: decoded?.RoleName || undefined,
       };
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
     }
