@@ -55,7 +55,20 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "ui-avatars.com",
       },
+      {
+        protocol: "https",
+        hostname: "dllvucwgezsuhwktkwxd.supabase.co",
+      },
     ],
+  },
+
+  async rewrites() {
+    return [
+      {
+        source: "/api/proxy/:path*",
+        destination: "https://backend.arterilearning.com/api/v1/:path*",
+      },
+    ];
   },
 };
 
