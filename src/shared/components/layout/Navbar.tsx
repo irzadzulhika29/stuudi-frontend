@@ -18,49 +18,51 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-6xl">
-      <nav className="w-full bg-neutral-white backdrop-blur-xl rounded-2xl shadow-lg border border-neutral-light">
-        <div className="flex items-center justify-between h-16 px-6">
+    <header className="absolute top-6 left-1/2 z-50 w-full max-w-6xl -translate-x-1/2">
+      <nav className="bg-neutral-white border-neutral-light w-full rounded-2xl border shadow-lg backdrop-blur-xl">
+        <div className="flex h-16 items-center justify-between px-6">
           <Link href={ROUTES.HOME} className="flex items-center">
-            <Image
-              src="/images/logo/ARTERI.webp"
-              alt="Arteri"
-              width={100}
-              height={32}
-              priority
-            />
+            <Image src="/images/logo/ARTERI.webp" alt="Arteri" width={100} height={32} priority />
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={
-                  pathname === link.href ? "nav-link-active" : "nav-link"
-                }
+                className={pathname === link.href ? "nav-link-active" : "nav-link"}
               >
                 {link.label}
               </Link>
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline" className="!bg-primary !text-neutral-white" href={ROUTES.LOGIN} size="sm">
+          <div className="hidden items-center gap-3 md:flex">
+            <Button
+              variant="outline"
+              className="!bg-primary !text-neutral-white"
+              href={ROUTES.LOGIN}
+              size="sm"
+            >
               Login
             </Button>
-            <Button className="!text-primary  !border-primary hover:!bg-primary hover:!text-neutral-white" variant="outline" href={ROUTES.REGISTER} size="sm">
+            <Button
+              className="!text-primary !border-primary hover:!bg-primary hover:!text-neutral-white"
+              variant="outline"
+              href={ROUTES.LOGIN}
+              size="sm"
+            >
               Join us
             </Button>
           </div>
 
           <button
-            className="md:hidden p-2 rounded-lg transition-colors hover:bg-neutral-light"
+            className="hover:bg-neutral-light rounded-lg p-2 transition-colors md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
             <svg
-              className="w-6 h-6 text-neutral-dark"
+              className="text-neutral-dark h-6 w-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -85,25 +87,33 @@ export default function Navbar() {
         </div>
 
         {isMobileMenuOpen && (
-          <div className="md:hidden px-6 pb-4 border-t border-neutral-light">
+          <div className="border-neutral-light border-t px-6 pb-4 md:hidden">
             <div className="flex flex-col gap-3 pt-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`py-2 ${
-                    pathname === link.href ? "nav-link-active" : "nav-link"
-                  }`}
+                  className={`py-2 ${pathname === link.href ? "nav-link-active" : "nav-link"}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="flex flex-col gap-2 pt-3 border-t border-neutral-light">
-                <Button variant="outline" className="!bg-primary !text-neutral-white" href={ROUTES.LOGIN} size="sm">
+              <div className="border-neutral-light flex flex-col gap-2 border-t pt-3">
+                <Button
+                  variant="outline"
+                  className="!bg-primary !text-neutral-white"
+                  href={ROUTES.LOGIN}
+                  size="sm"
+                >
                   Login
                 </Button>
-                <Button variant="outline" className="!bg-transparent !border !border-primary !text-primary hover:!bg-primary hover:!text-neutral-white" href={ROUTES.REGISTER} size="sm">
+                <Button
+                  variant="outline"
+                  className="!border-primary !text-primary hover:!bg-primary hover:!text-neutral-white !border !bg-transparent"
+                  href={ROUTES.LOGIN}
+                  size="sm"
+                >
                   Join us
                 </Button>
               </div>

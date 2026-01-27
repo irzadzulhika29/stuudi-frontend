@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Button from "@/shared/components/ui/Button";
 import Input from "@/shared/components/ui/Input";
-import { useToast } from "@/shared/components/ui/Toast";
 import AuthLayout from "@/features/auth/shared/components/AuthLayout";
 import { usePasswordVisibility } from "@/features/auth/shared/hooks/usePasswordVisibility";
 
@@ -22,10 +21,6 @@ export default function LoginSection() {
           <span className="text-black">Arterians!</span>
         </>
       }
-      googleButtonText="Masuk menggunakan google"
-      bottomText="Belum punya akun?"
-      bottomLinkText="Daftar disini"
-      bottomLinkHref="/register"
     >
       <form className="space-y-5">
         <Input type="email" placeholder="Masukkan Email" />
@@ -40,7 +35,7 @@ export default function LoginSection() {
         <div className="flex justify-end">
           <Link
             href="/forgot-password"
-            className="text-sm text-[#27A8F3] hover:underline hover:text-[#1E8FD4]"
+            className="text-sm text-[#27A8F3] hover:text-[#1E8FD4] hover:underline"
           >
             Lupa Password?
           </Link>
@@ -48,7 +43,7 @@ export default function LoginSection() {
 
         <Button
           variant="primary"
-          className="w-full rounded-2xl py-3 !text-lg shadow-blue-300/50 shadow-lg"
+          className="w-full rounded-2xl py-3 !text-lg shadow-lg shadow-blue-300/50"
         >
           Masuk
         </Button>

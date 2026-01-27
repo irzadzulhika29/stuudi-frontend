@@ -30,7 +30,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const { data: user } = useUser();
 
   const getDisplayName = () => {
-    if (user?.first_name) return `${user.first_name} ${user.last_name}`;
     if (user?.email) return user.email.split("@")[0];
     return "User";
   };
