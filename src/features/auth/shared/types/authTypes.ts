@@ -56,6 +56,7 @@ export interface AuthUser {
   avatar?: string;
   user_type?: string;
   role?: string;
+  roleName?: string;
   school_name?: string;
   city_id?: string;
   year?: number;

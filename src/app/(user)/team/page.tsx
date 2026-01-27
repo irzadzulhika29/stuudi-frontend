@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { TeamContainer } from "@/features/user/dashboard/teams/containers/TeamContainer";
+import { TeamContainer } from "@/features/user/dashboard/team/containers/TeamContainer";
 
 export const metadata: Metadata = {
   title: "Informasi Tim",
