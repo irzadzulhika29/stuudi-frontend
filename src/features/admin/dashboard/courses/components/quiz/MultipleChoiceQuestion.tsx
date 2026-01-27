@@ -1,26 +1,21 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { QuizOption, MultipleChoiceQuestionProps } from "./types";
+import { QuizOption, MultipleChoiceQuestionProps, QuizDifficulty } from "./types";
 import { QuizOptionItem } from "../material/QuizOptionItem";
 import { ToggleSwitch } from "@/shared/components/ui";
 
 export function MultipleChoiceQuestion({
   id,
-  question,
-  points,
-  isRequired,
+  difficulty,
   options,
   isMultipleAnswer,
-  onQuestionChange,
-  onPointsChange,
+  onDifficultyChange,
   onOptionsChange,
   onMultipleAnswerToggle,
 }: MultipleChoiceQuestionProps) {
   const handleOptionChange = (optionId: string, text: string) => {
-    const updatedOptions = options.map((opt) =>
-      opt.id === optionId ? { ...opt, text } : opt,
-    );
+    const updatedOptions = options.map((opt) => (opt.id === optionId ? { ...opt, text } : opt));
     onOptionsChange(updatedOptions);
   };
 
@@ -28,7 +23,7 @@ export function MultipleChoiceQuestion({
     let updatedOptions: QuizOption[];
     if (isMultipleAnswer) {
       updatedOptions = options.map((opt) =>
-        opt.id === optionId ? { ...opt, isCorrect: !opt.isCorrect } : opt,
+        opt.id === optionId ? { ...opt, isCorrect: !opt.isCorrect } : opt
       );
     } else {
       updatedOptions = options.map((opt) => ({
@@ -56,9 +51,9 @@ export function MultipleChoiceQuestion({
   return (
     <div className="space-y-4">
       {/* Options Header */}
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-primary">
+          <span className="text-primary text-sm font-medium">
             Pilihan Jawaban<span className="text-error">*</span>
           </span>
           <span className="text-neutral-gray">|</span>
@@ -72,16 +67,18 @@ export function MultipleChoiceQuestion({
           size="sm"
         />
 
-        {/* Points Input */}
+        {/* Difficulty Select */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-neutral-dark">Atur poin</span>
-          <input
-            type="number"
-            value={points}
-            onChange={(e) => onPointsChange(parseInt(e.target.value) || 0)}
-            className="w-16 px-3 py-1.5 border border-neutral-gray/30 rounded-lg focus:outline-none focus:border-primary text-sm text-center"
-            min={0}
-          />
+          <span className="text-neutral-dark text-sm">Kesulitan</span>
+          <select
+            value={difficulty}
+            onChange={(e) => onDifficultyChange(e.target.value as QuizDifficulty)}
+            className="border-neutral-gray/30 focus:border-primary text-neutral-dark rounded-lg border bg-white px-3 py-1.5 text-sm focus:outline-none"
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
         </div>
       </div>
 
@@ -106,9 +103,9 @@ export function MultipleChoiceQuestion({
       <button
         type="button"
         onClick={handleAddOption}
-        className="flex items-center gap-2 px-4 py-2 border border-dashed border-neutral-gray/40 rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-sm text-neutral-gray hover:text-primary"
+        className="border-neutral-gray/40 hover:border-primary hover:bg-primary/5 text-neutral-gray hover:text-primary flex items-center gap-2 rounded-lg border border-dashed px-4 py-2 text-sm transition-all"
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="h-4 w-4" />
         <span>Tambahkan jawaban</span>
       </button>
     </div>

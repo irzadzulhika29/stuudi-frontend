@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ArrowLeft, Plus, Trash2, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, ChevronLeft } from "lucide-react";
 import { TextContentBox } from "./TextContentBox";
 import { MediaBox } from "./MediaBox";
 import { QuizBox, QuizData } from "./QuizBox";
@@ -20,21 +20,20 @@ interface MaterialFormProps {
   materialName: string;
   onBack: () => void;
   onSave: (materialName: string, contents: MaterialContent[]) => void;
+  isSaving?: boolean;
 }
 
 export function MaterialForm({
   courseId,
-  courseName,
   materialName: initialMaterialName,
-  onBack,
   onSave,
+  isSaving = false,
 }: MaterialFormProps) {
   const [materialName, setMaterialName] = useState(initialMaterialName);
   const [contents, setContents] = useState<MaterialContent[]>([]);
 
   // Generate unique ID
-  const generateId = () =>
-    `content-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const generateId = () => `content-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   // Add new content blocks
   const addTextContent = useCallback(() => {
@@ -64,7 +63,7 @@ export function MaterialForm({
       questionType: "multiple_choice",
       isRequired: true,
       isMultipleAnswer: false,
-      points: 1,
+      difficulty: "medium",
       options: [
         { id: `opt-${Date.now()}-1`, text: "", isCorrect: false },
         { id: `opt-${Date.now()}-2`, text: "", isCorrect: true },
@@ -78,23 +77,19 @@ export function MaterialForm({
   // Update content
   const updateTextContent = useCallback((id: string, content: string) => {
     setContents((prev) =>
-      prev.map((c) =>
-        c.id === id && c.type === "text" ? { ...c, content } : c,
-      ),
+      prev.map((c) => (c.id === id && c.type === "text" ? { ...c, content } : c))
     );
   }, []);
 
   const updateMediaFile = useCallback((id: string, file: File | null) => {
     setContents((prev) =>
-      prev.map((c) => (c.id === id && c.type === "media" ? { ...c, file } : c)),
+      prev.map((c) => (c.id === id && c.type === "media" ? { ...c, file } : c))
     );
   }, []);
 
   const updateMediaUrl = useCallback((id: string, embedUrl: string) => {
     setContents((prev) =>
-      prev.map((c) =>
-        c.id === id && c.type === "media" ? { ...c, embedUrl } : c,
-      ),
+      prev.map((c) => (c.id === id && c.type === "media" ? { ...c, embedUrl } : c))
     );
   }, []);
 
@@ -106,8 +101,8 @@ export function MaterialForm({
               ...c,
               ...data,
             }
-          : c,
-      ),
+          : c
+      )
     );
   }, []);
 
@@ -138,42 +133,38 @@ export function MaterialForm({
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 ">
-        <div className="flex items-center gap-4 mb-8">
-            <Link
-              href={`/dashboard-admin/courses/${courseId}/manage/${courseId}`}
-              className="w-10 h-10 bg-[#FF9D00] rounded-full flex items-center justify-center text-white hover:bg-[#E68E00] transition-colors"
-            >
-              <ChevronLeft size={24} />
-            </Link>
-            <span className="text-white text-lg">Course/Course Details</span>
-          </div>
+      <div className="sticky top-0 z-10">
+        <div className="mb-8 flex items-center gap-4">
+          <Link
+            href={`/dashboard-admin/courses/${courseId}/manage/${courseId}`}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF9D00] text-white transition-colors hover:bg-[#E68E00]"
+          >
+            <ChevronLeft size={24} />
+          </Link>
+          <span className="text-lg text-white">Course/Course Details</span>
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Title */}
-        <h1 className="text-3xl font-bold text-white mb-8">Tambah Materi</h1>
+        <h1 className="mb-8 text-3xl font-bold text-white">Tambah Materi</h1>
 
         {/* Material Name Input */}
-        <div className="space-y-2 mb-8">
-          <label className="block text-sm font-medium text-white">
-            Nama Materi
-          </label>
+        <div className="mb-8 space-y-2">
+          <label className="block text-sm font-medium text-white">Nama Materi</label>
           <input
             type="text"
             value={materialName}
             onChange={(e) => setMaterialName(e.target.value)}
             placeholder="Masukkan nama materi"
-            className="w-full px-4 py-3  border border-white/20 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+            className="w-full rounded-lg border border-white/20 px-4 py-3 text-white transition-all placeholder:text-white/60 focus:ring-2 focus:ring-white/30 focus:outline-none"
           />
         </div>
 
         {/* Content Section */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white">
-            Konten Materi
-          </h2>
+          <h2 className="text-2xl font-bold text-white">Konten Materi</h2>
 
           {/* Content Items */}
           <div className="space-y-4">
@@ -218,7 +209,7 @@ export function MaterialForm({
                   questionType: content.questionType,
                   isRequired: content.isRequired,
                   isMultipleAnswer: content.isMultipleAnswer,
-                  points: content.points,
+                  difficulty: content.difficulty,
                   options: content.options,
                   imageUrl: content.imageUrl,
                   correctAnswer: content.correctAnswer,
@@ -249,17 +240,17 @@ export function MaterialForm({
           <div className="flex items-center gap-4">
             <button
               type="button"
-              className="p-2 text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg transition-all"
+              className="text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg p-2 transition-all"
               title="Hapus semua"
             >
-              <Trash2 className="hover:text-gray text-white w-5 h-5" />
+              <Trash2 className="hover:text-gray h-5 w-5 text-white" />
             </button>
             <button
               type="button"
               onClick={addQuizContent}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-transparent border-2 border-dashed border-white/50 rounded-lg text-white hover:bg-white/20 hover:border-white transition-all"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/50 bg-transparent px-6 py-3 text-white transition-all hover:border-white hover:bg-white/20"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="h-5 w-5" />
               <span className="font-medium">Tambah Pertanyaan</span>
             </button>
           </div>
@@ -271,13 +262,13 @@ export function MaterialForm({
             onAddMedia={addMediaContent}
           />
 
-
           <button
             type="button"
             onClick={handleSave}
-            className="w-full py-2 bg-white rounded-full text-gray-500 font-medium text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
+            disabled={isSaving}
+            className="w-full rounded-full bg-white py-2 text-lg font-medium text-gray-500 shadow-lg transition-all hover:opacity-90 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Simpan
+            {isSaving ? "Menyimpan..." : "Simpan"}
           </button>
         </div>
       </div>

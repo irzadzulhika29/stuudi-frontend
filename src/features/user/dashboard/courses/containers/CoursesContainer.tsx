@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, Plus } from "lucide-react";
-import { CourseCard } from "@/features/user/dashboard/courses/components/CourseCard";
+import { CourseCard } from "@/shared/components/courses";
 import { useState } from "react";
 import { JoinClassModal } from "@/shared/components/ui/JoinClassModal";
 import EmptyState from "@/shared/components/ui/EmptyState";

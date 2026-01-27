@@ -34,7 +34,11 @@ export function Sidebar({ menuItems, className = "" }: SidebarProps) {
   const [showSupportModal, setShowSupportModal] = useState(false);
 
   const getSubItems = (item: MenuItem): SubItem[] => {
-    if (item.dynamicSubItems && item.href === "/courses") {
+    // Support dynamic sub-items for both user and admin courses
+    if (
+      item.dynamicSubItems &&
+      (item.href === "/courses" || item.href === "/dashboard-admin/courses")
+    ) {
       return navigation.subItems;
     }
     return item.subItems || [];
