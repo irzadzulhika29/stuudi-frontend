@@ -1,8 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { MateriDetailContainer } from "@/features/user/dashboard/courses/containers/MateriDetailContainer";
-import { UjiPemahamanContainer } from "@/features/user/dashboard/courses/containers/UjiPemahamanContainer";
+import { MateriDetailContainer } from "@/features/user/courses/containers/MateriDetailContainer";
+import { UjiPemahamanContainer } from "@/features/user/courses/containers/UjiPemahamanContainer";
 
 const UJI_PEMAHAMAN_IDS = ["4"];
 

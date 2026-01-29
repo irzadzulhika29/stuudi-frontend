@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { TopicDetailContainer } from "@/features/user/dashboard/courses/containers/TopicDetailContainer";
+import { TopicDetailContainer } from "@/features/user/courses/containers/TopicDetailContainer";
 
 export default function TopicDetailPage() {
   const params = useParams();

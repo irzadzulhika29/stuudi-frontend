@@ -269,7 +269,7 @@ export function SystemCheckContainer({ onChecksComplete }: SystemCheckContainerP
             variant="glow"
             size="lg"
             onClick={onChecksComplete}
-            disabled={allChecksPassed}
+            disabled={!allChecksPassed}
             className="group"
             icon={
               <ArrowRight

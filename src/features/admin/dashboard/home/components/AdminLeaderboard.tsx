@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { DataTable, TableColumn } from "../../shared/components/DataTable";
 
@@ -84,11 +84,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     "Cheating Flagged": "text-[#FFC107]",
   };
 
-  return (
-    <span className={`font-medium ${statusStyles[status] || "text-gray-600"}`}>
-      {status}
-    </span>
-  );
+  return <span className={`font-medium ${statusStyles[status] || "text-gray-600"}`}>{status}</span>;
 };
 
 // Konfigurasi kolom untuk leaderboard

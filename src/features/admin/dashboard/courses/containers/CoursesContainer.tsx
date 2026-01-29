@@ -7,7 +7,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTeachingCourses } from "@/features/admin/dashboard/courses/hooks/useTeachingCourses";
 import { JoinClassModal } from "@/shared/components/ui/JoinClassModal";
-import { CourseListSkeleton } from "@/features/user/dashboard/courses/components/CourseListSkeleton";
+import { CourseListSkeleton } from "@/features/user/courses/components/CourseListSkeleton";
 
 export function CoursesContainer() {
   const [searchQuery, setSearchQuery] = useState("");

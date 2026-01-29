@@ -10,6 +10,7 @@ interface CourseEditFormProps {
   onDescriptionChange: (value: string) => void;
   thumbnailFile: File | null;
   thumbnailPreview: string | null;
+  existingThumbnailUrl?: string | null;
   onThumbnailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onThumbnailRemove: () => void;
 }
@@ -21,6 +22,7 @@ export function CourseEditForm({
   onDescriptionChange,
   thumbnailFile,
   thumbnailPreview,
+  existingThumbnailUrl,
   onThumbnailChange,
   onThumbnailRemove,
 }: CourseEditFormProps) {
@@ -82,18 +84,28 @@ export function CourseEditForm({
         </div>
 
         {/* Thumbnail Preview */}
-        {thumbnailPreview && (
+        {(thumbnailPreview || existingThumbnailUrl) && (
           <div className="relative mt-4 inline-block">
             <div className="relative h-40 w-64 overflow-hidden rounded-xl border-2 border-white/20">
-              <Image src={thumbnailPreview} alt="Thumbnail preview" fill className="object-cover" />
+              <Image 
+                src={thumbnailPreview || existingThumbnailUrl!} 
+                alt="Thumbnail preview" 
+                fill 
+                className="object-cover" 
+              />
             </div>
-            <button
-              type="button"
-              onClick={handleLocalRemove}
-              className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white transition-colors hover:bg-red-600"
-            >
-              <X size={14} />
-            </button>
+            {thumbnailPreview && (
+              <button
+                type="button"
+                onClick={handleLocalRemove}
+                className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white transition-colors hover:bg-red-600"
+              >
+                <X size={14} />
+              </button>
+            )}
+            {!thumbnailPreview && existingThumbnailUrl && (
+              <span className="mt-2 block text-xs text-white/60">Thumbnail saat ini</span>
+            )}
           </div>
         )}
       </div>

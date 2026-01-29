@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCourseNavigation } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
+import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
 import { ManageTopicList } from "@/features/admin/dashboard/courses/components/CourseDetailAdmin";
 import { CourseInfoSidebar } from "@/features/admin/dashboard/courses/components/CourseInfoSidebar";
 import { useTeachingCourseDetails } from "../hooks/useTeachingCourseDetails";
@@ -11,7 +11,7 @@ import { useAddTopic } from "../hooks/useAddTopic";
 import { useUpdateCourse } from "../hooks/useUpdateCourse";
 import { useDeleteCourse } from "../hooks/useDeleteCourse";
 import { Button } from "@/shared/components/ui";
-import { CourseDetailSkeleton } from "@/features/user/dashboard/courses/components/CourseDetailSkeleton";
+import { CourseDetailSkeleton } from "@/features/user/courses/components/CourseDetailSkeleton";
 import { AddTopicModal } from "../components/AddTopicModal";
 import { CourseEditForm } from "../components/CourseEditForm";
 import { ManagementHeader } from "../components/ManagementHeader";
@@ -32,12 +32,10 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [isAddTopicModalOpen, setIsAddTopicModalOpen] = useState(false);
 
-  // Local state for form editing
   const [prevCourse, setPrevCourse] = useState<typeof course | null>(null);
   const [courseName, setCourseName] = useState("");
   const [description, setDescription] = useState("");
 
-  // React-approved pattern: adjust state during render
   if (course && course !== prevCourse) {
     setCourseName(course.name);
     setDescription(course.description);
@@ -103,7 +101,6 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
         onSuccess: (data) => {
           console.log("Update success:", data);
           setThumbnailFile(null);
-          // Redirect to course detail
           router.push(`/dashboard-admin/courses/${courseId}`);
         },
         onError: (error) => {
@@ -164,7 +161,6 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
     enrollCode: course.enrollment_code,
   };
 
-  // Transform topics for ManageTopicList
   const transformedTopics =
     course.topics?.map((topic) => ({
       id: topic.topic_id,
@@ -200,6 +196,7 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
             onDescriptionChange={setDescription}
             thumbnailFile={thumbnailFile}
             thumbnailPreview={thumbnailPreview}
+            existingThumbnailUrl={course.image_url}
             onThumbnailChange={handleThumbnailChange}
             onThumbnailRemove={handleRemoveThumbnail}
           />

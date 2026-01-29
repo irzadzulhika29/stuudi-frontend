@@ -4,7 +4,7 @@ import { LayoutDashboard, BookOpen, Users } from "lucide-react";
 import DashboardLayout from "@/features/user/dashboard/shared/components/DashboardLayout";
 import { Sidebar } from "@/features/user/dashboard/shared/components/Sidebar";
 import { Topbar } from "@/features/user/dashboard/shared/components/Topbar";
-import { CourseNavigationProvider } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
+import { CourseNavigationProvider } from "@/features/user/courses/context/CourseNavigationContext";
 import { useUser } from "@/features/auth/shared/hooks/useUser";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
