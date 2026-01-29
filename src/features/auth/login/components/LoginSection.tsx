@@ -35,15 +35,15 @@ export default function LoginSection() {
         <div className="flex justify-end">
           <Link
             href="/forgot-password"
-            className="text-sm text-[#27A8F3] hover:text-[#1E8FD4] hover:underline"
+            className="text-secondary hover:text-secondary-dark text-sm hover:underline"
           >
             Lupa Password?
           </Link>
         </div>
 
         <Button
-          variant="primary"
-          className="w-full rounded-2xl py-3 !text-lg shadow-lg shadow-blue-300/50"
+          variant="secondary"
+          className="shadow-secondary/30 w-full rounded-2xl py-3 text-lg! shadow-lg"
         >
           Masuk
         </Button>

@@ -8,11 +8,13 @@ import EmptyState from "@/shared/components/ui/EmptyState";
 import { CourseListSkeleton } from "../components/CourseListSkeleton";
 import { useMyCourses } from "../hooks/useMyCourses";
 import { useEnrollCourse } from "../hooks/useEnrollCourse";
+import { useUser } from "@/features/auth/shared/hooks/useUser";
 
 export function CoursesContainer() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data: user } = useUser();
   const { data, isLoading } = useMyCourses();
   const { mutate: enroll, isPending: isEnrolling } = useEnrollCourse();
 
@@ -32,9 +34,29 @@ export function CoursesContainer() {
   return (
     <>
       <div className="min-h-screen overflow-x-hidden px-4 py-6">
-        <div className="mb-8">
-          <h1 className="mb-2 text-4xl font-bold text-white">Courses</h1>
-          <p className="text-lg text-white/80">Mau belajar apa hari ini?</p>
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <h1 className="mb-2 text-4xl font-bold text-white">Courses</h1>
+            <p className="text-lg text-white/80">Mau belajar apa hari ini?</p>
+          </div>
+          <div className="hidden text-right sm:block">
+            <p className="mb-2 text-3xl font-bold tracking-tight text-white drop-shadow-md">
+              {user?.username}
+            </p>
+            <div className="group relative inline-flex cursor-pointer items-center overflow-hidden rounded-full px-5 py-2 transition-all hover:scale-105">
+              {/* Glass Background with Gradient Border effect via shadow/ring */}
+              <div className="absolute inset-0 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl transition-colors group-hover:bg-white/10" />
+              <div className="absolute inset-0 bg-linear-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+              {/* Content */}
+              <span className="relative z-10 mr-3 text-sm font-black tracking-widest text-orange-400 drop-shadow-[0_0_8px_rgba(2fb,146,60,0.5)]">
+                EXP
+              </span>
+              <span className="relative z-10 text-xl font-black tracking-wide text-white drop-shadow-sm">
+                {user?.total_exp?.toLocaleString() || 0}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="mb-8 flex gap-3">
@@ -71,7 +93,6 @@ export function CoursesContainer() {
                 id={course.course_id}
                 title={course.name}
                 thumbnail={course.image_url}
-                studentCount={course.student_count}
                 progress={course.progress_percentage}
                 isEnrolled={true}
               />

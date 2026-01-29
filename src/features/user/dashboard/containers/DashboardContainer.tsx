@@ -6,8 +6,31 @@ import { DashboardCountdown } from "../components/DashboardCountdown";
 import Image from "next/image";
 import { useUser } from "@/features/auth/shared/hooks/useUser";
 
+import { useState, useEffect } from "react";
+import { dashboardService } from "../services/dashboardService";
+import { ExamAttempt } from "../types/dashboardTypes";
+import { ActiveAttemptCard } from "../components/ActiveAttemptCard";
+
 export function DashboardContainer() {
   const { data: user, isLoading } = useUser();
+  const [attempts, setAttempts] = useState<ExamAttempt[]>([]);
+
+  useEffect(() => {
+    const fetchAttempts = async () => {
+      try {
+        const response = await dashboardService.getAttempts();
+        if (response?.attempts) {
+          const activeAttempts = response.attempts.filter(
+            (attempt) => attempt.status !== "passed" && attempt.status !== "failed"
+          );
+          setAttempts(activeAttempts);
+        }
+      } catch (error) {
+        console.error("Failed to fetch attempts", error);
+      }
+    };
+    fetchAttempts();
+  }, []);
 
   if (isLoading) {
     return (
@@ -17,7 +40,7 @@ export function DashboardContainer() {
     );
   }
 
-  const displayName = user?.email.split("@")[0] || "User";
+  const displayName = user?.username || "User";
 
   return (
     <div className="relative flex min-h-[calc(100vh-8rem)] flex-col items-center justify-start pt-4">
@@ -45,9 +68,17 @@ export function DashboardContainer() {
           </div>
         </div>
 
+        {attempts.length > 0 && (
+          <div className="mb-6 flex w-full flex-col items-center px-4">
+            {attempts.map((attempt) => (
+              <ActiveAttemptCard key={attempt.attempt_id} attempt={attempt} />
+            ))}
+          </div>
+        )}
+
         <ExamCodeInput />
 
-        <div className="relative z-10 w-full">
+        <div className="relative z-10 flex w-full max-w-2xl">
           <TeamTable />
         </div>
 

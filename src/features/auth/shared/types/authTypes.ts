@@ -10,7 +10,7 @@ export interface ApiResponse<T> {
 }
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -61,6 +61,8 @@ export interface AuthUser {
   school_name?: string;
   city_id?: string;
   year?: number;
+  username?: string;
+  total_exp?: number;
 }
 
 export interface RegistrationState {
