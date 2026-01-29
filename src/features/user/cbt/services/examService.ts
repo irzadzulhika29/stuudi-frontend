@@ -11,9 +11,22 @@ export const examService = {
     answer: QuestionAnswer
   ): Promise<boolean> {
     try {
+      // Normalize answer to string[]
+      let selectedOptionIds: string[] = [];
+
+      if (typeof answer === "string") {
+        selectedOptionIds = [answer];
+      } else if (Array.isArray(answer)) {
+        selectedOptionIds = answer as string[];
+      } else if (answer && typeof answer === "object") {
+        // For matching (Record<string, string>), we send the selected option IDs (values)
+        // Adjust this if your backend expects a specific format like "key:value"
+        selectedOptionIds = Object.values(answer as Record<string, string>);
+      }
+
       await api.post(`/student/exams-attempt/${attemptId}/answers`, {
         question_id: questionId,
-        selected_option_id: answer,
+        selected_option_id: selectedOptionIds,
       });
       return true;
     } catch (error) {
@@ -66,9 +79,7 @@ export const examService = {
     };
   },
 
-  async recordTabSwitch(
-    attemptId: string
-  ): Promise<{
+  async recordTabSwitch(attemptId: string): Promise<{
     lives_remaining: number;
     warning_message: string;
     is_disqualified: boolean;

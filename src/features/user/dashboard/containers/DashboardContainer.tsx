@@ -1,6 +1,7 @@
 "use client";
 
 import { TeamTable } from "../components/TeamTable";
+import Loading from "@/app/loading";
 import { ExamCodeInput } from "../components/ExamCodeInput";
 import { DashboardCountdown } from "../components/DashboardCountdown";
 import Image from "next/image";
@@ -12,8 +13,9 @@ import { ExamAttempt } from "../types/dashboardTypes";
 import { ActiveAttemptCard } from "../components/ActiveAttemptCard";
 
 export function DashboardContainer() {
-  const { data: user, isLoading } = useUser();
+  const { data: user, isLoading: isUserLoading } = useUser();
   const [attempts, setAttempts] = useState<ExamAttempt[]>([]);
+  const [isAttemptsLoading, setIsAttemptsLoading] = useState(true);
 
   useEffect(() => {
     const fetchAttempts = async () => {
@@ -27,45 +29,48 @@ export function DashboardContainer() {
         }
       } catch (error) {
         console.error("Failed to fetch attempts", error);
+      } finally {
+        setIsAttemptsLoading(false);
       }
     };
     fetchAttempts();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center text-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-      </div>
-    );
-  }
+  // if (isUserLoading || isAttemptsLoading) {
+  //   return <Loading />;
+  // }
 
-  const displayName = user?.username || "User";
+  const displayName = user?.username || "Arterians";
 
   return (
     <div className="relative flex min-h-[calc(100vh-8rem)] flex-col items-center justify-start pt-4">
-      <div className="relative z-10 flex w-full flex-col items-center text-center">
-        <div className="mb-6 ml-4 w-full px-2 text-left md:px-4">
-          <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
-            Selamat Datang, <span className="text-secondary">{displayName}!</span>
-          </h1>
-          <p className="text-lg text-white/60">Mau belajar apa hari ini?</p>
-        </div>
+      {/* Loading Overlay */}
+      {(isUserLoading || isAttemptsLoading) && <Loading />}
 
-        <div className="mb-8 flex w-full flex-col items-center">
-          <div className="relative mb-4 h-32 w-64">
+      <div className="relative z-10 flex w-full flex-col items-center text-center">
+        <div className="mb-6 grid w-full grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-3">
+          <div className="text-left">
+            <h1 className="mb-1 text-xl font-bold text-white md:text-2xl">
+              Selamat Datang, <span className="text-secondary">{displayName}!</span>
+            </h1>
+            <p className="text-sm text-white/50">Mau belajar apa hari ini?</p>
+          </div>
+
+          <div className="relative h-16 w-32 md:h-20 md:w-40 md:justify-self-center">
             <Image
               src="/images/logo/ARTERI.webp"
               alt="ARTERI"
               fill
-              className="object-contain"
+              className="object-contain object-right md:object-center"
               priority
             />
           </div>
 
-          <div className="mb-4 text-center">
-            <DashboardCountdown />
-          </div>
+          <div className="hidden md:block" />
+        </div>
+
+        <div className="mb-8 w-full">
+          <DashboardCountdown />
         </div>
 
         {attempts.length > 0 && (
@@ -89,6 +94,7 @@ export function DashboardContainer() {
             width={320}
             height={320}
             className="object-contain object-bottom"
+            priority
           />
         </div>
 
@@ -99,6 +105,7 @@ export function DashboardContainer() {
             width={320}
             height={320}
             className="scale-x-[-1] object-contain object-bottom"
+            priority
           />
         </div>
       </div>

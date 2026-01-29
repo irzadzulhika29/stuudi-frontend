@@ -9,8 +9,11 @@ import { CourseListSkeleton } from "../components/CourseListSkeleton";
 import { useMyCourses } from "../hooks/useMyCourses";
 import { useEnrollCourse } from "../hooks/useEnrollCourse";
 import { useUser } from "@/features/auth/shared/hooks/useUser";
+import { useCourseNavigation } from "../context/CourseNavigationContext";
+import { useEffect } from "react";
 
 export function CoursesContainer() {
+  const { clearNav } = useCourseNavigation();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -25,6 +28,11 @@ export function CoursesContainer() {
       },
     });
   };
+
+  // Clear sidebar navigation history when visiting the main courses page
+  useEffect(() => {
+    clearNav();
+  }, [clearNav]);
 
   const courses = data?.courses || [];
   const filteredCourses = searchQuery

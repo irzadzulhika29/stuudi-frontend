@@ -104,6 +104,7 @@ export interface ApiCourseDetails {
   participants: Participant[];
   total_participants: number;
   last_accessed: string | null;
+  my_notes: Note[] | null;
 }
 
 // Transformed type (used in components)
@@ -119,6 +120,7 @@ export interface CourseDetails {
   participants: Participant[];
   total_participants: number;
   last_accessed: string | null;
+  my_notes: Note[] | null;
 }
 
 // API response for GET /student/courses/{courseId}/topics
@@ -250,4 +252,5 @@ export interface Note {
   title: string;
   content: string;
   created_at: string;
+  topic_name?: string;
 }

@@ -19,7 +19,7 @@ export function TeamTable({ className }: TeamTableProps) {
       )}
     >
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
+        <div className="max-h-[300px] flex-1 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-full border-collapse text-center">
             <thead className="bg-secondary-default sticky top-0 z-10 text-white shadow-md">
               <tr>

@@ -30,6 +30,7 @@ interface ExamContainerProps {
 }
 
 import { useRouter } from "next/navigation";
+import Loading from "@/app/loading";
 
 export function ExamContainer({ stream }: ExamContainerProps) {
   const dispatch = useAppDispatch();
@@ -170,14 +171,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
         </div>
 
         {/* Loading Spinner Overlay */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/20 bg-white/10 p-8 shadow-2xl backdrop-blur-md">
-            <div className="relative">
-              <div className="h-16 w-16 animate-spin rounded-full border-4 border-white/20 border-t-orange-500"></div>
-            </div>
-            <p className="animate-pulse text-lg font-medium text-white/90">Memuat Data Ujian...</p>
-          </div>
-        </div>
+        <Loading />
       </div>
     );
   }
