@@ -10,7 +10,7 @@ import {
   QuizSettings,
 } from "@/features/admin/dashboard/courses/components/quiz";
 import { Button } from "@/shared/components/ui";
-import { useCreateQuiz } from "../hooks/useCreateQuiz";
+import { useCreateQuiz, useUpdateQuizQuestion, useAddQuizQuestions, useDeleteQuizQuestion } from "../hooks/useCreateQuiz";
 
 export interface QuizItem {
   id: string;
@@ -44,9 +44,16 @@ export function QuizFormContainer({
   const [quizName, setQuizName] = useState(initialQuizName);
   const [quizItems, setQuizItems] = useState<QuizItem[]>(initialQuizItems);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState({ current: 0, total: 0 });
 
   // Use the create quiz hook (only for new quizzes)
   const { createQuiz, isCreating, progress } = useCreateQuiz(topicId || "");
+  
+  // Use update question hook for edit mode
+  const updateQuestionMutation = useUpdateQuizQuestion();
+  const addQuestionMutation = useAddQuizQuestions();
+  const deleteQuestionMutation = useDeleteQuizQuestion();
 
   const [quizSettings, setQuizSettings] = useState<QuizSettings>({
     randomizeQuestions: false,
@@ -91,12 +98,26 @@ export function QuizFormContainer({
     });
   }, []);
 
-  const deleteQuiz = useCallback((id: string) => {
+  const deleteQuiz = useCallback(async (id: string) => {
+    const initialItemIds = new Set(initialQuizItems.map(item => item.id));
+    const isExistingQuestion = initialItemIds.has(id);
+
+    if (isEditMode && isExistingQuestion) {
+      try {
+        console.log(`Deleting question ${id}...`);
+        await deleteQuestionMutation.mutateAsync({ questionId: id });
+        console.log(`Question ${id} deleted successfully`);
+      } catch (error) {
+        console.error(`Failed to delete question ${id}:`, error);
+        setError("Gagal menghapus pertanyaan");
+        return; 
+      }
+    }
+
     setQuizItems((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  }, [isEditMode, initialQuizItems, deleteQuestionMutation]);
 
   const handleSave = async () => {
-    // Validate
     if (!quizName.trim()) {
       setError("Nama quiz harus diisi");
       return;
@@ -114,19 +135,76 @@ export function QuizFormContainer({
 
     setError(null);
 
-    // For edit mode, use onSave callback or implement update API
     if (isEditMode) {
       if (onSave) {
         onSave(quizName, quizItems, quizSettings);
       } else {
-        // TODO: Implement update quiz API
-        console.log("Updating quiz:", { quizId, quizName, quizItems, quizSettings });
+        setIsUpdating(true);
+        setUpdateProgress({ current: 0, total: quizItems.length });
+        
+        const failedQuestions: number[] = [];
+        const initialItemIds = new Set(initialQuizItems.map(item => item.id));
+
+        for (let i = 0; i < quizItems.length; i++) {
+          const item = quizItems[i];
+          
+          let questionType: "single" | "multiple" = "single";
+          if (item.data.questionType === "multiple_choice") {
+            questionType = item.data.isMultipleAnswer ? "multiple" : "single";
+          }
+
+          const options = item.data.options.map((opt) => ({
+            text: opt.text,
+            is_correct: opt.isCorrect,
+          }));
+
+          const questionData = {
+            question_text: item.data.question,
+            question_type: questionType,
+            difficulty: item.data.difficulty,
+            explanation: "",
+            options,
+          };
+
+          try {
+            const isExistingQuestion = initialItemIds.has(item.id);
+            
+            if (isExistingQuestion) {
+              console.log(`Updating question ${i + 1}/${quizItems.length}:`, questionData);
+              await updateQuestionMutation.mutateAsync({
+                questionId: item.id,
+                question: questionData,
+              });
+              console.log(`Question ${i + 1} updated successfully`);
+            } else {
+              console.log(`Adding new question ${i + 1}/${quizItems.length}:`, questionData);
+              await addQuestionMutation.mutateAsync({
+                contentId: quizId!,
+                question: questionData,
+              });
+              console.log(`Question ${i + 1} added successfully`);
+            }
+          } catch (error) {
+            console.error(`Failed to save question ${i + 1}:`, error);
+            failedQuestions.push(i);
+          }
+
+          setUpdateProgress({ current: i + 1, total: quizItems.length });
+        }
+
+        setIsUpdating(false);
+
+        if (failedQuestions.length > 0) {
+          setError(`${failedQuestions.length} pertanyaan gagal disimpan`);
+          return;
+        }
+
+        console.log("Quiz updated successfully");
         router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
       }
       return;
     }
 
-    // Create quiz using API
     const result = await createQuiz(quizName, quizItems);
 
     if (result.success) {
@@ -221,27 +299,25 @@ export function QuizFormContainer({
             onSettingsChange={handleSettingsChange}
           />
 
-          {/* Error message */}
           {error && (
             <div className="rounded-lg bg-red-500/20 p-4 text-red-200">
               {error}
             </div>
           )}
 
-          {/* Progress indicator */}
-          {isCreating && (
+          {(isCreating || isUpdating) && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-white">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>
-                  Menyimpan... ({progress.current}/{progress.total})
+                  {isEditMode ? "Memperbarui" : "Menyimpan"}... ({isEditMode ? updateProgress.current : progress.current}/{isEditMode ? updateProgress.total : progress.total})
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
                 <div
                   className="bg-primary h-full transition-all duration-300"
                   style={{
-                    width: `${(progress.current / progress.total) * 100}%`,
+                    width: `${((isEditMode ? updateProgress.current : progress.current) / (isEditMode ? updateProgress.total : progress.total)) * 100}%`,
                   }}
                 />
               </div>
@@ -251,10 +327,10 @@ export function QuizFormContainer({
           <Button
             variant="outline"
             onClick={handleSave}
-            disabled={isCreating}
+            disabled={isCreating || isUpdating}
             className="hover:!bg-primary w-full hover:text-white disabled:opacity-50"
           >
-            {isCreating ? "Menyimpan..." : "Simpan"}
+            {isCreating || isUpdating ? (isEditMode ? "Memperbarui..." : "Menyimpan...") : "Simpan"}
           </Button>
         </div>
       </div>

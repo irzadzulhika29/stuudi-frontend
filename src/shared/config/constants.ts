@@ -54,6 +54,8 @@ export const API_ENDPOINTS = {
     ADD_MEDIA_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/media`,
     ADD_QUIZ_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/quiz`,
     ADD_QUIZ_QUESTION: (blockId: string) => `teacher/blocks/${blockId}/questions`,
+    UPDATE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
+    DELETE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
   },
   TEAM: {
     INFO: "/elearning/team-details",
