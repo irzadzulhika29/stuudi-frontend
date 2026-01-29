@@ -4,12 +4,12 @@ import { useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCourseNavigation } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
+import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
 import { TopicCard } from "@/features/admin/dashboard/courses/components/TopicCard";
 import { CourseInfoSidebar } from "@/features/admin/dashboard/courses/components/CourseInfoSidebar";
 import { useTeachingCourseDetails } from "../hooks/useTeachingCourseDetails";
 import { Button } from "@/shared/components/ui";
-import { CourseDetailSkeleton } from "@/features/user/dashboard/courses/components/CourseDetailSkeleton";
+import { CourseDetailSkeleton } from "@/features/user/courses/components/CourseDetailSkeleton";
 
 interface CourseDetailContainerProps {
   courseId: string;

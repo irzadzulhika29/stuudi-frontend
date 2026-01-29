@@ -6,7 +6,7 @@ import { HelpCircle, ChevronLeft, Menu, X, Phone, MessageCircle } from "lucide-r
 import { ReactNode, useState } from "react";
 import Image from "next/image";
 import { useSidebar } from "@/features/user/dashboard/shared/context/SidebarContext";
-import { useCourseNavigation } from "@/features/user/dashboard/courses/context/CourseNavigationContext";
+import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
 
 export type SubItem = {
   label: string;

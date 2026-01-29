@@ -25,18 +25,20 @@ export const authService = {
     setTokens(result.token);
 
     const decoded = decodeJwt<JwtPayload>(result.token);
+    const roleName = decoded?.RoleName;
 
     if (typeof window !== "undefined") {
       const userData: AuthUser = {
         id: decoded?.UserID || "local-user",
         email: data.email,
         user_type: result.user_type,
-        roleName: decoded?.RoleName || undefined,
+        roleName: roleName || undefined,
       };
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
     }
 
-    return result;
+    // Return result with roleName included for redirect logic
+    return { ...result, roleName };
   },
 
   async logout(): Promise<void> {

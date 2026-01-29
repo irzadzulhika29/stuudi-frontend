@@ -14,10 +14,19 @@ export const useLogin = () => {
     onSuccess: (data) => {
       console.log("Login successful", data);
       console.log("User type from API:", data.user_type);
+      console.log("Role name from response:", data.roleName);
 
       // Role-based redirect: students go to /dashboard, teachers go to /dashboard-admin
+      // Check both user_type (from API response) and roleName (from JWT token)
       const userType = data.user_type?.toLowerCase();
-      const isStudent = userType === "student" || userType === "siswa";
+      const roleName = data.roleName?.toLowerCase();
+
+      const isStudent =
+        userType === "student" ||
+        userType === "siswa" ||
+        roleName === "student" ||
+        roleName === "siswa";
+
       const redirectPath = isStudent ? ROUTES.DASHBOARD : ROUTES.ADMIN_DASHBOARD;
 
       console.log("Is student:", isStudent, "| Redirecting to:", redirectPath);

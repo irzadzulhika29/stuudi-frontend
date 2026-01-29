@@ -2,6 +2,6 @@ export { default as DashboardLayout } from "./dashboard/shared/components/Dashbo
 export { Sidebar } from "./dashboard/shared/components/Sidebar";
 export { Topbar } from "./dashboard/shared/components/Topbar";
 
-export { CourseCard } from "./dashboard/courses/components/CourseCard";
+export { CourseCard } from "./courses/components/CourseCard";
 
 export { SidebarProvider, useSidebar } from "./dashboard/shared/context/SidebarContext";

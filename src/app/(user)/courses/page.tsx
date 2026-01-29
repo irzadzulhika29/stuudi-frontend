@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { CoursesContainer } from "@/features/user/dashboard/courses/containers/CoursesContainer";
+import { CoursesContainer } from "@/features/user/courses/containers/CoursesContainer";
 
 export const metadata: Metadata = {
   title: "Kursus",
