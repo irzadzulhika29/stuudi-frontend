@@ -1,23 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { CourseInfoSidebarProps, Note } from "../types/cTypes";
+// import { useState } from "react";
+// import { CourseInfoSidebarProps, Note } from "../types/cTypes";
+import { CourseInfoSidebarProps } from "../types/cTypes";
 import { CoursePeople } from "./smallcomponents/CoursePeople";
 import { CourseEnrollCode } from "./smallcomponents/CourseEnrollCode";
 
 export function CourseInfoSidebar({
-  progress,
+  progress, // eslint-disable-line @typescript-eslint/no-unused-vars
   teachers = [],
   participants = [],
   totalParticipants = 0,
   lastAccessed,
-  notes: initialNotes = [],
   showPeople = true,
   showLastAccessed = true,
   enrollCode,
 }: CourseInfoSidebarProps) {
-  const [notes, setNotes] = useState<Note[]>(initialNotes);
-
+  // const [notes] = useState<Note[]>(initialNotes); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   return (
     <div className="space-y-3">
@@ -32,11 +31,9 @@ export function CourseInfoSidebar({
       )}
 
       {showLastAccessed && lastAccessed && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-primary-light">
-          <p className="text-xs text-primary-light font-medium">
-            Last Accessed
-          </p>
-          <p className="font-bold text-primary-dark text-sm">{lastAccessed}</p>
+        <div className="border-primary-light rounded-xl border-l-4 bg-white p-4 shadow-sm">
+          <p className="text-primary-light text-xs font-medium">Last Accessed</p>
+          <p className="text-primary-dark text-sm font-bold">{lastAccessed}</p>
         </div>
       )}
     </div>

@@ -18,10 +18,12 @@ export interface CourseInfoSidebarProps {
   topicId?: string;
   showPeople?: boolean;
   showLastAccessed?: boolean;
+  readOnly?: boolean;
 }
 
 export interface Note {
   id: string;
+  title?: string;
   content: string;
   createdAt: string;
   updatedAt?: string;
@@ -33,10 +35,11 @@ export interface Note {
 
 export interface CourseNotesProps {
   notes: Note[];
-  onAddNote?: (content: string) => void;
-  onEditNote?: (id: string, content: string) => void;
+  onAddNote?: (title: string, content: string) => void;
+  onEditNote?: (id: string, title: string, content: string) => void;
   onDeleteNote?: (id: string) => void;
   level?: "course" | "topic" | "material";
+  readOnly?: boolean;
 }
 
 export interface QuizOption {

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { MateriDetailSkeleton } from "../components/MateriDetailSkeleton";
 import Button from "@/shared/components/ui/Button";
 import { QuizBlockQuestion } from "../components/QuizBlockQuestion";
 import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
@@ -52,14 +53,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
   const isLoading = isLoadingContent || isLoadingCourse;
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center text-white">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-          <p>Memuat materi...</p>
-        </div>
-      </div>
-    );
+    return <MateriDetailSkeleton />;
   }
 
   if (isContentError || !content) {
@@ -188,6 +182,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
           <div className="mb-6 lg:hidden">
             <CourseInfoSidebar
               progress={sidebarProps.progress}
+              topicId={topicId}
               showPeople={false}
               showLastAccessed={false}
             />
@@ -235,6 +230,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
           <div className="sticky top-24">
             <CourseInfoSidebar
               progress={sidebarProps.progress}
+              topicId={topicId}
               showPeople={false}
               showLastAccessed={false}
             />

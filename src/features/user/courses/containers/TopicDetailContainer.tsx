@@ -8,6 +8,7 @@ import { CourseInfoSidebar } from "@/features/user/courses/components/CourseInfo
 import { useCourseTopics } from "../hooks/useCourseTopics";
 import { useCourseDetails } from "../hooks/useCourseDetails";
 import Button from "@/shared/components/ui/Button";
+import { TopicDetailSkeleton } from "../components/TopicDetailSkeleton";
 
 interface TopicDetailContainerProps {
   courseId: string;
@@ -38,14 +39,9 @@ export function TopicDetailContainer({ courseId, topicId }: TopicDetailContainer
   const isLoading = isLoadingTopics || isLoadingCourse;
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center text-white">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-          <p>Memuat data...</p>
-        </div>
-      </div>
-    );
+    if (isLoading) {
+      return <TopicDetailSkeleton />;
+    }
   }
 
   if (isTopicsError || !topic) {

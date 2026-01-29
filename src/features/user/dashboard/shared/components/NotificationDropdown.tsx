@@ -136,9 +136,9 @@ export function NotificationDropdown() {
       </button>
 
       {isOpen && (
-        <div className="animate-fade-in absolute top-full right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-white/10 bg-neutral-900 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
-            <h3 className="font-semibold text-white">Notifikasi</h3>
+        <div className="animate-fade-in absolute top-full right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50 px-4 py-3">
+            <h3 className="font-semibold text-neutral-800">Notifikasi</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
@@ -152,7 +152,7 @@ export function NotificationDropdown() {
 
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-white/50">
+              <div className="flex flex-col items-center justify-center py-10 text-neutral-400">
                 <Bell size={32} className="mb-2" />
                 <p className="text-sm">Tidak ada notifikasi</p>
               </div>
@@ -160,7 +160,7 @@ export function NotificationDropdown() {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`group relative border-b border-white/5 px-4 py-3 transition-colors hover:bg-white/5 ${
+                  className={`group relative border-b border-neutral-100 px-4 py-3 transition-colors hover:bg-neutral-50 ${
                     !notification.isRead ? "bg-primary/5" : ""
                   }`}
                 >
@@ -171,21 +171,21 @@ export function NotificationDropdown() {
                     <div className="min-w-0 flex-1">
                       <p
                         className={`text-sm font-medium ${
-                          notification.isRead ? "text-white/70" : "text-white"
+                          notification.isRead ? "text-neutral-600" : "text-neutral-900"
                         }`}
                       >
                         {notification.title}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-white/50">
+                      <p className="mt-0.5 truncate text-xs text-neutral-500">
                         {notification.message}
                       </p>
-                      <p className="mt-1 text-[10px] text-white/40">{notification.time}</p>
+                      <p className="mt-1 text-[10px] text-neutral-400">{notification.time}</p>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       {!notification.isRead && (
                         <button
                           onClick={() => handleMarkAsRead(notification.id)}
-                          className="hover:text-primary p-1 text-white/50 transition-colors"
+                          className="hover:text-primary p-1 text-neutral-400 transition-colors"
                           title="Tandai dibaca"
                         >
                           <Check size={14} />
@@ -193,7 +193,7 @@ export function NotificationDropdown() {
                       )}
                       <button
                         onClick={() => handleDelete(notification.id)}
-                        className="p-1 text-white/50 transition-colors hover:text-red-400"
+                        className="p-1 text-neutral-400 transition-colors hover:text-red-500"
                         title="Hapus"
                       >
                         <Trash2 size={14} />
@@ -205,7 +205,7 @@ export function NotificationDropdown() {
             )}
           </div>
 
-          <div className="border-t border-white/10 bg-white/5 px-4 py-2">
+          <div className="border-t border-neutral-100 bg-neutral-50 px-4 py-2">
             <button className="text-primary hover:text-primary/80 w-full py-1 text-center text-xs transition-colors">
               Lihat semua notifikasi
             </button>

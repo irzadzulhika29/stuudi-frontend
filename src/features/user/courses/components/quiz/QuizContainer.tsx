@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/shared/components/ui/Modal";
+import Loading from "@/app/loading";
 import {
   QuizData,
   QuizState,
@@ -257,6 +258,7 @@ export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizC
 
   return (
     <div className="px-3 py-4 md:px-4 md:py-6">
+      {isLoading && <Loading />}
       {state.status === "start" && (
         <QuizStart
           quiz={quiz}

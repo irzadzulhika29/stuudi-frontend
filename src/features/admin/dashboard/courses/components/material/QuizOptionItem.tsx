@@ -14,7 +14,7 @@ interface QuizOptionItemProps {
 }
 
 export function QuizOptionItem({
-  id,
+  // id, // eslint-disable-line @typescript-eslint/no-unused-vars
   optionId,
   text,
   isCorrect,
@@ -24,32 +24,22 @@ export function QuizOptionItem({
   isMultipleAnswer,
 }: QuizOptionItemProps) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-neutral-light rounded-lg border border-neutral-gray/20 hover:border-primary/30 transition-all group">
+    <div className="bg-neutral-light border-neutral-gray/20 hover:border-primary/30 group flex items-center gap-3 rounded-lg border p-3 transition-all">
       {/* Checkbox/Radio for correct answer */}
       <button
         type="button"
         onClick={() => onToggleCorrect(optionId)}
-        className={`w-5 h-5 flex items-center justify-center border-2 transition-all ${
+        className={`flex h-5 w-5 items-center justify-center border-2 transition-all ${
           isMultipleAnswer ? "rounded" : "rounded-full"
         } ${
           isCorrect
             ? "bg-primary border-primary"
-            : "bg-white border-neutral-gray/50 hover:border-primary/50"
+            : "border-neutral-gray/50 hover:border-primary/50 bg-white"
         }`}
       >
         {isCorrect && (
-          <svg
-            className="w-3 h-3 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={3}
-              d="M5 13l4 4L19 7"
-            />
+          <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
         )}
       </button>
@@ -60,16 +50,16 @@ export function QuizOptionItem({
         value={text}
         onChange={(e) => onChange(optionId, e.target.value)}
         placeholder="Dengan saya mengetahui yang saya ketahui."
-        className="flex-1 bg-transparent focus:outline-none text-neutral-dark placeholder:text-black text-sm"
+        className="text-neutral-dark flex-1 bg-transparent text-sm placeholder:text-black focus:outline-none"
       />
 
       {/* Delete button */}
       <button
         type="button"
         onClick={() => onDelete(optionId)}
-        className="p-1.5 text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+        className="text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg p-1.5 opacity-0 transition-all group-hover:opacity-100"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="h-4 w-4" />
       </button>
     </div>
   );
