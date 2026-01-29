@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { QuizBox, QuizData } from "@/features/admin/dashboard/courses/components/material";
 import {
   QuizSettingsPanel,
   QuizSettings,
 } from "@/features/admin/dashboard/courses/components/quiz";
 import { Button } from "@/shared/components/ui";
+import { useCreateQuiz } from "../hooks/useCreateQuiz";
 
 export interface QuizItem {
   id: string;
@@ -20,18 +22,31 @@ export type { QuizSettings };
 interface QuizFormContainerProps {
   courseId: string;
   manageCoursesId: string;
+  topicId?: string;
+  quizId?: string;
   quizName?: string;
+  initialQuizItems?: QuizItem[];
+  isEditMode?: boolean;
   onSave?: (quizName: string, quizItems: QuizItem[], settings: QuizSettings) => void;
 }
 
 export function QuizFormContainer({
   courseId,
   manageCoursesId,
+  topicId,
+  quizId,
   quizName: initialQuizName = "",
+  initialQuizItems = [],
+  isEditMode = false,
   onSave,
 }: QuizFormContainerProps) {
+  const router = useRouter();
   const [quizName, setQuizName] = useState(initialQuizName);
-  const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
+  const [quizItems, setQuizItems] = useState<QuizItem[]>(initialQuizItems);
+  const [error, setError] = useState<string | null>(null);
+
+  // Use the create quiz hook (only for new quizzes)
+  const { createQuiz, isCreating, progress } = useCreateQuiz(topicId || "");
 
   const [quizSettings, setQuizSettings] = useState<QuizSettings>({
     randomizeQuestions: false,
@@ -80,11 +95,48 @@ export function QuizFormContainer({
     setQuizItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  const handleSave = () => {
-    if (onSave) {
-      onSave(quizName, quizItems, quizSettings);
+  const handleSave = async () => {
+    // Validate
+    if (!quizName.trim()) {
+      setError("Nama quiz harus diisi");
+      return;
+    }
+
+    if (quizItems.length === 0) {
+      setError("Quiz harus memiliki minimal 1 pertanyaan");
+      return;
+    }
+
+    if (!isEditMode && !topicId) {
+      setError("Topic ID tidak ditemukan");
+      return;
+    }
+
+    setError(null);
+
+    // For edit mode, use onSave callback or implement update API
+    if (isEditMode) {
+      if (onSave) {
+        onSave(quizName, quizItems, quizSettings);
+      } else {
+        // TODO: Implement update quiz API
+        console.log("Updating quiz:", { quizId, quizName, quizItems, quizSettings });
+        router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+      }
+      return;
+    }
+
+    // Create quiz using API
+    const result = await createQuiz(quizName, quizItems);
+
+    if (result.success) {
+      console.log("Quiz created successfully with ID:", result.contentId);
+      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
     } else {
-      console.log("Saving quiz:", { quizName, quizItems, quizSettings });
+      setError(result.error || "Gagal membuat quiz");
+      if (result.failedQuestions && result.failedQuestions.length > 0) {
+        console.error("Failed questions indices:", result.failedQuestions);
+      }
     }
   };
 
@@ -110,7 +162,9 @@ export function QuizFormContainer({
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-white">Tambah Quiz</h1>
+        <h1 className="mb-8 text-3xl font-bold text-white">
+          {isEditMode ? "Edit Quiz" : "Tambah Quiz"}
+        </h1>
 
         <div className="mb-8 space-y-2">
           <label className="block text-sm font-medium text-white">Nama Quiz</label>
@@ -166,12 +220,41 @@ export function QuizFormContainer({
             totalQuestions={quizItems.length}
             onSettingsChange={handleSettingsChange}
           />
+
+          {/* Error message */}
+          {error && (
+            <div className="rounded-lg bg-red-500/20 p-4 text-red-200">
+              {error}
+            </div>
+          )}
+
+          {/* Progress indicator */}
+          {isCreating && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-white">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>
+                  Menyimpan... ({progress.current}/{progress.total})
+                </span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
+                <div
+                  className="bg-primary h-full transition-all duration-300"
+                  style={{
+                    width: `${(progress.current / progress.total) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           <Button
             variant="outline"
             onClick={handleSave}
-            className="hover:!bg-primary w-full hover:text-white"
+            disabled={isCreating}
+            className="hover:!bg-primary w-full hover:text-white disabled:opacity-50"
           >
-            Simpan
+            {isCreating ? "Menyimpan..." : "Simpan"}
           </Button>
         </div>
       </div>
