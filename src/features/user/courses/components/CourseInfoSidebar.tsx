@@ -19,6 +19,7 @@ export function CourseInfoSidebar({
   topicId,
   showPeople = true,
   showLastAccessed = true,
+  readOnly = false,
 }: CourseInfoSidebarProps) {
   const queryClient = useQueryClient();
   // Track local notes for when no topicId is present
@@ -32,8 +33,15 @@ export function CourseInfoSidebar({
     if (topicId) {
       if (apiNotes && apiNotes.length > 0) {
         return apiNotes.map(
-          (note: { note_id: string; content: string; created_at: string; topic_id: string }) => ({
+          (note: {
+            note_id: string;
+            title: string;
+            content: string;
+            created_at: string;
+            topic_id: string;
+          }) => ({
             id: note.note_id,
+            title: note.title,
             content: note.content,
             createdAt: note.created_at,
             topicId: note.topic_id,
@@ -45,7 +53,7 @@ export function CourseInfoSidebar({
     return localNotes;
   }, [topicId, apiNotes, initialNotes, localNotes]);
 
-  const handleAddNote = async (content: string) => {
+  const handleAddNote = async (title: string, content: string) => {
     console.log("[CourseInfoSidebar] Adding note, topicId:", topicId);
     console.log("[CourseInfoSidebar] Content:", content);
 
@@ -53,7 +61,7 @@ export function CourseInfoSidebar({
     if (topicId) {
       try {
         const result = await notesService.createNote(topicId, {
-          title: "Catatan",
+          title,
           content,
         });
         console.log("[CourseInfoSidebar] Note created:", result);
@@ -65,6 +73,7 @@ export function CourseInfoSidebar({
       // Fallback to local state only
       const newNote: Note = {
         id: `note-${Date.now()}`,
+        title,
         content,
         createdAt: new Date().toISOString(),
       };
@@ -72,13 +81,13 @@ export function CourseInfoSidebar({
     }
   };
 
-  const handleEditNote = async (id: string, content: string) => {
+  const handleEditNote = async (id: string, title: string, content: string) => {
     console.log("[CourseInfoSidebar] Editing note:", id);
 
     if (topicId) {
       try {
         await notesService.updateNote(id, {
-          title: "Catatan",
+          title,
           content,
         });
         console.log("[CourseInfoSidebar] Note updated");
@@ -89,7 +98,7 @@ export function CourseInfoSidebar({
     } else {
       setLocalNotes((prev) =>
         prev.map((note) =>
-          note.id === id ? { ...note, content, updatedAt: new Date().toISOString() } : note
+          note.id === id ? { ...note, title, content, updatedAt: new Date().toISOString() } : note
         )
       );
     }
@@ -121,6 +130,7 @@ export function CourseInfoSidebar({
         onEditNote={handleEditNote}
         onDeleteNote={handleDeleteNote}
         level="course"
+        readOnly={readOnly}
       />
 
       {showPeople && teachers.length > 0 && (

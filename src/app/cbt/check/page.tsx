@@ -2,7 +2,8 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { SystemCheckContainer } from "@/features/user/cbt/containers/SystemCheckContainer";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import Loading from "@/app/loading";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { dashboardService } from "@/features/user/dashboard/services/dashboardService";
@@ -89,14 +90,7 @@ function CheckContent() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-white">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 size={40} className="text-secondary animate-spin" />
-          <p>Memuat informasi ujian...</p>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error || !examData) {

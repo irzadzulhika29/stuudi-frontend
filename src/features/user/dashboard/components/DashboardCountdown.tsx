@@ -85,7 +85,9 @@ export function DashboardCountdown() {
 
   return (
     <div className="flex flex-col items-center">
-      <h2 className="mb-2 text-lg font-semibold text-white md:text-xl">{exam?.title || "-"}</h2>
+      <h2 className="md:text-md mb-2 text-lg font-semibold text-white">
+        {exam?.title || "Exam: Belum ada jadwal"}
+      </h2>
       <div
         className="text-xl font-bold tracking-wider text-white md:text-2xl"
         style={{ textShadow: "0 2px 4px rgba(0,0,0,0.3)" }}

@@ -52,6 +52,16 @@ export function CourseDetailContainer({ courseId }: CourseDetailContainerProps) 
     participants: course.participants.map((p) => ({ id: p.user_id, name: p.name })),
     totalParticipants: course.total_participants,
     lastAccessed: course.last_accessed || undefined,
+    readOnly: true,
+    notes:
+      course.my_notes?.map((n) => ({
+        id: n.note_id,
+        title: n.title,
+        content: n.content,
+        createdAt: n.created_at,
+        topicId: n.topic_id,
+        topicName: n.topic_name,
+      })) || [],
   };
 
   return (

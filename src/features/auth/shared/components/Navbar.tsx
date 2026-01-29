@@ -2,29 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+// import { usePathname } from "next/navigation";
+// import { useState } from "react";
 
 export default function Navbar() {
-  const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // const pathname = usePathname(); // eslint-disable-line @typescript-eslint/no-unused-vars
+  // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   return (
-    <header className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-6xl">
-      <nav className="w-full bg-neutral-white backdrop-blur-xl rounded-2xl shadow-lg border border-neutral-light">
-        <div className="flex items-center justify-start gap-6 h-16 px-6">
+    <header className="absolute top-6 left-1/2 z-50 w-full max-w-6xl -translate-x-1/2">
+      <nav className="bg-neutral-white border-neutral-light w-full rounded-2xl border shadow-lg backdrop-blur-xl">
+        <div className="flex h-16 items-center justify-start gap-6 px-6">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/images/logo/ARTERI.webp"
-              alt="Arteri"
-              width={110}
-              height={32}
-              priority
-            />
+            <Image src="/images/logo/ARTERI.webp" alt="Arteri" width={110} height={32} priority />
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
-            <span className="font-semibold text-xl">Masuk atau Daftar</span>
+          <div className="hidden items-center gap-8 md:flex">
+            <span className="text-xl font-semibold">Masuk atau Daftar</span>
           </div>
         </div>
       </nav>

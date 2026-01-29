@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -54,6 +55,22 @@ export const RichTextEditor = ({
       onChange(editor.getHTML());
     },
   });
+
+  // Sync content updates from parent (e.g. real-time updates from floating editor)
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      // Only update if content is different to avoid cursor jumps/loops
+      // We check if the content prop is noticeably different from editor content
+      // Note: getHTML() might return different formatting, so this is a basic check.
+      // Ideally we'd use a more robust comparison or just setContent if we are sure it's an external update.
+      // For this specific use case (syncing two editors), assuming they are kept in sync via state.
+
+      // Check if the difference is just empty paragraph to avoid initial mount loops if any
+      if (editor.getHTML() === "<p></p>" && !content) return;
+
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return null;

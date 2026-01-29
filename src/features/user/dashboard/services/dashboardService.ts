@@ -1,4 +1,5 @@
 import { api } from "@/shared/api/api";
+import { AxiosError } from "axios";
 import { API_ENDPOINTS } from "@/shared/config";
 import { ApiResponse } from "@/features/auth/shared/types/authTypes";
 import {
@@ -14,7 +15,10 @@ export const dashboardService = {
     try {
       const response = await api.get<ApiResponse<UpcomingExam>>(API_ENDPOINTS.EXAM.UPCOMING);
       return response.data.data;
-    } catch (error) {
+    } catch (error: unknown) {
+      if ((error as AxiosError).response?.status === 404) {
+        return null;
+      }
       console.error("Failed to fetch upcoming exam", error);
       return null;
     }
