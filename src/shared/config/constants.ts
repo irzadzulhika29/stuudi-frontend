@@ -35,6 +35,12 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `student/courses/${id}`,
     Topic: (id: string) => `student/courses/${id}/topics`,
     CONTENTDETAILS: (id: string) => `student/content/${id}`,
+    CONTENT_COMPLETE: (id: string) => `student/content/${id}/complete`,
+    CONTENT_INCOMPLETE: (id: string) => `student/content/${id}/incomplete`,
+    QUIZ_CHECK_ANSWER: "student/content/quiz/check-answer",
+    TOPIC_NOTES: (topicId: string) => `student/topics/${topicId}/notes`,
+    NOTE_UPDATE: (noteId: string) => `student/notes/${noteId}`,
+    NOTE_DELETE: (noteId: string) => `student/notes/${noteId}`,
   },
   TEACHER: {
     COURSES: "teacher/courses",
@@ -53,6 +59,10 @@ export const API_ENDPOINTS = {
   },
   TEAM: {
     INFO: "/elearning/team-details",
+    LIST: "/teams",
+  },
+  EXAM: {
+    UPCOMING: "upcoming-exam",
   },
 } as const;
 

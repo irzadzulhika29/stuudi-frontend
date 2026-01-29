@@ -1,20 +1,18 @@
-﻿import { AdminLeaderboard } from "@/features/admin/dashboard/home/components/AdminLeaderboard";
+import { AdminLeaderboard } from "@/features/admin/dashboard/home/components/AdminLeaderboard";
 import { AdminStatsCards } from "@/features/admin/dashboard/home/components/AdminStatsCards";
 
 export default function AdminDashboardPage() {
   return (
-    <div className="min-h-screen py-4 md:py-6 px-3 md:px-4">
+    <div className="min-h-screen px-3 py-4 md:px-4 md:py-6">
       <div className="max-w-6xl">
-        <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">
+        <h1 className="mb-2 text-2xl font-bold text-white md:text-4xl">
           Welcome back, <span className="text-secondary">Admin!</span>
         </h1>
-        <p className="text-white/60 mb-8">
-          Lihat performa kegiatan platform pada hari ini.
-        </p>
+        <p className="mb-8 text-white/60">Lihat performa kegiatan platform pada hari ini.</p>
         <AdminStatsCards />
 
         <div className="">
-          <h2 className="text-white text-3xl mb-5 font-bold text-neutral-800">
+          <h2 className="mb-5 text-3xl font-bold text-neutral-800 text-white">
             Leaderboard Top 10 Teams
           </h2>
         </div>

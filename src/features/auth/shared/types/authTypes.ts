@@ -17,6 +17,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   user_type: string;
+  roleName?: string;
 }
 
 export interface SendOtpRequest {
