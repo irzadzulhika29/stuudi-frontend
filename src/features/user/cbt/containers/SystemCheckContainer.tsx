@@ -1,68 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  AlertCircle,
-  ArrowRight,
-  ShieldCheck,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  FileText,
-  Camera,
-  Monitor,
-  Ban,
-  MessageSquareOff,
-  AppWindow,
-} from "lucide-react";
-import { CameraCheck } from "../components/CameraCheck";
-import { FullscreenCheck } from "../components/FullscreenCheck";
+import { useEffect, useState, useRef } from "react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Clock, FileText, Camera } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 
+import { ExamAccessData } from "@/features/user/dashboard/types/dashboardTypes";
+
 interface SystemCheckContainerProps {
-  examName: string;
+  examData: ExamAccessData;
   onChecksComplete: () => void;
+  isLoading?: boolean;
 }
 
 const EXAM_RULES = [
-  {
-    icon: Monitor,
-    text: "Mode layar penuh wajib aktif selama ujian berlangsung",
-  },
-  {
-    icon: Camera,
-    text: "Kamera harus aktif dan wajah terlihat jelas selama ujian",
-  },
-  {
-    icon: Ban,
-    text: "Dilarang membuka tab, aplikasi, atau jendela lain",
-  },
-  {
-    icon: AppWindow,
-    text: "Dilarang keluar dari mode fullscreen tanpa izin",
-  },
-  {
-    icon: MessageSquareOff,
-    text: "Dilarang berkomunikasi dengan pihak lain selama ujian",
-  },
-  {
-    icon: FileText,
-    text: "Dilarang menggunakan catatan atau materi bantu apapun",
-  },
-  {
-    icon: Clock,
-    text: "Waktu ujian berjalan otomatis dan tidak dapat dihentikan",
-  },
+  "Mode layar penuh wajib aktif",
+  "Kamera harus aktif & wajah terlihat",
+  "Dilarang berpindah tab/aplikasi",
+  "Dilarang menggunakan catatan",
 ];
 
-export function SystemCheckContainer({ onChecksComplete }: SystemCheckContainerProps) {
+export function SystemCheckContainer({
+  examData,
+  onChecksComplete,
+  isLoading = false,
+}: SystemCheckContainerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string>("");
   const [hasEnteredFullscreen, setHasEnteredFullscreen] = useState(false);
   const [showFullscreenOverlay, setShowFullscreenOverlay] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, isCameraActive]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -95,7 +70,7 @@ export function SystemCheckContainer({ onChecksComplete }: SystemCheckContainerP
       await document.documentElement.requestFullscreen();
     } catch (err) {
       console.error("Fullscreen error:", err);
-      setError("Gagal masuk mode fullscreen. Silakan coba lagi atau gunakan browser lain.");
+      setError("Gagal masuk mode fullscreen.");
     }
   };
 
@@ -105,38 +80,21 @@ export function SystemCheckContainer({ onChecksComplete }: SystemCheckContainerP
     try {
       setIsCameraLoading(true);
       setError("");
-      console.log("Requesting camera access...");
 
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Browser API not supported");
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
+        video: { width: 1280, height: 720 }, // Higher res for "Zoom" feel
         audio: false,
       });
 
-      console.log("Camera access granted, stream:", mediaStream.id);
       setStream(mediaStream);
       setIsCameraActive(true);
     } catch (err: unknown) {
       console.error("Camera error details:", err);
-      let errorMessage = "Gagal mengakses kamera.";
-
-      const errorObj = err as Error;
-
-      if (errorObj.name === "NotAllowedError" || errorObj.name === "PermissionDeniedError") {
-        errorMessage =
-          "Izin kamera ditolak. Mohon izinkan akses kamera di pengaturan browser (ikon gembok di address bar).";
-      } else if (errorObj.name === "NotFoundError" || errorObj.name === "DevicesNotFoundError") {
-        errorMessage = "Kamera tidak ditemukan. Pastikan kamera terhubung.";
-      } else if (errorObj.message === "Browser API not supported") {
-        errorMessage = "Browser ini tidak mendukung akses kamera. Gunakan Chrome/Firefox terbaru.";
-      } else {
-        errorMessage = `Gagal mengakses kamera: ${errorObj.message || "Unknown error"}`;
-      }
-
-      setError(errorMessage);
+      setError("Gagal mengakses kamera. Pastikan izin telah diberikan.");
       setIsCameraActive(false);
     } finally {
       setIsCameraLoading(false);
@@ -147,145 +105,158 @@ export function SystemCheckContainer({ onChecksComplete }: SystemCheckContainerP
 
   return (
     <>
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col p-4 md:p-8">
-        {/* Header Section */}
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 bg-linear-to-r from-white via-white to-white/70 bg-clip-text text-3xl font-bold text-transparent md:text-4xl">
-            Persiapan Ujian
-          </h1>
-          <p className="text-white/60">
-            Pastikan semua persyaratan terpenuhi sebelum memulai ujian
-          </p>
-        </div>
-
-        {/* Main 2-Column Layout */}
-        <div className="mb-8 grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Left Column - System Checks */}
-          <div className="flex flex-col gap-6">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-              <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-white">
-                <ShieldCheck className="text-secondary" size={22} />
-                Verifikasi Sistem
-              </h2>
-              <p className="mb-6 text-sm text-white/50">
-                Aktifkan fitur berikut untuk dapat memulai ujian
-              </p>
-
-              <div className="flex flex-col gap-4">
-                <FullscreenCheck
-                  isFullscreen={isFullscreen}
-                  onRequestFullscreen={requestFullscreen}
-                />
-
-                <CameraCheck
-                  isCameraActive={isCameraActive}
-                  onRequestCamera={requestCamera}
-                  stream={stream}
-                  isLoading={isCameraLoading}
-                />
-              </div>
-
-              {error && (
-                <div className="animate-fade-in mt-6 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
-                  <AlertCircle size={20} className="mt-0.5 shrink-0" />
-                  <p className="text-sm font-medium">{error}</p>
+      <div className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8">
+        <div className="grid h-full grid-cols-1 gap-6 lg:h-[calc(100vh-140px)] lg:grid-cols-12 lg:gap-8">
+          {/* LEFT COLUMN: Camera & System Checks */}
+          <div className="flex flex-col gap-6 lg:col-span-7">
+            {/* Camera View */}
+            <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl backdrop-blur-sm">
+              {!isCameraActive ? (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-6 p-8 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 text-white/20">
+                    <Camera size={32} />
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-lg font-semibold text-white">
+                      Akses Kamera Diperlukan
+                    </h3>
+                    <p className="mx-auto max-w-sm text-sm text-white/50">
+                      Kamera wajib aktif selama ujian berlangsung.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={requestCamera}
+                    disabled={isCameraLoading}
+                    variant="secondary"
+                    size="md"
+                  >
+                    {isCameraLoading ? "Menghubungkan..." : "Aktifkan Kamera"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="relative h-full w-full">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="h-full w-full scale-x-[-1] object-cover"
+                  />
+                  <div className="absolute top-4 right-4 rounded-full bg-black/50 px-3 py-1.5 text-xs text-white backdrop-blur-md">
+                    <span className="flex items-center gap-2">
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                      REC
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Status Summary */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-              <h3 className="mb-4 text-sm font-medium text-white/70">Status Kesiapan</h3>
-              <div className="flex flex-col gap-3">
+            {/* Bottom Controls Bar */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
+              <div className="flex flex-col gap-4">
+                {/* Fullscreen Toggle */}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/60">Mode Layar Penuh</span>
-                  {isFullscreen ? (
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-green-400">
-                      <CheckCircle2 size={16} />
-                      Aktif
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-red-400">
-                      <XCircle size={16} />
-                      Belum Aktif
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors ${isFullscreen ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                    >
+                      {isFullscreen ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white">Mode Layar Penuh</h4>
+                      <p className="text-sm text-white/50">
+                        {isFullscreen ? "Sudah akaif" : "Wajib diaktifkan"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isFullscreen && (
+                    <Button onClick={requestFullscreen} variant="secondary" size="sm">
+                      Aktifkan Fullscreen
+                    </Button>
                   )}
                 </div>
-                <div className="h-px bg-white/10" />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/60">Akses Kamera</span>
-                  {isCameraActive ? (
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-green-400">
-                      <CheckCircle2 size={16} />
-                      Aktif
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-red-400">
-                      <XCircle size={16} />
-                      Belum Aktif
-                    </span>
-                  )}
+
+                <div className="h-px w-full bg-white/10" />
+
+                {/* Camera Status */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors ${isCameraActive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                  >
+                    {isCameraActive ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white">Kamera Pengawas</h4>
+                    <p className="text-sm text-white/50">
+                      {isCameraActive ? "Terhubung & Merekam" : "Belum terhubung"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-center text-sm text-red-300">
+                  {error}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Info & Rules */}
+          <div className="flex flex-col gap-6 lg:col-span-5">
+            {/* Exam Details Card */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+              <span className="text-secondary mb-2 block text-sm font-medium tracking-wider uppercase">
+                {examData.course_name}
+              </span>
+              <h1 className="mb-4 text-2xl leading-tight font-bold text-white">{examData.title}</h1>
+
+              <div className="flex items-center gap-4 text-sm text-white/60">
+                <div className="flex items-center gap-2">
+                  <Clock size={16} />
+                  <span>{examData.duration} Menit</span>
+                </div>
+                <div className="h-1 w-1 rounded-full bg-white/30" />
+                <div className="flex items-center gap-2">
+                  <FileText size={16} />
+                  <span>{examData.total_questions} Soal</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column - Exam Rules */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-            <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-white">
-              <FileText className="text-secondary" size={22} />
-              Tata Tertib Ujian
-            </h2>
-            <p className="mb-6 text-sm text-white/50">
-              Baca dan pahami peraturan berikut sebelum memulai ujian
-            </p>
+            {/* Rules & Action */}
+            <div className="flex flex-1 flex-col justify-between rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+              <div>
+                <h3 className="mb-4 text-lg font-semibold text-white">Tata Tertib Ujian</h3>
+                <ol className="list-decimal space-y-3 pl-5 text-sm text-white/70 marker:text-white/40">
+                  {EXAM_RULES.map((rule, i) => (
+                    <li key={i} className="pl-1">
+                      {rule}
+                    </li>
+                  ))}
+                </ol>
+              </div>
 
-            <div className="flex flex-col gap-4">
-              {EXAM_RULES.map((rule, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/10">
-                    <rule.icon size={20} className="text-white/70" />
-                  </div>
-                  <p className="pt-2 text-sm leading-relaxed text-white/70">{rule.text}</p>
+              <div className="mt-8 border-t border-white/10 pt-6">
+                <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+                  <p className="text-xs leading-relaxed text-amber-200/80">
+                    <strong>Penting:</strong> Waktu akan berjalan otomatis saat tombol diklik.
+                  </p>
                 </div>
-              ))}
+
+                <Button
+                  variant="glow"
+                  size="lg"
+                  className="w-full"
+                  onClick={onChecksComplete}
+                  disabled={!allChecksPassed || isLoading}
+                >
+                  {isLoading ? "Menyiapkan Ujian..." : "Mulai Ujian Sekarang"}
+                </Button>
+              </div>
             </div>
-
-            <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-              <p className="text-sm leading-relaxed text-amber-200/80">
-                <strong className="text-amber-200">Peringatan:</strong> Pelanggaran terhadap tata
-                tertib dapat mengakibatkan pembatalan hasil ujian dan sanksi akademik.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <div className="flex flex-col items-center gap-4">
-          <Button
-            variant="glow"
-            size="lg"
-            onClick={onChecksComplete}
-            disabled={!allChecksPassed}
-            className="group"
-            icon={
-              <ArrowRight
-                size={24}
-                className={`transition-transform duration-300 ${
-                  allChecksPassed ? "group-hover:translate-x-2" : ""
-                }`}
-              />
-            }
-          >
-            Mulai Ujian Sekarang
-          </Button>
-
-          <div className="flex items-center gap-2 text-sm font-medium text-white/40">
-            <ShieldCheck size={16} />
-            <span>Sistem Keamanan Terenkripsi & Terproteksi</span>
           </div>
         </div>
       </div>

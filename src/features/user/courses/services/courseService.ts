@@ -95,6 +95,7 @@ const transformContentDetails = (apiData: ApiContentDetails): ContentDetails => 
     topicName: apiData.topic_name,
     isCompleted: apiData.is_completed,
     blocks: apiData.blocks?.map(transformBlock) || [],
+    lastAttemptId: apiData.last_attempt_id,
   };
 };
 

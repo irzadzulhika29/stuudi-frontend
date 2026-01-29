@@ -1,66 +1,54 @@
 "use client";
 
-import Image from "next/image";
+import { BaseQuestionCard } from "@/shared/components/questions/BaseQuestionCard";
+import { SharedQuestion, QuestionType, QuestionAnswer } from "@/shared/types/questionTypes";
 import { ExamQuestion } from "../types/examTypes";
 
 interface QuestionCardProps {
   question: ExamQuestion;
-  selectedAnswer: string | null;
-  onSelectAnswer: (answer: string) => void;
+  selectedAnswer: QuestionAnswer;
+  onSelectAnswer: (answer: QuestionAnswer) => void;
 }
 
 export function QuestionCard({ question, selectedAnswer, onSelectAnswer }: QuestionCardProps) {
+  // Map ExamQuestion to SharedQuestion
+  const sharedQuestion: SharedQuestion = {
+    id: question.question_id,
+    text: question.question_text,
+    type: mapQuestionType(question.question_type),
+    image: question.question_image,
+    points: question.points,
+    options: question.options.map((o) => ({
+      id: o.option_id,
+      text: o.option_text,
+      sequence: o.sequence,
+      side: o.side,
+      matchingPair: o.matching_pair,
+    })),
+  };
+
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white">
-      {question.image && (
-        <div className="relative h-48 w-full shrink-0 overflow-hidden">
-          <Image
-            src={question.image}
-            alt="Question image"
-            fill
-            className="object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        </div>
-      )}
-
-      <div className="flex flex-1 flex-col p-6">
-        <p className="mb-6 text-lg font-medium text-neutral-800">{question.text}</p>
-
-        <div className="flex flex-col gap-3">
-          {question.options.map((option) => (
-            <label
-              key={option.label}
-              className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all duration-200 ${
-                selectedAnswer === option.label
-                  ? "border-orange-500 bg-orange-50"
-                  : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
-              }`}
-            >
-              <input
-                type="radio"
-                name={`question-${question.id}`}
-                value={option.label}
-                checked={selectedAnswer === option.label}
-                onChange={() => onSelectAnswer(option.label)}
-                className="sr-only"
-              />
-              <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all ${
-                  selectedAnswer === option.label
-                    ? "border-orange-500 bg-orange-500 text-white"
-                    : "border-neutral-300 text-neutral-500"
-                }`}
-              >
-                {option.label}
-              </div>
-              <span className="text-neutral-700">{option.text}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
+    <BaseQuestionCard
+      question={sharedQuestion}
+      selectedAnswer={selectedAnswer}
+      onSelectAnswer={onSelectAnswer}
+    />
   );
+}
+
+function mapQuestionType(type: ExamQuestion["question_type"]): QuestionType {
+  switch (type) {
+    case "multiple":
+      return "multiple";
+    case "single":
+      return "single";
+    case "matching":
+      return "matching";
+    case "true_false":
+      return "true_false";
+    case "short_answer":
+      return "short_answer";
+    default:
+      return "single";
+  }
 }

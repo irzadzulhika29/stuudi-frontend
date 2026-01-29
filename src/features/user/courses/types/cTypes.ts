@@ -39,12 +39,16 @@ export interface CourseNotesProps {
   level?: "course" | "topic" | "material";
 }
 
-export interface QuizQuestion {
-  id: string;
-  question: string;
-  image?: string;
-  options: string[];
-  correctAnswer: number;
+export interface QuizOption {
+  option_id: string;
+  option_text: string;
+  sequence: number;
+}
+
+import { SharedQuestion, QuestionAnswer, QuestionType } from "@/shared/types/questionTypes";
+
+export interface QuizQuestion extends SharedQuestion {
+  correctAnswer?: number;
 }
 
 export interface QuizAttempt {
@@ -58,8 +62,61 @@ export interface QuizData {
   id: string;
   title: string;
   description: string;
-  questions: QuizQuestion[];
+  questions?: QuizQuestion[];
   previousAttempt?: QuizAttempt;
+  lastAttemptId?: string;
+}
+
+export interface QuizStartResponse {
+  attempt_id: string;
+  content_id: string;
+  content_title: string;
+  total_questions: number;
+  time_limit_minutes: number;
+  passing_score: number;
+  started_at: string;
+  questions: {
+    question_id: string;
+    question_text: string;
+    question_type: QuestionType;
+    difficulty: string;
+    points: number;
+    image_url: string | null;
+    sequence: number;
+    options: {
+      option_id: string;
+      option_text: string;
+      sequence: number;
+    }[];
+  }[];
+}
+
+export interface QuizResultResponse {
+  attempt_id: string;
+  content_id: string;
+  content_title: string;
+  score: number;
+  passing_score: number;
+  status: "passed" | "failed";
+  correct_answers: number;
+  total_questions: number;
+  average_answer_time?: string;
+  exp_gained?: number;
+  total_exp?: number;
+  started_at: string;
+  finished_at: string;
+  time_taken: string;
+  question_results: {
+    question_id: string;
+    question_text: string;
+    question_type: QuestionType;
+    is_correct: boolean;
+    points_earned: number;
+    max_points: number;
+    your_answer: string;
+    correct_answer: string;
+    explanation: string;
+  }[];
 }
 
 export type QuizStatus = "start" | "in-progress" | "summary";
@@ -67,7 +124,7 @@ export type QuizStatus = "start" | "in-progress" | "summary";
 export interface QuizState {
   status: QuizStatus;
   currentQuestion: number;
-  answers: (number | null)[];
+  answers: QuestionAnswer[];
   correctCount: number;
   startTime: number;
   questionTimes: number[];

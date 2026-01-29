@@ -37,7 +37,12 @@ export const API_ENDPOINTS = {
     CONTENTDETAILS: (id: string) => `student/content/${id}`,
     CONTENT_COMPLETE: (id: string) => `student/content/${id}/complete`,
     CONTENT_INCOMPLETE: (id: string) => `student/content/${id}/incomplete`,
-    QUIZ_CHECK_ANSWER: "student/content/quiz/check-answer",
+    QUIZ: {
+      START: (contentId: string) => `student/content/${contentId}/quiz/start`,
+      ANSWER: (attemptId: string) => `student/exams-attempt/${attemptId}/answers`,
+      SUBMIT: (attemptId: string) => `student/quiz-attempts/${attemptId}/submit`,
+      RESULT: (attemptId: string) => `student/quiz-attempts/${attemptId}/result`,
+    },
     TOPIC_NOTES: (topicId: string) => `student/topics/${topicId}/notes`,
     NOTE_UPDATE: (noteId: string) => `student/notes/${noteId}`,
     NOTE_DELETE: (noteId: string) => `student/notes/${noteId}`,
@@ -63,6 +68,7 @@ export const API_ENDPOINTS = {
   },
   EXAM: {
     UPCOMING: "upcoming-exam",
+    ACCESS: "student/exams/access",
   },
 } as const;
 

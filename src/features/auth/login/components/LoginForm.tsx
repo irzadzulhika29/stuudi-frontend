@@ -8,7 +8,7 @@ import { usePasswordVisibility } from "../hooks/usePasswordVisibility";
 import { useLogin } from "../hooks/useLogin";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
   const {
@@ -21,7 +21,7 @@ export default function LoginForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    login({ email, password });
+    login({ identifier, password });
   };
 
   return (
@@ -33,10 +33,10 @@ export default function LoginForm() {
       )}
 
       <Input
-        type="email"
-        placeholder="Masukkan Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        type="text"
+        placeholder="Username / Email"
+        value={identifier}
+        onChange={(e) => setIdentifier(e.target.value)}
         required
       />
 
@@ -56,7 +56,12 @@ export default function LoginForm() {
         </Link>
       </div>
 
-      <Button type="submit" variant="primary" className="w-full" disabled={isPending}>
+      <Button
+        type="submit"
+        variant="secondary"
+        className="w-full"
+        disabled={isPending || !identifier}
+      >
         {isPending ? "Memproses..." : "Masuk"}
       </Button>
     </form>

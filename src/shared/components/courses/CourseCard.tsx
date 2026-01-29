@@ -6,7 +6,7 @@ interface CourseCardProps {
   id: string;
   title: string;
   thumbnail?: string;
-  studentCount: number;
+  studentCount?: number;
   progress: number;
   isEnrolled?: boolean;
   onClick?: () => void;
@@ -23,7 +23,7 @@ function CircularProgress({ progress }: { progress: number }) {
 
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" className="-rotate-90 transform">
-      <circle cx="16" cy="16" r={radius} fill="none" stroke="#E5E5E5" strokeWidth="4" />
+      <circle cx="16" cy="16" r={radius} fill="none" className="stroke-white/10" strokeWidth="4" />
       <circle
         cx="16"
         cy="16"
@@ -53,7 +53,7 @@ export function CourseCard({
   const CardContent = (
     <div
       onClick={onClick}
-      className="hover:shadow-secondary relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl bg-white p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+      className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-2 hover:bg-white/10 hover:shadow-xl"
     >
       {showEnrolledBadge && isEnrolled && (
         <div className="bg-secondary-default/90 absolute top-4 right-4 z-10 rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-sm">
@@ -66,24 +66,26 @@ export function CourseCard({
           src={thumbnail || "/images/dummycardimage.svg"}
           alt={title}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
       </div>
 
       <div className="flex flex-1 flex-col space-y-4 pt-4">
-        <h3 className="line-clamp-2 min-h-14 text-xl font-bold text-neutral-900">{title}</h3>
+        <h3 className="line-clamp-2 min-h-14 text-xl font-bold text-white">{title}</h3>
 
         <div className="mt-auto flex items-center justify-between text-sm">
-          <div className="flex items-center gap-1.5 text-neutral-500">
-            <Users size={16} />
-            <span>{studentCount || 0} students</span>
-          </div>
+          {studentCount !== undefined && (
+            <div className="flex items-center gap-1.5 text-white/50">
+              <Users size={16} />
+              <span>{studentCount} students</span>
+            </div>
+          )}
 
           <div className="text-secondary-default flex items-center gap-2 font-medium">
             <CircularProgress progress={progress} />
             <span>
-              <span className="font-bold">{progress}%</span>
-              <span className="ml-1 font-normal text-neutral-500">progress</span>
+              <span className="font-bold text-white">{progress}%</span>
+              <span className="ml-1 font-normal text-white/50">progress</span>
             </span>
           </div>
         </div>
