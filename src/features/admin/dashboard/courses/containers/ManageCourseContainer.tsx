@@ -200,6 +200,7 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
             onDescriptionChange={setDescription}
             thumbnailFile={thumbnailFile}
             thumbnailPreview={thumbnailPreview}
+            existingThumbnailUrl={course.image_url}
             onThumbnailChange={handleThumbnailChange}
             onThumbnailRemove={handleRemoveThumbnail}
           />
