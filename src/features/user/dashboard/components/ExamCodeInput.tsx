@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { dashboardService } from "../services/dashboardService";
 
 export function ExamCodeInput() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export function ExamCodeInput() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim()) {
       setError("Please enter an exam code");
@@ -19,11 +20,21 @@ export function ExamCodeInput() {
 
     setIsLoading(true);
     setError("");
+    console.log("Submitting exam code:", code);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const data = await dashboardService.accessExam(code);
+      console.log("Exam accessed successfully:", data);
       router.push(`/cbt/check?code=${encodeURIComponent(code)}`);
-    }, 800);
+    } catch (err: unknown) {
+      console.log("Error accessing exam:", err);
+      const message =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        "Invalid exam code or access denied.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

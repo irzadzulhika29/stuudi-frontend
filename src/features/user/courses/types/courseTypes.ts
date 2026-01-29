@@ -145,6 +145,7 @@ export interface ApiContentDetails {
   topic_name: string;
   is_completed: boolean;
   blocks: ApiContentBlock[] | null;
+  last_attempt_id?: string;
 }
 
 // API Content block types (raw from backend)
@@ -215,6 +216,7 @@ export interface ContentDetails {
   topicName: string;
   isCompleted: boolean;
   blocks: ContentBlock[];
+  lastAttemptId?: string;
 }
 
 // API response for content complete/incomplete

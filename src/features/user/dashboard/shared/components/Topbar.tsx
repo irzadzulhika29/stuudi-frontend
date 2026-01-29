@@ -10,8 +10,10 @@ import { useLogout } from "@/features/auth/shared/hooks/useLogout";
 interface TopbarProps {
   user?: {
     name?: string;
+    email?: string;
     role?: string;
     image?: string;
+    xp?: number;
   };
 }
 
@@ -35,16 +37,18 @@ export function Topbar({ user }: TopbarProps) {
             <p className="text-sm leading-tight font-semibold text-white">
               {user?.name || "User Name"}
             </p>
-            <p className="text-xs text-white/70">{user?.role || "Role"}</p>
+            <p className="text-xs text-white/70">{user?.email || ""}</p>
           </div>
 
-          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-white/20 text-white">
-            {user?.image ? (
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-white/20 text-xs font-bold text-white ring-2 ring-white/10">
+            {user?.xp !== undefined ? (
+              `${user.xp}`
+            ) : user?.image ? (
               <Image
                 src={user.image}
                 alt={user.name || "User"}
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 className="h-full w-full object-cover"
               />
             ) : (

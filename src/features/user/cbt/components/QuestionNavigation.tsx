@@ -1,13 +1,14 @@
 "use client";
 
+import { ExamQuestion } from "../types/examTypes";
 import { Flag } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 
 interface QuestionNavigationProps {
-  totalQuestions: number;
+  questions: ExamQuestion[];
   currentIndex: number;
-  answers: Record<number, string>;
-  flaggedQuestions: Set<number>;
+  answers: Record<string, unknown>;
+  flaggedQuestions: Set<string>;
   isFlagged: boolean;
   onNavigate: (index: number) => void;
   onToggleFlag: () => void;
@@ -15,7 +16,7 @@ interface QuestionNavigationProps {
 }
 
 export function QuestionNavigation({
-  totalQuestions,
+  questions,
   currentIndex,
   answers,
   flaggedQuestions,
@@ -25,16 +26,15 @@ export function QuestionNavigation({
   onFinishAttempt,
 }: QuestionNavigationProps) {
   const answeredCount = Object.keys(answers).length;
-  const isLastQuestion = currentIndex === totalQuestions - 1;
+  const isLastQuestion = currentIndex === questions.length - 1;
 
-  const getStatusStyles = (index: number): string => {
-    const questionId = index + 1;
+  const getStatusStyles = (questionId: string, index: number): string => {
     const isAnswered = answers[questionId] !== undefined;
     const isCurrent = index === currentIndex;
 
-    if (isCurrent) return "bg-secondary text-white ring-2 ring-primary/20";
+    if (isCurrent) return "bg-transparent text-white ring-2 ring-orange-500 font-bold";
     if (isAnswered) return "bg-primary text-white";
-    return "bg-white text-primary";
+    return "bg-white/5 text-white/70 hover:bg-white/10";
   };
 
   return (
@@ -42,15 +42,15 @@ export function QuestionNavigation({
       <h3 className="mb-4 text-sm font-semibold text-white">Navigasi soal</h3>
 
       <div className="grid grid-cols-5 gap-2">
-        {Array.from({ length: totalQuestions }).map((_, index) => {
-          const questionId = index + 1;
+        {questions.map((question, index) => {
+          const questionId = question.question_id;
           const isQuestionFlagged = flaggedQuestions.has(questionId);
 
           return (
             <button
-              key={index}
+              key={questionId}
               onClick={() => onNavigate(index)}
-              className={`relative flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-110 ${getStatusStyles(index)}`}
+              className={`relative flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-110 ${getStatusStyles(questionId, index)}`}
             >
               {index + 1}
               {isQuestionFlagged && (
@@ -78,7 +78,7 @@ export function QuestionNavigation({
             onClick={onFinishAttempt}
             className="w-full rounded-xl bg-white/10 py-2.5 text-sm font-medium text-white transition-all hover:bg-white/20"
           >
-            Selesai ({answeredCount}/{totalQuestions})
+            Selesai ({answeredCount}/{questions.length})
           </button>
         )}
       </div>

@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Clock } from "lucide-react";
-import { QuizQuestion as QuizQuestionType } from "../../types/cTypes";
+import { Clock, CheckCircle } from "lucide-react";
+import { BaseQuestionCard } from "@/shared/components/questions/BaseQuestionCard";
+import { QuestionAnswer, SharedQuestion } from "@/shared/types/questionTypes";
 
 interface QuizQuestionProps {
-  question: QuizQuestionType;
+  question: SharedQuestion;
   questionNumber: number;
   totalQuestions: number;
   elapsedTime: number;
-  onSubmit: (selectedOption: number) => void;
+  onSubmit: (selectedOption: QuestionAnswer) => void;
   showFeedback: boolean;
-  selectedAnswer: number | null;
+  selectedAnswer: QuestionAnswer;
   onNext: () => void;
   isLastQuestion: boolean;
 }
@@ -28,14 +28,6 @@ export function QuizQuestion({
   onNext,
   isLastQuestion,
 }: QuizQuestionProps) {
-  const [selected, setSelected] = useState<number | null>(selectedAnswer);
-
-  // Sync selected state when selectedAnswer prop changes (for navigation between questions)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelected(selectedAnswer);
-  }, [selectedAnswer, question.id]);
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -43,108 +35,111 @@ export function QuizQuestion({
     return `${mins.toString().padStart(2, "0")}:${Math.floor(secs).toString().padStart(2, "0")},${centisecs.toString().padStart(2, "0")}`;
   };
 
+  const handleSelectAnswer = (answer: QuestionAnswer) => {
+    // In Quiz mode, maybe we want instant submit?
+    // Current flow: Select -> (Button enabled) -> Submit -> Feedback -> Next
+    // So we need local state if we want to "Select" before "Submit".
+    // But QuizContainer handles "optimistic update" on submit? No, handleSubmitAnswer updates state.
+    // BaseQuestionCard expects onSelectAnswer to update selection immediately.
+    // If we pass `onSubmit` to `onSelectAnswer`, it submits immediately.
+    // To keep "Select then Submit" flow, `QuizContainer` needs to handle "Selection" state separately from "Submitted Answer"?
+    // OR we just use `onSubmit` as "Select" and modify `QuizContainer` to not call API immediately?
+
+    // Actually `QuizContainer`'s `handleSubmitAnswer` calls API immediately.
+    // If we want "Select then Submit button", we need to lift "Selection" state or keep it local here.
+    // But `BaseQuestionCard` is controlled by `selectedAnswer`.
+
+    // Let's assume for this Refactor that selecting an option updates the Parent State (Selection) but DOES NOT submit APi?
+    // Refactor `QuizContainer`'s `handleSubmitAnswer` logic?
+    // The current `QuizContainer` implementation calls API immediately in `handleSubmitAnswer`.
+    // And the UI had a "Submit Answer" button.
+
+    // Let's change the flow slightly to be more seamless or adapt `QuizContainer`.
+    // Simplest: `onSelectAnswer` here calls a new prop `onSelect` (which updates local state in Container without API), and "Submit" button calls `onSubmit` (API).
+    // But `QuizContainer` doesn't have `onSelect`.
+
+    // Hack for now: We treat "Submit" as "Select" for UI purposes, but we only really "Lock in" when clicking Next?
+    // No, `saveAnswer` IS the submission.
+
+    // Okay, the previous `QuizQuestion` had local `selected` state.
+    // I should do the same here.
+    // local `currentSelection` state.
+
+    // But `BaseQuestionCard` needs `selectedAnswer` prop.
+    // I will use local state to feed `BaseQuestionCard`, then `onSubmit` sends it up.
+    setCurrentSelection(answer);
+  };
+
+  const [currentSelection, setCurrentSelection] = useState<QuestionAnswer>(selectedAnswer);
+
+  // Sync if prop changes (navigating)
+  useEffect(() => {
+    setCurrentSelection(selectedAnswer);
+  }, [selectedAnswer, question.id]);
+
   const handleSubmit = () => {
-    if (selected !== null) {
-      onSubmit(selected);
+    if (currentSelection !== null) {
+      onSubmit(currentSelection);
     }
   };
 
-  const isCorrect = selectedAnswer === question.correctAnswer;
-
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <h1 className="mb-6 text-2xl font-bold text-white md:text-3xl">
-        {question.question.split(" ").slice(0, 2).join(" ")}
-      </h1>
-
-      <div className="mb-6 flex items-center justify-between">
+    <div className="mx-auto w-full max-w-4xl">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 text-sm font-bold text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-lg font-bold text-white backdrop-blur-md">
             {questionNumber}
           </span>
-          <span className="bg-primary-light rounded-full px-3 py-1.5 text-xs font-medium text-white">
-            /{totalQuestions} Question Done
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium tracking-wider text-white/60 uppercase">
+              Question
+            </span>
+            <span className="font-semibold text-white">
+              {questionNumber} / {totalQuestions}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-white">
-          <Clock size={20} />
-          <span className="font-mono text-lg">{formatTime(elapsedTime)}</span>
+
+        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-md">
+          <Clock size={18} className="text-orange-300" />
+          <span className="font-mono text-xl font-bold tracking-widest text-white">
+            {formatTime(elapsedTime)}
+          </span>
         </div>
       </div>
 
-      <div className="rounded-xl bg-white/10 p-5 backdrop-blur-sm md:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <span className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium text-white/80">
-            Soal No. {questionNumber}
-          </span>
-          <span className="text-sm font-medium text-red-400">Required*</span>
-        </div>
+      <div className="rounded-3xl bg-white p-1 shadow-2xl shadow-black/20">
+        <BaseQuestionCard
+          question={question}
+          selectedAnswer={currentSelection} // Local selection
+          onSelectAnswer={handleSelectAnswer}
+          disabled={showFeedback} // Disable interaction if showing feedback
+          className="h-auto min-h-[400px] border-none shadow-none"
+        />
+      </div>
 
-        {question.image && (
-          <div className="relative mx-auto mb-4 aspect-square w-full max-w-xs overflow-hidden rounded-lg">
-            <Image src={question.image} alt="Question illustration" fill className="object-cover" />
-          </div>
+      <div className="mt-8 flex justify-end">
+        {!showFeedback ? (
+          <button
+            onClick={handleSubmit}
+            disabled={!currentSelection && currentSelection !== 0} // Check if selected
+            className={`transform rounded-xl px-8 py-4 text-lg font-bold transition-all active:scale-95 ${
+              currentSelection || currentSelection === 0
+                ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-lg hover:shadow-orange-500/30"
+                : "cursor-not-allowed border border-white/10 bg-white/10 text-white/40"
+            }`}
+          >
+            Jawab Pertanyaan
+          </button>
+        ) : (
+          <button
+            onClick={onNext}
+            className="flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-neutral-900 shadow-lg transition-all hover:bg-neutral-100"
+          >
+            {isLastQuestion ? "Selesai & Lihat Hasil" : "Pertanyaan Selanjutnya"}
+            <CheckCircle size={20} />
+          </button>
         )}
-
-        <p className="mb-6 font-medium text-white">{question.question}</p>
-
-        <div className="space-y-3">
-          {question.options.map((option, index) => {
-            let optionClass = "border-white/20 hover:border-white/40";
-
-            if (showFeedback && selectedAnswer !== null) {
-              if (index === question.correctAnswer) {
-                optionClass = "border-emerald-500 bg-emerald-500/20";
-              } else if (index === selectedAnswer && !isCorrect) {
-                optionClass = "border-red-500 bg-red-500/20";
-              }
-            } else if (selected === index) {
-              optionClass = "border-primary-light bg-primary-light/20";
-            }
-
-            return (
-              <label
-                key={index}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all ${optionClass} ${
-                  showFeedback ? "pointer-events-none" : ""
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="quiz-option"
-                  checked={selected === index}
-                  onChange={() => !showFeedback && setSelected(index)}
-                  disabled={showFeedback}
-                  className="accent-primary-light h-4 w-4"
-                />
-                <span className="text-sm text-white">{option}</span>
-              </label>
-            );
-          })}
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          {!showFeedback ? (
-            <button
-              onClick={handleSubmit}
-              disabled={selected === null}
-              className={`rounded-lg px-6 py-2.5 font-medium transition-colors ${
-                selected !== null
-                  ? "bg-primary-light hover:bg-primary-light/90 text-white"
-                  : "cursor-not-allowed bg-white/20 text-white/50"
-              }`}
-            >
-              Submit Answer
-            </button>
-          ) : (
-            <button
-              onClick={onNext}
-              className="bg-secondary hover:bg-secondary-dark rounded-lg px-6 py-2.5 font-medium text-white transition-colors"
-            >
-              {isLastQuestion ? "Lihat Hasil" : "Selanjutnya"}
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );
