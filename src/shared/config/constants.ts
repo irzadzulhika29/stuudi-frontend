@@ -49,13 +49,19 @@ export const API_ENDPOINTS = {
     DELETE_COURSE: (id: string) => `teacher/courses/${id}`,
     COURSE_DETAIL: (id: string) => `student/courses/${id}`,
     ADD_TOPIC: (courseId: string) => `teacher/courses/${courseId}/topics`,
-    // Content (Material)
+    // Content (Material/Quiz)
     ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
+    // Quiz
+    ADD_QUIZ_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
+    ADD_QUIZ_QUESTIONS: (contentId: string) => `teacher/content/${contentId}/quiz`,
+    GET_QUIZ_DETAILS: (contentId: string) => `teacher/content/${contentId}/quiz/details`,
     // Blocks
     ADD_TEXT_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/text`,
     ADD_MEDIA_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/media`,
     ADD_QUIZ_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/quiz`,
     ADD_QUIZ_QUESTION: (blockId: string) => `teacher/blocks/${blockId}/questions`,
+    UPDATE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
+    DELETE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
   },
   TEAM: {
     INFO: "/elearning/team-details",

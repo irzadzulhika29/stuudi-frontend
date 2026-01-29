@@ -134,12 +134,9 @@ export function ManageTopicItem({
                 type={material.type}
                 index={index}
                 totalItems={orderedMaterials.length}
+                courseId={courseId}
                 onMoveUp={() => moveMaterial(index, "up")}
                 onMoveDown={() => moveMaterial(index, "down")}
-                onEdit={() => {
-                  // TODO: Handle edit action
-                  console.log("Edit material:", material.id);
-                }}
               />
             ))}
           </div>
