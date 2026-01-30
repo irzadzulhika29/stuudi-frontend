@@ -5,7 +5,7 @@ import { API_ENDPOINTS } from "@/shared/config/constants";
 export interface QuizOption {
   option_id: string;
   option_text: string;
-  sequence: number;
+  is_correct: boolean;
 }
 
 export interface QuizQuestion {
@@ -19,7 +19,7 @@ export interface QuizQuestion {
 export interface ContentBlock {
   block_id: string;
   type: "text" | "media" | "quiz";
-  sequence: number;
+  order: number;
   // Text block
   text_content?: string;
   // Media block
@@ -32,11 +32,8 @@ export interface ContentBlock {
 export interface ContentDetails {
   content_id: string;
   title: string;
+  description?: string;
   type: "materi" | "quiz";
-  sequence: number;
-  topic_id: string;
-  topic_name: string;
-  is_completed: boolean;
   blocks: ContentBlock[];
 }
 
@@ -55,7 +52,7 @@ export function useGetContentDetails(contentId: string | null) {
     queryFn: async () => {
       if (!contentId) throw new Error("No content ID provided");
       const response = await api.get<ContentDetailsResponse>(
-        API_ENDPOINTS.COURSES.CONTENTDETAILS(contentId)
+        API_ENDPOINTS.TEACHER.CONTENT_DETAIL(contentId)
       );
       return response.data;
     },

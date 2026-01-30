@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
     ADD_TOPIC: (courseId: string) => `teacher/courses/${courseId}/topics`,
     // Content (Material/Quiz)
     ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
+    CONTENT_DETAIL: (contentId: string) => `teacher/content/${contentId}`,
     // Quiz
     ADD_QUIZ_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     ADD_QUIZ_QUESTIONS: (contentId: string) => `teacher/content/${contentId}/quiz`,
@@ -64,6 +65,7 @@ export const API_ENDPOINTS = {
     ADD_TEXT_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/text`,
     ADD_MEDIA_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/media`,
     ADD_QUIZ_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/quiz`,
+    DELETE_BLOCK: (blockId: string) => `teacher/blocks/${blockId}`,
     ADD_QUIZ_QUESTION: (blockId: string) => `teacher/blocks/${blockId}/questions`,
     UPDATE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
     DELETE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,

@@ -1,16 +1,24 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   MaterialForm,
   MaterialContent,
 } from "@/features/admin/dashboard/courses/components/material";
 import { useAddContent } from "@/features/admin/dashboard/courses/hooks/useAddContent";
-import { useGetContentDetails, ContentBlock } from "@/features/admin/dashboard/courses/hooks/useGetContentDetails";
+import {
+  useGetContentDetails,
+  ContentBlock,
+} from "@/features/admin/dashboard/courses/hooks/useGetContentDetails";
 import { api } from "@/shared/api/api";
 import { API_ENDPOINTS } from "@/shared/config/constants";
-import { TextContent, MediaContent, QuizContent, QuizOption } from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
+import {
+  TextContent,
+  MediaContent,
+  QuizContent,
+  QuizOption,
+} from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
 
 // Transform API blocks to MaterialContent format
 function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
@@ -29,7 +37,9 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
         id: block.block_id,
         type: "media",
         file: null,
-        embedUrl: block.media_url,
+        embedUrl: "", // Leave empty for embed URL field
+        previewUrl: block.media_type === "image" ? block.media_url : undefined,
+        mediaType: block.media_type,
       };
       contents.push(mediaContent);
     } else if (block.type === "quiz" && block.questions) {
@@ -38,7 +48,7 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
         const options: QuizOption[] = question.options.map((opt) => ({
           id: opt.option_id,
           text: opt.option_text,
-          isCorrect: false, // API doesn't return correct answer for editing
+          isCorrect: opt.is_correct,
         }));
 
         const quizContent: QuizContent = {
@@ -66,18 +76,22 @@ export default function MaterialDetailPage() {
   const coursesId = params.coursesId as string;
   const manageCoursesId = params.manageCoursesId as string;
   const materialId = params.materialId as string;
-  
+
   // Check if this is edit mode (materialId is not "new" and not a topicId from query)
   const topicIdFromQuery = searchParams.get("topicId");
   const isEditMode = materialId !== "new" && !topicIdFromQuery;
-  
+
   // For new materials, topicId comes from query param; for edit, we'll get it from content details
   const topicId = topicIdFromQuery || materialId;
 
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch content details when editing
-  const { data: contentData, isLoading, error } = useGetContentDetails(isEditMode ? materialId : null);
+  const {
+    data: contentData,
+    isLoading,
+    error,
+  } = useGetContentDetails(isEditMode ? materialId : null);
 
   // Debug logs
   console.log("=== MaterialDetailPage Debug ===");
@@ -144,7 +158,10 @@ export default function MaterialDetailPage() {
           } else if (content.type === "media" && content.file) {
             const formData = new FormData();
             formData.append("file", content.file);
-            formData.append("media_type", content.file.type.startsWith("image/") ? "image" : "video");
+            formData.append(
+              "media_type",
+              content.file.type.startsWith("image/") ? "image" : "video"
+            );
 
             await api.post(API_ENDPOINTS.TEACHER.ADD_MEDIA_BLOCK(contentId), formData, {
               headers: { "Content-Type": "multipart/form-data" },
@@ -175,6 +192,17 @@ export default function MaterialDetailPage() {
     }
   };
 
+  // Handle content deletion based on type
+  const handleDeleteContent = async (id: string, type: "text" | "media" | "quiz") => {
+    if (type === "quiz") {
+      // Quiz content uses question_id, so call DELETE_QUESTION
+      await api.delete(API_ENDPOINTS.TEACHER.DELETE_QUESTION(id));
+    } else {
+      // Text and Media use block_id, so call DELETE_BLOCK
+      await api.delete(API_ENDPOINTS.TEACHER.DELETE_BLOCK(id));
+    }
+  };
+
   // Show loading state when fetching content for edit mode
   if (isEditMode && isLoading) {
     return (
@@ -194,6 +222,7 @@ export default function MaterialDetailPage() {
       isSaving={isSaving}
       initialContents={initialContents}
       isEditMode={isEditMode}
+      onDeleteContent={handleDeleteContent}
     />
   );
 }

@@ -16,6 +16,8 @@ export interface MediaContent {
   type: "media";
   file: File | null;
   embedUrl: string;
+  previewUrl?: string; // URL for previewing existing media in edit mode
+  mediaType?: "image" | "video"; // Type of existing media
 }
 
 export interface QuizOption {
