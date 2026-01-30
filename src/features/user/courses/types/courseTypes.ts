@@ -104,6 +104,7 @@ export interface ApiCourseDetails {
   participants: Participant[];
   total_participants: number;
   last_accessed: string | null;
+  my_notes: Note[] | null;
 }
 
 // Transformed type (used in components)
@@ -119,6 +120,7 @@ export interface CourseDetails {
   participants: Participant[];
   total_participants: number;
   last_accessed: string | null;
+  my_notes: Note[] | null;
 }
 
 // API response for GET /student/courses/{courseId}/topics
@@ -145,6 +147,7 @@ export interface ApiContentDetails {
   topic_name: string;
   is_completed: boolean;
   blocks: ApiContentBlock[] | null;
+  last_attempt_id?: string;
 }
 
 // API Content block types (raw from backend)
@@ -215,6 +218,7 @@ export interface ContentDetails {
   topicName: string;
   isCompleted: boolean;
   blocks: ContentBlock[];
+  lastAttemptId?: string;
 }
 
 // API response for content complete/incomplete
@@ -248,4 +252,5 @@ export interface Note {
   title: string;
   content: string;
   created_at: string;
+  topic_name?: string;
 }

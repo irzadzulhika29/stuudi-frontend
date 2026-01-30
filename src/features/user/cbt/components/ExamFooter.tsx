@@ -15,7 +15,7 @@ export function ExamFooter({ currentIndex, totalQuestions, onPrevious, onNext }:
   const isLast = currentIndex === totalQuestions - 1;
 
   return (
-    <footer className="flex items-center justify-center gap-4">
+    <footer className="flex w-full items-center justify-between gap-4">
       <Button
         variant="secondary"
         size="md"

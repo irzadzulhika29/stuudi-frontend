@@ -3,10 +3,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/shared/components/ui/Modal";
-import { QuizData, QuizState } from "../../types/cTypes";
+import Loading from "@/app/loading";
+import {
+  QuizData,
+  QuizState,
+  QuizResultResponse,
+  QuizQuestion as QuizQuestionType,
+} from "../../types/cTypes";
+import { QuestionAnswer } from "@/shared/types/questionTypes";
 import { QuizStart } from "./QuizStart";
 import { QuizQuestion } from "./QuizQuestion";
 import { QuizSummary } from "./QuizSummary";
+import { quizService } from "../../services/quizService";
 
 interface QuizContainerProps {
   quiz: QuizData;
@@ -18,10 +26,15 @@ interface QuizContainerProps {
 export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizContainerProps) {
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastResult, setLastResult] = useState<QuizResultResponse | null>(null);
+  const [localQuiz, setLocalQuiz] = useState<QuizData>(quiz);
+
   const [state, setState] = useState<QuizState>({
     status: "start",
     currentQuestion: 0,
-    answers: new Array(quiz.questions.length).fill(null),
+    answers: [],
     correctCount: 0,
     startTime: 0,
     questionTimes: [],
@@ -29,6 +42,25 @@ export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizC
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(0);
+
+  console.log("[QuizContainer] Quiz data:", quiz);
+  console.log("[QuizContainer] Last result state:", lastResult);
+
+  useEffect(() => {
+    const fetchLastResult = async () => {
+      if (quiz.lastAttemptId) {
+        try {
+          console.log("[QuizContainer] Fetching last result for:", quiz.lastAttemptId);
+          const result = await quizService.getQuizResult(quiz.lastAttemptId);
+          console.log("[QuizContainer] Last result from API:", result);
+          setLastResult(result);
+        } catch (error) {
+          console.error("Failed to fetch last result:", error);
+        }
+      }
+    };
+    fetchLastResult();
+  }, [quiz.lastAttemptId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -48,48 +80,105 @@ export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizC
     setShowConfirmModal(true);
   };
 
-  const handleConfirmStart = () => {
-    setShowConfirmModal(false);
-    const now = Date.now();
-    setState((prev) => ({
-      ...prev,
-      status: "in-progress",
-      startTime: now,
-      currentQuestion: 0,
-      answers: new Array(quiz.questions.length).fill(null),
-      correctCount: 0,
-      questionTimes: [],
-    }));
-    setQuestionStartTime(now);
-    setElapsedTime(0);
-    setShowFeedback(false);
+  const handleConfirmStart = async () => {
+    setIsLoading(true);
+    try {
+      const data = await quizService.startQuiz(localQuiz.id);
+
+      const mappedQuestions: QuizQuestionType[] = data.questions.map((q) => ({
+        id: q.question_id,
+        text: q.question_text,
+        type: q.question_type,
+        image: q.image_url || undefined,
+        points: q.points,
+        options: q.options.map((o) => ({
+          id: o.option_id,
+          text: o.option_text,
+          sequence: o.sequence,
+        })),
+        correctAnswer: -1,
+      }));
+
+      setLocalQuiz((prev) => ({
+        ...prev,
+        questions: mappedQuestions,
+      }));
+      setAttemptId(data.attempt_id);
+
+      const now = Date.now();
+      setState((prev) => ({
+        ...prev,
+        status: "in-progress",
+        startTime: now,
+        currentQuestion: 0,
+        answers: new Array<QuestionAnswer>(data.questions.length).fill(null),
+        correctCount: 0,
+        questionTimes: [],
+      }));
+      setQuestionStartTime(now);
+      setElapsedTime(0);
+      setShowFeedback(false);
+      setShowConfirmModal(false);
+    } catch (error) {
+      console.error("Failed to start quiz:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmitAnswer = useCallback(
-    (selectedOption: number) => {
+    async (answer: QuestionAnswer) => {
+      if (!attemptId || !localQuiz.questions) return;
+
       const questionTime = (Date.now() - questionStartTime) / 1000;
-      const currentQ = quiz.questions[state.currentQuestion];
-      const isCorrect = selectedOption === currentQ.correctAnswer;
+      const currentQ = localQuiz.questions[state.currentQuestion];
+
+      // Map Answer back to option IDs for the API
+      let selectedOptionIds: string[] = [];
+      if (typeof answer === "string") {
+        selectedOptionIds = [answer];
+      } else if (Array.isArray(answer)) {
+        selectedOptionIds = answer as string[];
+      } else if (answer && typeof answer === "object") {
+        selectedOptionIds = Object.values(answer as Record<string, string>);
+      }
 
       setState((prev) => ({
         ...prev,
-        answers: prev.answers.map((a, i) => (i === prev.currentQuestion ? selectedOption : a)),
-        correctCount: isCorrect ? prev.correctCount + 1 : prev.correctCount,
+        answers: prev.answers.map((a, i) => (i === prev.currentQuestion ? answer : a)),
         questionTimes: [...prev.questionTimes, questionTime],
       }));
-      setShowFeedback(true);
+
+      try {
+        await quizService.saveAnswer(attemptId, currentQ.id, selectedOptionIds);
+        setShowFeedback(true);
+      } catch (error) {
+        console.error("Failed to save answer:", error);
+      }
     },
-    [questionStartTime, quiz.questions, state.currentQuestion]
+    [attemptId, localQuiz.questions, questionStartTime, state.currentQuestion]
   );
 
-  const handleNext = useCallback(() => {
-    const isLast = state.currentQuestion === quiz.questions.length - 1;
+  const handleNext = useCallback(async () => {
+    if (!localQuiz.questions) return;
+    const isLast = state.currentQuestion === localQuiz.questions.length - 1;
 
     if (isLast) {
-      setState((prev) => ({
-        ...prev,
-        status: "summary",
-      }));
+      // Submit Quiz
+      if (!attemptId) return;
+      setIsLoading(true);
+      try {
+        const result = await quizService.submitQuiz(attemptId);
+        setLastResult(result); // Use result for summary
+        setState((prev) => ({
+          ...prev,
+          status: "summary",
+        }));
+      } catch (error) {
+        console.error("Failed to submit quiz:", error);
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setState((prev) => ({
         ...prev,
@@ -98,13 +187,14 @@ export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizC
       setQuestionStartTime(Date.now());
       setShowFeedback(false);
     }
-  }, [state.currentQuestion, quiz.questions.length]);
+  }, [state.currentQuestion, localQuiz.questions, attemptId]);
 
   const handleRetake = () => {
+    setAttemptId(null);
     setState({
       status: "start",
       currentQuestion: 0,
-      answers: new Array(quiz.questions.length).fill(null),
+      answers: [],
       correctCount: 0,
       startTime: 0,
       questionTimes: [],
@@ -121,39 +211,84 @@ export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizC
     router.push(`/courses/${courseId}/topic/${topicId}`);
   };
 
-  const averageTime =
-    state.questionTimes.length > 0
-      ? state.questionTimes.reduce((a, b) => a + b, 0) / state.questionTimes.length
-      : 0;
+  const handleResume = async () => {
+    setIsLoading(true);
+    try {
+      const data = await quizService.resumeQuiz(localQuiz.id);
 
-  const expEarned = Math.round((state.correctCount / quiz.questions.length) * 500);
+      const mappedQuestions: QuizQuestionType[] = data.questions.map((q) => ({
+        id: q.question_id,
+        text: q.question_text,
+        type: q.question_type,
+        image: q.image_url || undefined,
+        points: q.points,
+        options: q.options.map((o) => ({
+          id: o.option_id,
+          text: o.option_text,
+          sequence: o.sequence,
+        })),
+        correctAnswer: -1,
+      }));
+
+      setLocalQuiz((prev) => ({
+        ...prev,
+        questions: mappedQuestions,
+      }));
+      setAttemptId(data.attempt_id);
+
+      const now = Date.now();
+      setState((prev) => ({
+        ...prev,
+        status: "in-progress",
+        startTime: now,
+        currentQuestion: 0,
+        answers: new Array<QuestionAnswer>(data.questions.length).fill(null), // Or hydrate if API provided answers
+        correctCount: 0,
+        questionTimes: [],
+      }));
+      setQuestionStartTime(now);
+      setElapsedTime(0);
+      setShowFeedback(false);
+    } catch (error) {
+      console.error("Failed to resume quiz:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="px-3 py-4 md:px-4 md:py-6">
+      {isLoading && <Loading />}
       {state.status === "start" && (
-        <QuizStart quiz={quiz} onStart={handleStart} onContinue={handleContinue} />
+        <QuizStart
+          quiz={quiz}
+          lastResult={lastResult || undefined}
+          onStart={handleStart}
+          onResume={quiz.lastAttemptId ? handleResume : undefined}
+          onContinue={handleContinue}
+        />
       )}
 
-      {state.status === "in-progress" && (
+      {state.status === "in-progress" && localQuiz.questions && (
         <QuizQuestion
-          question={quiz.questions[state.currentQuestion]}
+          question={localQuiz.questions[state.currentQuestion]}
           questionNumber={state.currentQuestion + 1}
-          totalQuestions={quiz.questions.length}
+          totalQuestions={localQuiz.questions.length}
           elapsedTime={elapsedTime}
           onSubmit={handleSubmitAnswer}
           showFeedback={showFeedback}
           selectedAnswer={state.answers[state.currentQuestion]}
           onNext={handleNext}
-          isLastQuestion={state.currentQuestion === quiz.questions.length - 1}
+          isLastQuestion={state.currentQuestion === localQuiz.questions.length - 1}
         />
       )}
 
-      {state.status === "summary" && (
+      {state.status === "summary" && lastResult && (
         <QuizSummary
-          correctAnswers={state.correctCount}
-          totalQuestions={quiz.questions.length}
-          averageTime={averageTime}
-          expEarned={expEarned}
+          correctAnswers={lastResult.correct_answers}
+          totalQuestions={lastResult.total_questions}
+          averageTime={0} // Computed from time_taken if needed, or 0
+          expEarned={lastResult.exp_gained || 0}
           onRetake={handleRetake}
           onBack={handleBack}
         />
@@ -178,9 +313,10 @@ export function QuizContainer({ quiz, courseId, topicId, onStatusChange }: QuizC
           </button>
           <button
             onClick={handleConfirmStart}
-            className="bg-primary-dark hover:bg-primary-dark/90 flex-1 rounded-lg py-2.5 font-medium text-white transition-colors"
+            disabled={isLoading}
+            className="bg-primary-dark hover:bg-primary-dark/90 flex-1 rounded-lg py-2.5 font-medium text-white transition-colors disabled:opacity-50"
           >
-            Mulai Sekarang
+            {isLoading ? "Memuat..." : "Mulai Sekarang"}
           </button>
         </div>
       </Modal>

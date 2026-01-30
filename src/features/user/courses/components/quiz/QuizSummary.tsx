@@ -3,7 +3,7 @@
 interface QuizSummaryProps {
   correctAnswers: number;
   totalQuestions: number;
-  averageTime: number;
+  averageTime: number | string;
   expEarned: number;
   onRetake: () => void;
   onBack: () => void;
@@ -17,10 +17,13 @@ export function QuizSummary({
   onRetake,
   onBack,
 }: QuizSummaryProps) {
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    const centisecs = Math.floor((seconds % 1) * 100);
+  const formatTime = (time: number | string) => {
+    if (typeof time === "string") {
+      return time.replace(" sec/question", "");
+    }
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    const centisecs = Math.floor((time % 1) * 100);
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${centisecs.toString().padStart(2, "0")}`;
   };
 

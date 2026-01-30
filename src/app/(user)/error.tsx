@@ -16,34 +16,45 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-6">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-orange-100">
-            <span className="text-4xl">😓</span>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-900 px-4">
+      {/* Background Elements */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-orange-500/20 blur-[120px]" />
+        <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-red-500/20 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl backdrop-blur-xl sm:p-12">
+        <div className="mb-8 flex justify-center">
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-red-500/10 ring-1 ring-red-500/30">
+            <div className="absolute inset-0 rounded-full bg-red-500/20 blur-xl"></div>
+            <RefreshCw size={40} className="relative z-10 rotate-180 text-red-400" />
+            {/* Using RefreshCw as a 'system reset' metaphor or AlertTriangle if imported */}
           </div>
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">Oops! Ada Masalah</h1>
-          <p className="text-sm text-gray-600">
-            Terjadi kesalahan saat memuat halaman. Jangan khawatir, coba refresh atau kembali ke
-            dashboard.
-          </p>
         </div>
 
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+        <h1 className="mb-3 text-3xl font-bold tracking-tight text-white drop-shadow-lg sm:text-4xl">
+          Terjadi Kendala
+        </h1>
+
+        <p className="mb-8 leading-relaxed text-white/60">
+          Sistem mengalami sedikit gangguan saat memuat halaman ini. Cobalah menyegarkan kembali.
+        </p>
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-600"
+            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-8 py-3 font-semibold text-neutral-900 transition-all hover:bg-neutral-200"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={18} className="transition-transform group-hover:rotate-180" />
             <span>Coba Lagi</span>
           </button>
 
           <Link
             href="/dashboard/home"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-5 py-2.5 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-300"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-8 py-3 font-semibold text-white transition-all hover:bg-white/10"
           >
-            <ArrowLeft size={16} />
-            <span>Ke Dashboard</span>
+            <ArrowLeft size={18} />
+            <span>Dashboard</span>
           </Link>
         </div>
       </div>

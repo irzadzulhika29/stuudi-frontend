@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { MateriDetailSkeleton } from "../components/MateriDetailSkeleton";
 import Button from "@/shared/components/ui/Button";
 import { QuizBlockQuestion } from "../components/QuizBlockQuestion";
 import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
@@ -12,6 +13,8 @@ import { useCourseDetails } from "../hooks/useCourseDetails";
 import { useMarkContentComplete, useMarkContentIncomplete } from "../hooks/useContentCompletion";
 import { ContentBlock } from "../types/courseTypes";
 import { CompletionButton } from "../components/CompletionButton";
+import { QuizContainer } from "../components/quiz/QuizContainer";
+import { QuizData } from "../types/cTypes";
 
 interface MateriDetailContainerProps {
   courseId: string;
@@ -32,6 +35,12 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
   const markIncomplete = useMarkContentIncomplete();
 
   useEffect(() => {
+    if (content) {
+      console.log("DEBUG: Content Details:", content);
+    }
+  }, [content]);
+
+  useEffect(() => {
     if (content && courseDetails) {
       setMateriNav(
         { id: courseId, name: courseDetails.name },
@@ -44,14 +53,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
   const isLoading = isLoadingContent || isLoadingCourse;
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center text-white">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-          <p>Memuat materi...</p>
-        </div>
-      </div>
-    );
+    return <MateriDetailSkeleton />;
   }
 
   if (isContentError || !content) {
@@ -65,6 +67,33 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
             </Button>
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (content.type === "quiz") {
+    const quizData: QuizData = {
+      id: content.contentId,
+      title: content.title,
+      description: "",
+      questions: [],
+      lastAttemptId: content.lastAttemptId,
+    };
+
+    return (
+      <div className="min-h-screen px-3 py-4 md:px-4 md:py-6">
+        <div className="mb-4">
+          <Link
+            href={`/courses/${courseId}/topic/${topicId}`}
+            className="inline-flex items-center gap-2 text-white/70 transition-colors duration-200 hover:text-white"
+          >
+            <ChevronLeft size={18} />
+            <span className="text-sm">
+              Courses / {courseDetails?.name} / {content.topicName} / {content.title}
+            </span>
+          </Link>
+        </div>
+        <QuizContainer quiz={quizData} courseId={courseId} topicId={topicId} />
       </div>
     );
   }
@@ -153,6 +182,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
           <div className="mb-6 lg:hidden">
             <CourseInfoSidebar
               progress={sidebarProps.progress}
+              topicId={topicId}
               showPeople={false}
               showLastAccessed={false}
             />
@@ -200,6 +230,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
           <div className="sticky top-24">
             <CourseInfoSidebar
               progress={sidebarProps.progress}
+              topicId={topicId}
               showPeople={false}
               showLastAccessed={false}
             />

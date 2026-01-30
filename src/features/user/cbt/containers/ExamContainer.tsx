@@ -1,116 +1,148 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ExamHeader } from "../components/ExamHeader";
 import { ExamTimerBar } from "../components/ExamTimerBar";
 import { QuestionCard } from "../components/QuestionCard";
 import { QuestionNavigation } from "../components/QuestionNavigation";
 import { ExamFooter } from "../components/ExamFooter";
 import { ExamSummary } from "../components/ExamSummary";
-import { dummyExamData } from "../data/dummyExamData";
 import { AlertTriangle, CheckCircle2, Maximize } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
+import { QuestionAnswer } from "@/shared/types/questionTypes";
 import {
   initializeExam,
   setView,
   setCurrentIndex,
   setAnswer,
   toggleFlag,
-  decrementLife,
+  setLives,
   decrementTime,
   finishExam,
 } from "@/shared/store/slices/examSlice";
+import { examService } from "../services/examService";
+import { dashboardService } from "@/features/user/dashboard/services/dashboardService";
 
 interface ExamContainerProps {
   stream: MediaStream | null;
 }
 
+import { useRouter } from "next/navigation";
+import Loading from "@/app/loading";
+
 export function ExamContainer({ stream }: ExamContainerProps) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const {
     view,
-    currentIndex,
+    currentQuestionIndex, // Updated name
     answers,
     flaggedQuestions,
     lives,
     maxLives,
     timeRemaining,
     isInitialized,
+    examData, // Use real data
   } = useAppSelector((state) => state.exam);
-
-  const currentQuestion = dummyExamData.questions[currentIndex];
-  const currentQuestionId = currentQuestion?.id;
-  const flaggedSet = new Set(flaggedQuestions);
 
   // Fullscreen state tracking
   const [showFullscreenOverlay, setShowFullscreenOverlay] = useState(false);
-  const [isReenteringFullscreen, setIsReenteringFullscreen] = useState(false);
 
+  // Track if user has interacted/started to prevent initial penalty
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  // Hydrate exam data on refresh
   useEffect(() => {
-    if (!isInitialized) {
-      dispatch(initializeExam({ duration: dummyExamData.duration, maxLives: 3 }));
-    }
-  }, [dispatch, isInitialized]);
+    if (!isInitialized || !examData) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const examId = searchParams.get("code");
 
-  const handleViolation = useCallback(() => {
-    if (lives > 0 && view !== "finished") {
-      dispatch(decrementLife());
+      if (examId) {
+        const fetchExam = async () => {
+          try {
+            const response = await dashboardService.resumeExam(examId);
+            const payload = examService.transformExamToReduxPayload(response);
+            dispatch(initializeExam(payload));
+          } catch (error) {
+            console.error("Failed to restore exam session", error);
+            // Handle error (e.g., redirect to dashboard or show error)
+          }
+        };
+        fetchExam();
+      }
     }
-  }, [lives, view, dispatch]);
+  }, [dispatch, isInitialized, examData]);
+
+  // Sync flags to LocalStorage
+  useEffect(() => {
+    if (examData?.exam_id && flaggedQuestions) {
+      localStorage.setItem(`exam_flags_${examData.exam_id}`, JSON.stringify(flaggedQuestions));
+    }
+  }, [flaggedQuestions, examData?.exam_id]);
 
   useEffect(() => {
     if (view === "finished") return;
 
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
-        // User exited fullscreen - show overlay and decrement life
         setShowFullscreenOverlay(true);
-        handleViolation();
-
-        // Auto-attempt to re-enter fullscreen (will fail without user interaction, but we try)
-        document.documentElement.requestFullscreen().catch(() => {
-          // Expected to fail - browser requires user interaction
-          console.log("[CBT] Auto-fullscreen blocked - requires user click");
-        });
+        // Only enforce fullscreen, do not penalize here.
+        // Penalty is strictly for visibility change (tab switch).
       } else if (document.fullscreenElement) {
-        // User re-entered fullscreen
         setShowFullscreenOverlay(false);
-        setIsReenteringFullscreen(false);
+        setHasInteracted(true);
       }
     };
 
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        handleViolation();
+    const handleVisibilityChange = async () => {
+      if (document.hidden && hasInteracted && examData?.attempt_id) {
+        // Tab Switched -> Record Violation
+        try {
+          // Optimistic update? No, let's wait for API to be accurate.
+          const result = await examService.recordTabSwitch(examData.attempt_id);
+
+          if (result) {
+            dispatch(setLives(result.lives_remaining));
+
+            // Show warning toast if available and not disqualified
+            if (result.warning_message && !result.is_disqualified) {
+              // Using built-in alert/toast or custom UI?
+              // Since we don't have a global toast setup visible, let's use a temporary console log or simple alert for now
+              // Better: Use a small local state to show a "Toast" component
+              console.warn(result.warning_message);
+              // alert(result.warning_message); // Alert pauses execution, bad for UX.
+              // TODO: Implement proper toast. For now, we rely on the Red Flash or the overlay.
+            }
+
+            if (result.is_disqualified) {
+              // Handle disqualification if needed, usually lives <= 0 handles it
+            }
+          }
+        } catch (e) {
+          console.error("Failed to record tab switch", e);
+        }
       }
     };
 
-    // Polling: Check fullscreen status every 500ms as backup detection
+    // Polling backup
     const fullscreenPolling = setInterval(() => {
-      if (!document.fullscreenElement && !showFullscreenOverlay) {
+      if (!document.fullscreenElement && !showFullscreenOverlay && view !== "intro") {
         setShowFullscreenOverlay(true);
-        // Don't decrement life here - only on actual fullscreenchange event
       }
-    }, 500);
+    }, 1000);
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange); // Safari
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange); // Firefox
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange); // IE/Edge
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       clearInterval(fullscreenPolling);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [handleViolation, view, showFullscreenOverlay]);
+  }, [view, showFullscreenOverlay, hasInteracted, examData?.attempt_id, dispatch]);
 
   useEffect(() => {
     if (timeRemaining <= 0 || lives <= 0 || view === "finished") return;
@@ -122,9 +154,31 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     return () => clearInterval(timer);
   }, [timeRemaining, lives, view, dispatch]);
 
-  const handleSelectAnswer = (answer: string) => {
-    dispatch(setAnswer({ questionId: currentQuestionId, answer }));
-  };
+  // Loading / Hydrating UI
+  if (!isInitialized || !examData) {
+    return (
+      <div className="relative flex min-h-screen flex-col gap-6 overflow-hidden p-6">
+        {/* Blurred Background Skeleton */}
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-50 blur-xl">
+          <div className="flex h-full flex-col gap-6 p-6">
+            <div className="h-20 w-full animate-pulse rounded-2xl bg-white/10"></div>
+            <div className="h-16 w-full animate-pulse rounded-2xl bg-white/10"></div>
+            <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-4">
+              <div className="h-full animate-pulse rounded-3xl bg-white/10 lg:col-span-3"></div>
+              <div className="h-64 animate-pulse rounded-2xl bg-white/10"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Loading Spinner Overlay */}
+        <Loading />
+      </div>
+    );
+  }
+
+  const currentQuestion = examData.questions[currentQuestionIndex];
+  const currentQuestionId = currentQuestion?.question_id; // Using string ID
+  const flaggedSet = new Set(flaggedQuestions); // flaggedQuestions is string[]
 
   const handleNavigate = (index: number) => {
     dispatch(setCurrentIndex(index));
@@ -134,14 +188,23 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   };
 
   const handlePrevious = () => {
-    if (currentIndex > 0) {
-      dispatch(setCurrentIndex(currentIndex - 1));
+    if (currentQuestionIndex > 0) {
+      dispatch(setCurrentIndex(currentQuestionIndex - 1));
     }
   };
 
   const handleNext = () => {
-    if (currentIndex < dummyExamData.questions.length - 1) {
-      dispatch(setCurrentIndex(currentIndex + 1));
+    if (currentQuestionIndex < examData.questions.length - 1) {
+      dispatch(setCurrentIndex(currentQuestionIndex + 1));
+    }
+  };
+
+  const handleSelectAnswer = async (answer: QuestionAnswer) => {
+    dispatch(setAnswer({ questionId: currentQuestionId, answer }));
+
+    // Background save to API
+    if (examData?.attempt_id) {
+      await examService.saveAnswer(examData.attempt_id, currentQuestionId, answer);
     }
   };
 
@@ -149,6 +212,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     dispatch(toggleFlag(currentQuestionId));
   };
 
+  // ... rest of the handlers ...
   const handleFinishAttempt = () => {
     dispatch(setView("summary"));
   };
@@ -157,21 +221,32 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     dispatch(setView("exam"));
   };
 
-  const handleConfirmSubmit = () => {
-    dispatch(finishExam());
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
+  const handleConfirmSubmit = async () => {
+    if (!examData?.attempt_id) return;
+
+    console.log("Submitting exam...", { attemptId: examData.attempt_id });
+
+    try {
+      const result = await examService.submitExam(examData.attempt_id);
+      console.log("Exam submitted successfully", result);
+
+      if (examData.exam_id) {
+        localStorage.removeItem(`exam_flags_${examData.exam_id}`);
+      }
+
+      dispatch(finishExam());
+
+      router.replace("/dashboard");
+    } catch (error) {
+      console.error("Failed to submit exam", error);
     }
   };
 
-  // Re-enter fullscreen function
   const handleReenterFullscreen = async () => {
-    setIsReenteringFullscreen(true);
     try {
       await document.documentElement.requestFullscreen();
     } catch (err) {
       console.error("Failed to enter fullscreen:", err);
-      setIsReenteringFullscreen(false);
     }
   };
 
@@ -203,7 +278,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
           <h2 className="mb-4 text-3xl font-bold text-white">Ujian Selesai!</h2>
           <p className="mb-2 text-lg text-white/70">Jawaban Anda telah berhasil dikumpulkan.</p>
           <p className="mb-8 text-white/50">
-            {answeredCount} dari {dummyExamData.questions.length} soal terjawab
+            {answeredCount} dari {examData.questions.length} soal terjawab
           </p>
           <Link href="/dashboard">
             <Button variant="glow" size="lg">
@@ -218,7 +293,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   if (view === "summary") {
     return (
       <ExamSummary
-        questions={dummyExamData.questions}
+        questions={examData.questions}
         answers={answers}
         flaggedQuestions={flaggedQuestions}
         onNavigateToQuestion={handleNavigate}
@@ -230,28 +305,27 @@ export function ExamContainer({ stream }: ExamContainerProps) {
 
   return (
     <div className="flex min-h-screen flex-col gap-6 p-6">
-      <ExamHeader title={dummyExamData.title} subject={dummyExamData.subject} stream={stream} />
+      <ExamHeader title={examData.title} subject={examData.subject || ""} stream={stream} />
 
       <ExamTimerBar
-        currentQuestion={currentIndex + 1}
+        currentQuestion={currentQuestionIndex + 1}
         timeRemaining={timeRemaining}
         lives={lives}
-        maxLives={maxLives}
       />
 
       <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="lg:col-span-3">
           <QuestionCard
             question={currentQuestion}
-            selectedAnswer={answers[currentQuestionId] || null}
+            selectedAnswer={answers[currentQuestionId] || null} // selectedAnswer might be complex object
             onSelectAnswer={handleSelectAnswer}
           />
         </div>
 
         <div>
           <QuestionNavigation
-            totalQuestions={dummyExamData.questions.length}
-            currentIndex={currentIndex}
+            questions={examData.questions}
+            currentIndex={currentQuestionIndex}
             answers={answers}
             flaggedQuestions={flaggedSet}
             isFlagged={flaggedSet.has(currentQuestionId)}
@@ -263,12 +337,13 @@ export function ExamContainer({ stream }: ExamContainerProps) {
       </div>
 
       <ExamFooter
-        currentIndex={currentIndex}
-        totalQuestions={dummyExamData.questions.length}
+        currentIndex={currentQuestionIndex}
+        totalQuestions={examData.questions.length}
         onPrevious={handlePrevious}
         onNext={handleNext}
       />
 
+      {/* Lives Warning & Overlay (Keep same logic) */}
       {lives < maxLives && lives > 0 && !showFullscreenOverlay && (
         <div className="animate-fade-in fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-red-500/50 bg-red-500/90 px-6 py-3 text-white shadow-2xl">
           <div className="flex items-center gap-3">
@@ -278,12 +353,10 @@ export function ExamContainer({ stream }: ExamContainerProps) {
         </div>
       )}
 
-      {/* Fullscreen Re-entry Overlay - BLOCKING */}
       {showFullscreenOverlay && lives > 0 && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black p-6"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-neutral-950 p-6"
           style={{
-            // Ensure complete coverage
             position: "fixed",
             top: 0,
             left: 0,
@@ -293,37 +366,24 @@ export function ExamContainer({ stream }: ExamContainerProps) {
             height: "100vh",
           }}
         >
-          <div className="w-full max-w-lg text-center">
-            <div className="mx-auto mb-8 flex h-24 w-24 animate-bounce items-center justify-center rounded-full bg-red-600">
-              <Maximize size={48} className="text-white" />
+          <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+              <Maximize size={32} className="text-white/80" />
             </div>
 
-            <h1 className="mb-4 text-3xl font-bold text-white">MODE FULLSCREEN DIPERLUKAN</h1>
-
-            <p className="mb-3 text-lg text-white/80">
-              Ujian hanya dapat dilanjutkan dalam mode layar penuh.
-            </p>
-
-            <p className="mb-8 rounded-lg bg-red-900/50 p-3 text-red-400">
-              ⚠️ Pelanggaran terdeteksi! Sisa nyawa:{" "}
-              <strong className="text-red-300">{lives}</strong>
-            </p>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold tracking-tight text-white">Mode Fullscreen</h1>
+              <p className="text-neutral-400">Ujian harus dilakukan dalam mode layar penuh.</p>
+            </div>
 
             <Button
               variant="glow"
               size="lg"
               onClick={handleReenterFullscreen}
-              disabled={isReenteringFullscreen}
-              icon={<Maximize size={24} />}
-              iconPosition="left"
-              className="w-full py-4 text-lg"
+              className="w-full py-6 text-base font-semibold"
             >
-              {isReenteringFullscreen ? "Memuat..." : "KLIK UNTUK FULLSCREEN"}
+              Aktifkan Fullscreen
             </Button>
-
-            <p className="mt-6 text-sm text-white/40">
-              Tekan tombol di atas untuk melanjutkan ujian
-            </p>
           </div>
         </div>
       )}

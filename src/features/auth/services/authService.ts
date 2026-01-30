@@ -28,9 +28,11 @@ export const authService = {
     const roleName = decoded?.RoleName;
 
     if (typeof window !== "undefined") {
+      const isEmail = data.identifier.includes("@");
       const userData: AuthUser = {
         id: decoded?.UserID || "local-user",
-        email: data.email,
+        email: isEmail ? data.identifier : "", // Use identifier as email if it looks like one, otherwise empty
+        username: !isEmail ? data.identifier : undefined, // Use identifier as username if it doesn't look like email
         user_type: result.user_type,
         roleName: roleName || undefined,
       };
@@ -51,8 +53,28 @@ export const authService = {
   async getProfile(): Promise<AuthUser> {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-      if (storedUser) {
-        return JSON.parse(storedUser);
+      let user = storedUser ? JSON.parse(storedUser) : null;
+
+      if (this.isAuthenticated()) {
+        try {
+          const response = await api.get("/student/profile");
+          if (response.data?.data) {
+            const { username, total_exp, email } = response.data.data;
+            user = {
+              ...user,
+              username,
+              total_exp,
+            };
+            if (email) user.email = email;
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+          }
+        } catch (error) {
+          console.warn("Failed to fetch fresh profile data:", error);
+        }
+      }
+
+      if (user) {
+        return user;
       }
     }
     throw new Error("User data not found");

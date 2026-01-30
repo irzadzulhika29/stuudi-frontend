@@ -8,7 +8,7 @@ export default function LoginContainer() {
     <AuthLayout
       title={
         <>
-          Selamat datang, <span className="text-primary-light">Arterians!</span>
+          Selamat datang, <span className="text-secondary">Arterians!</span>
         </>
       }
       subtitle="Masuk untuk melanjutkan pembelajaranmu dan jangan lupa ambil kuis mu hari ini!"
