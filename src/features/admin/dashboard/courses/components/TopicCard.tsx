@@ -26,7 +26,6 @@ export function TopicCard({
   title,
   description,
   materials,
-  // status, // eslint-disable-line @typescript-eslint/no-unused-vars
   isExpanded: defaultExpanded = false,
 }: TopicCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -38,9 +37,6 @@ export function TopicCard({
       setContentHeight(contentRef.current.scrollHeight);
     }
   }, [materials]);
-
-  // const completedCount = materials.filter((m) => m.isCompleted).length;
-  // const isAllCompleted = completedCount === materials.length;
 
   const handleCardClick = () => {
     setIsExpanded(!isExpanded);

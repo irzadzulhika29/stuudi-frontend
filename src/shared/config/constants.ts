@@ -54,6 +54,7 @@ export const API_ENDPOINTS = {
     DELETE_COURSE: (id: string) => `teacher/courses/${id}`,
     COURSE_DETAIL: (id: string) => `student/courses/${id}`,
     ADD_TOPIC: (courseId: string) => `teacher/courses/${courseId}/topics`,
+    DELETE_TOPIC: (topicId: string) => `teacher/topics/${topicId}`,
     // Content (Material/Quiz)
     ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     CONTENT_DETAIL: (contentId: string) => `teacher/content/${contentId}`,
