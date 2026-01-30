@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Plus, Trash2, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { TextContentBox } from "./TextContentBox";
 import { MediaBox } from "./MediaBox";
 import { QuizBox, QuizData } from "./QuizBox";
@@ -21,6 +21,10 @@ interface MaterialFormProps {
   onBack: () => void;
   onSave: (materialName: string, contents: MaterialContent[]) => void;
   isSaving?: boolean;
+  initialContents?: MaterialContent[];
+  isEditMode?: boolean;
+  pageTitle?: string;
+  onDeleteContent?: (id: string, type: "text" | "media" | "quiz") => Promise<void>;
 }
 
 export function MaterialForm({
@@ -28,14 +32,16 @@ export function MaterialForm({
   materialName: initialMaterialName,
   onSave,
   isSaving = false,
+  initialContents = [],
+  isEditMode = false,
+  pageTitle,
+  onDeleteContent,
 }: MaterialFormProps) {
   const [materialName, setMaterialName] = useState(initialMaterialName);
-  const [contents, setContents] = useState<MaterialContent[]>([]);
+  const [contents, setContents] = useState<MaterialContent[]>(initialContents);
 
-  // Generate unique ID
   const generateId = () => `content-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Add new content blocks
   const addTextContent = useCallback(() => {
     const newContent: TextContent = {
       id: generateId(),
@@ -74,7 +80,6 @@ export function MaterialForm({
     setContents((prev) => [...prev, newContent]);
   }, []);
 
-  // Update content
   const updateTextContent = useCallback((id: string, content: string) => {
     setContents((prev) =>
       prev.map((c) => (c.id === id && c.type === "text" ? { ...c, content } : c))
@@ -93,6 +98,12 @@ export function MaterialForm({
     );
   }, []);
 
+  const clearMediaPreview = useCallback((id: string) => {
+    setContents((prev) =>
+      prev.map((c) => (c.id === id && c.type === "media" ? { ...c, previewUrl: undefined } : c))
+    );
+  }, []);
+
   const updateQuizContent = useCallback((id: string, data: QuizData) => {
     setContents((prev) =>
       prev.map((c) =>
@@ -106,7 +117,6 @@ export function MaterialForm({
     );
   }, []);
 
-  // Reorder content
   const moveContent = useCallback((index: number, direction: "up" | "down") => {
     setContents((prev) => {
       const newContents = [...prev];
@@ -120,19 +130,32 @@ export function MaterialForm({
     });
   }, []);
 
-  // Delete content
-  const deleteContent = useCallback((id: string) => {
-    setContents((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+  const deleteContent = useCallback(
+    async (id: string) => {
+      // Find the content to get its type
+      const content = contents.find((c) => c.id === id);
 
-  // Handle save
+      // If in edit mode and onDeleteContent is provided, call it to delete from API
+      if (isEditMode && onDeleteContent && content) {
+        try {
+          await onDeleteContent(id, content.type);
+        } catch (error) {
+          console.error("Failed to delete content:", error);
+          alert("Gagal menghapus. Silakan coba lagi.");
+          return;
+        }
+      }
+      setContents((prev) => prev.filter((c) => c.id !== id));
+    },
+    [isEditMode, onDeleteContent, contents]
+  );
+
   const handleSave = () => {
     onSave(materialName, contents);
   };
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <div className="sticky top-0 z-10">
         <div className="mb-8 flex items-center gap-4">
           <Link
@@ -145,12 +168,11 @@ export function MaterialForm({
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Title */}
-        <h1 className="mb-8 text-3xl font-bold text-white">Tambah Materi</h1>
+        <h1 className="mb-8 text-3xl font-bold text-white">
+          {pageTitle || (isEditMode ? "Edit Materi" : "Tambah Materi")}
+        </h1>
 
-        {/* Material Name Input */}
         <div className="mb-8 space-y-2">
           <label className="block text-sm font-medium text-white">Nama Materi</label>
           <input
@@ -162,11 +184,9 @@ export function MaterialForm({
           />
         </div>
 
-        {/* Content Section */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-white">Konten Materi</h2>
 
-          {/* Content Items */}
           <div className="space-y-4">
             {contents.map((content, index) => {
               if (content.type === "text") {
@@ -192,8 +212,10 @@ export function MaterialForm({
                     id={content.id}
                     file={content.file}
                     embedUrl={content.embedUrl}
+                    previewUrl={content.previewUrl}
                     onFileChange={updateMediaFile}
                     onEmbedUrlChange={updateMediaUrl}
+                    onClearPreview={clearMediaPreview}
                     onMoveUp={() => moveContent(index, "up")}
                     onMoveDown={() => moveContent(index, "down")}
                     onDelete={() => deleteContent(content.id)}
@@ -236,26 +258,6 @@ export function MaterialForm({
             })}
           </div>
 
-          {/* Add New Question Button */}
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg p-2 transition-all"
-              title="Hapus semua"
-            >
-              <Trash2 className="hover:text-gray h-5 w-5 text-white" />
-            </button>
-            <button
-              type="button"
-              onClick={addQuizContent}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/50 bg-transparent px-6 py-3 text-white transition-all hover:border-white hover:bg-white/20"
-            >
-              <Plus className="h-5 w-5" />
-              <span className="font-medium">Tambah Pertanyaan</span>
-            </button>
-          </div>
-
-          {/* Add Content Buttons */}
           <AddContentButtons
             onAddText={addTextContent}
             onAddQuiz={addQuizContent}
