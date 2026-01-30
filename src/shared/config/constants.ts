@@ -54,6 +54,7 @@ export const API_ENDPOINTS = {
     DELETE_COURSE: (id: string) => `teacher/courses/${id}`,
     COURSE_DETAIL: (id: string) => `student/courses/${id}`,
     ADD_TOPIC: (courseId: string) => `teacher/courses/${courseId}/topics`,
+    DELETE_TOPIC: (topicId: string) => `teacher/topics/${topicId}`,
     // Content (Material/Quiz)
     ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     CONTENT_DETAIL: (contentId: string) => `teacher/content/${contentId}`,
@@ -66,6 +67,9 @@ export const API_ENDPOINTS = {
     ADD_MEDIA_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/media`,
     ADD_QUIZ_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/quiz`,
     DELETE_BLOCK: (blockId: string) => `teacher/blocks/${blockId}`,
+    UPDATE_BLOCK_TEXT: (blockId: string) => `teacher/blocks/text/${blockId}`,
+    UPDATE_BLOCK_MEDIA: (blockId: string) => `teacher/blocks/media/${blockId}`,
+    UPDATE_BLOCK_QUIZ: (blockId: string) => `teacher/blocks/quiz/${blockId}`,
     ADD_QUIZ_QUESTION: (blockId: string) => `teacher/blocks/${blockId}/questions`,
     UPDATE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
     DELETE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,

@@ -18,6 +18,7 @@ export interface TopicCardProps {
   materials: Material[];
   status: "completed" | "in-progress" | "locked";
   isExpanded?: boolean;
+  isAdmin?: boolean;
 }
 
 export function TopicCard({
@@ -28,6 +29,7 @@ export function TopicCard({
   materials,
   status,
   isExpanded: defaultExpanded = false,
+  isAdmin = false,
 }: TopicCardProps) {
   const [isExpanded, setIsExpanded] = useState(status === "locked" ? false : defaultExpanded);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -100,7 +102,11 @@ export function TopicCard({
               </span>
             ) : (
               <Link
-                href={`/courses/${courseId}/topic/${id}`}
+                href={
+                  isAdmin
+                    ? `/dashboard-admin/courses/${courseId}/topic/${id}`
+                    : `/courses/${courseId}/topic/${id}`
+                }
                 onClick={handleTitleClick}
                 className="text-primary-dark hover:text-primary-light mb-1.5 block text-lg font-semibold transition-colors duration-200"
               >
@@ -141,7 +147,11 @@ export function TopicCard({
             {materials.map((material, index) => (
               <Link
                 key={material.id}
-                href={`/courses/${courseId}/topic/${id}/materi/${material.id}`}
+                href={
+                  isAdmin
+                    ? `/dashboard-admin/courses/${courseId}/manage/${courseId}/material/${material.id}`
+                    : `/courses/${courseId}/topic/${id}/materi/${material.id}`
+                }
                 className={`hover:bg-primary-light/20 flex items-center justify-between px-5 py-3.5 transition-all duration-200 ${
                   index !== materials.length - 1 ? "border-b border-white/10" : ""
                 }`}
