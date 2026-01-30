@@ -20,6 +20,12 @@ import {
   QuizOption,
 } from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
 
+// Helper to check if ID is a valid UUID (existing from API)
+function isValidUUID(id: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 // Transform API blocks to MaterialContent format
 function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
   const contents: MaterialContent[] = [];
@@ -44,6 +50,7 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
       contents.push(mediaContent);
     } else if (block.type === "quiz" && block.questions) {
       // Each question in the quiz block becomes a separate QuizContent
+      // Store questionId as id, and blockId separately for API calls
       for (const question of block.questions) {
         const options: QuizOption[] = question.options.map((opt) => ({
           id: opt.option_id,
@@ -52,7 +59,7 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
         }));
 
         const quizContent: QuizContent = {
-          id: question.question_id,
+          id: question.question_id, // Use questionId for UPDATE_QUESTION endpoint
           type: "quiz",
           question: question.question_text,
           questionType: "multiple_choice",
@@ -137,7 +144,89 @@ export default function MaterialDetailPage() {
       if (isEditMode) {
         // For edit mode, we already have the content ID
         contentId = materialId;
-        // TODO: Add API call to update content title if needed
+
+        // Update existing blocks (only those with valid UUID from API)
+        for (const content of contents) {
+          // Skip new content that doesn't have a valid UUID yet
+          if (!isValidUUID(content.id)) {
+            continue;
+          }
+
+          if (content.type === "text") {
+            await api.patch(API_ENDPOINTS.TEACHER.UPDATE_BLOCK_TEXT(content.id), {
+              text_content: content.content,
+            });
+          } else if (content.type === "media") {
+            const formData = new FormData();
+            if (content.file) {
+              formData.append("file", content.file);
+              formData.append(
+                "media_type",
+                content.file.type.startsWith("image/") ? "image" : "video"
+              );
+            } else if (content.embedUrl) {
+              formData.append("media_type", "video");
+              formData.append("youtube_url", content.embedUrl);
+            }
+
+            if (content.file || content.embedUrl) {
+              await api.patch(API_ENDPOINTS.TEACHER.UPDATE_BLOCK_MEDIA(content.id), formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+              });
+            }
+          } else if (content.type === "quiz") {
+            // Quiz content ID is question_id, use UPDATE_QUESTION endpoint
+            const options = content.options.map((opt) => ({
+              text: opt.text,
+              is_correct: opt.isCorrect,
+            }));
+
+            await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(content.id), {
+              question_text: content.question,
+              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              difficulty: content.difficulty || "medium",
+              explanation: "",
+              options,
+            });
+          }
+        }
+
+        // Also create NEW blocks that were added during edit mode
+        for (const content of contents) {
+          // Only process new content (no valid UUID)
+          if (isValidUUID(content.id)) {
+            continue;
+          }
+
+          if (content.type === "text") {
+            await api.post(API_ENDPOINTS.TEACHER.ADD_TEXT_BLOCK(contentId), {
+              text_content: content.content,
+            });
+          } else if (content.type === "media" && content.file) {
+            const formData = new FormData();
+            formData.append("file", content.file);
+            formData.append(
+              "media_type",
+              content.file.type.startsWith("image/") ? "image" : "video"
+            );
+
+            await api.post(API_ENDPOINTS.TEACHER.ADD_MEDIA_BLOCK(contentId), formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+          } else if (content.type === "quiz") {
+            const options = content.options.map((opt) => ({
+              text: opt.text,
+              is_correct: opt.isCorrect,
+            }));
+
+            await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
+              question: content.question,
+              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              difficulty: content.difficulty || "medium",
+              options,
+            });
+          }
+        }
       } else {
         // Step 1: Create content/material
         const contentResponse = await addContentMutation.mutateAsync({
@@ -145,11 +234,8 @@ export default function MaterialDetailPage() {
           type: "materi",
         });
         contentId = contentResponse.data.content_id;
-      }
 
-      // Step 2: Add blocks sequentially (for new content only)
-      // For edit mode, blocks already exist - would need update/delete APIs
-      if (!isEditMode) {
+        // Step 2: Add blocks sequentially (for new content only)
         for (const content of contents) {
           if (content.type === "text") {
             await api.post(API_ENDPOINTS.TEACHER.ADD_TEXT_BLOCK(contentId), {
