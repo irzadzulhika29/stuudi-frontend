@@ -21,6 +21,9 @@ interface MaterialFormProps {
   onBack: () => void;
   onSave: (materialName: string, contents: MaterialContent[]) => void;
   isSaving?: boolean;
+  initialContents?: MaterialContent[];
+  isEditMode?: boolean;
+  pageTitle?: string;
 }
 
 export function MaterialForm({
@@ -28,9 +31,12 @@ export function MaterialForm({
   materialName: initialMaterialName,
   onSave,
   isSaving = false,
+  initialContents = [],
+  isEditMode = false,
+  pageTitle,
 }: MaterialFormProps) {
   const [materialName, setMaterialName] = useState(initialMaterialName);
-  const [contents, setContents] = useState<MaterialContent[]>([]);
+  const [contents, setContents] = useState<MaterialContent[]>(initialContents);
 
   // Generate unique ID
   const generateId = () => `content-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -148,7 +154,7 @@ export function MaterialForm({
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Title */}
-        <h1 className="mb-8 text-3xl font-bold text-white">Tambah Materi</h1>
+        <h1 className="mb-8 text-3xl font-bold text-white">{pageTitle || (isEditMode ? "Edit Materi" : "Tambah Materi")}</h1>
 
         {/* Material Name Input */}
         <div className="mb-8 space-y-2">
