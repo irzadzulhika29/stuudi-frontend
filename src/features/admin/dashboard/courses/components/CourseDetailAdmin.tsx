@@ -20,10 +20,10 @@ interface ManageTopicListProps {
 export function ManageTopicList({ courseId, topics, onAddNewTopic }: ManageTopicListProps) {
   return (
     <div className="space-y-6">
-      <div className="flex gap-4 mb-8">
+      <div className="mb-8 flex gap-4">
         {onAddNewTopic ? (
           <Button
-            className="flex-1 hover:text-gray-800 hover:bg-white"
+            className="flex-1 hover:bg-white hover:text-gray-800"
             variant="outline"
             size="md"
             onClick={onAddNewTopic}
@@ -35,17 +35,20 @@ export function ManageTopicList({ courseId, topics, onAddNewTopic }: ManageTopic
             className="flex-1"
             href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/material/new`}
           >
-            <Button className="w-full hover:text-gray-800 hover:bg-white" variant="outline" size="md">
+            <Button
+              className="w-full hover:bg-white hover:text-gray-800"
+              variant="outline"
+              size="md"
+            >
               <Plus className="mr-2" size={20} /> Add New Topic
             </Button>
           </Link>
         )}
         <Link
-        className="flex-1"
-          href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/quiz/new`}
-        
+          className="flex-1"
+          href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/exam/new`}
         >
-          <Button className="w-full hover:text-gray-800 hover:bg-white" variant="outline" size="md">
+          <Button className="w-full hover:bg-white hover:text-gray-800" variant="outline" size="md">
             <Plus className="mr-2" size={20} /> Add Exam
           </Button>
         </Link>
