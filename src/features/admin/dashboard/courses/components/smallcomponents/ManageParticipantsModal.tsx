@@ -22,6 +22,7 @@ type ManageParticipantsModalProps = {
   availableStudents: AvailableStudent[];
   onAddParticipant: (student: AvailableStudent) => void;
   onRemoveParticipant: (participantId: string) => void;
+  showCSVFeatures?: boolean;
   onUploadSuccess?: () => void;
 };
 
@@ -32,6 +33,7 @@ export function ManageParticipantsModal({
   availableStudents,
   onAddParticipant,
   onRemoveParticipant,
+  showCSVFeatures = false,
   onUploadSuccess,
 }: ManageParticipantsModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,18 +127,20 @@ export function ManageParticipantsModal({
     <>
       <Modal isOpen={isOpen} onClose={handleClose} title="Manage Participants" size="xl">
         <div className="space-y-4">
-          {/* Download & Upload Section */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={handleDownloadTemplate}
-              disabled={isDownloading}
-              className="hover:border-primary hover:bg-primary/5 hover:text-primary flex items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-2.5 text-sm font-medium text-neutral-600 transition-colors disabled:opacity-50"
-            >
-              <Download size={16} />
-              {isDownloading ? "Downloading..." : "Download Template"}
-            </button>
-            <CSVUploadButton onFileSelected={handleFileSelected} />
-          </div>
+          {/* CSV Download & Upload Section - Only shown when showCSVFeatures is true */}
+          {showCSVFeatures && (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleDownloadTemplate}
+                disabled={isDownloading}
+                className="hover:border-primary hover:bg-primary/5 hover:text-primary flex items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-2.5 text-sm font-medium text-neutral-600 transition-colors disabled:opacity-50"
+              >
+                <Download size={16} />
+                {isDownloading ? "Downloading..." : "Download Template"}
+              </button>
+              <CSVUploadButton onFileSelected={handleFileSelected} />
+            </div>
+          )}
 
           {/* Search Input */}
           <div className="relative">
@@ -248,14 +252,16 @@ export function ManageParticipantsModal({
         </div>
       </Modal>
 
-      {/* CSV Preview Modal */}
-      <CSVPreviewModal
-        isOpen={isPreviewModalOpen}
-        onClose={handlePreviewModalClose}
-        data={csvPreviewData}
-        onSubmit={handleSubmitCSV}
-        isSubmitting={isSubmitting}
-      />
+      {/* CSV Preview Modal - Only rendered when showCSVFeatures is true */}
+      {showCSVFeatures && (
+        <CSVPreviewModal
+          isOpen={isPreviewModalOpen}
+          onClose={handlePreviewModalClose}
+          data={csvPreviewData}
+          onSubmit={handleSubmitCSV}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </>
   );
 }
