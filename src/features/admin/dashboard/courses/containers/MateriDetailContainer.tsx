@@ -9,6 +9,7 @@ import { useCourseNavigation } from "@/features/user/courses/context/CourseNavig
 import { CourseInfoSidebar } from "@/features/admin/dashboard/courses/components/CourseInfoSidebar";
 import { useGetContentDetails } from "../hooks/useGetContentDetails";
 import { useTeachingCourseDetails } from "../hooks/useTeachingCourseDetails";
+import { useGetQuizDetails, QuizQuestion } from "../hooks/useGetQuizDetails";
 
 interface MateriDetailContainerProps {
   courseId: string;
@@ -27,12 +28,23 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
   const { data: courseDetails, isLoading: isLoadingCourse } = useTeachingCourseDetails(courseId);
 
   const content = contentResponse?.data;
+  const isQuizContent = content?.type === "quiz";
+
+  // Fetch quiz details only when content type is quiz
+  const { data: quizDetailsResponse, isLoading: isLoadingQuiz } = useGetQuizDetails(
+    isQuizContent ? materiId : ""
+  );
+
+  const quizDetails = quizDetailsResponse?.data;
 
   useEffect(() => {
     if (content) {
       console.log("DEBUG: Admin Content Details:", content);
     }
-  }, [content]);
+    if (quizDetails) {
+      console.log("DEBUG: Admin Quiz Details:", quizDetails);
+    }
+  }, [content, quizDetails]);
 
   useEffect(() => {
     if (content && courseDetails) {
@@ -44,7 +56,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
     }
   }, [courseId, topicId, materiId, setMateriNav, content, courseDetails]);
 
-  const isLoading = isLoadingContent || isLoadingCourse;
+  const isLoading = isLoadingContent || isLoadingCourse || (isQuizContent && isLoadingQuiz);
 
   if (isLoading) {
     return <MateriDetailSkeleton />;
@@ -75,6 +87,46 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
     totalParticipants: courseDetails?.total_participants || 0,
     lastAccessed: courseDetails?.last_accessed || undefined,
     enrollCode: courseDetails?.enrollment_code,
+  };
+
+  // Render quiz question for quiz content type
+  const renderQuizQuestion = (question: QuizQuestion, index: number) => {
+    return (
+      <div
+        key={question.question_id}
+        className="mb-6 rounded-xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm md:p-6"
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-sm font-medium text-white">Pertanyaan {index + 1}</span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-blue-500/20 px-2 py-1 text-xs font-medium text-blue-400">
+              {question.difficulty}
+            </span>
+            <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-red-500">
+              {question.points} Poin
+            </span>
+          </div>
+        </div>
+        <p className="mb-4 font-medium text-white">{question.text}</p>
+        <div className="space-y-3">
+          {question.options.map((option, optIndex) => (
+            <div
+              key={option.option_id}
+              className={`flex items-center gap-3 rounded-xl border p-4 ${
+                option.is_correct ? "border-emerald-500 bg-emerald-500/20" : "border-white/20"
+              }`}
+            >
+              <span className="flex-1 text-sm text-white">
+                {String.fromCharCode(65 + optIndex)}. {option.text}
+              </span>
+              {option.is_correct && (
+                <span className="text-xs text-emerald-400">✓ Jawaban Benar</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const renderBlock = (block: (typeof content.blocks)[0], index: number) => {
@@ -153,6 +205,53 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
     }
   };
 
+  // Render quiz content view
+  const renderQuizContent = () => {
+    if (!quizDetails) {
+      return <div className="py-8 text-center text-white/50">Quiz details tidak tersedia.</div>;
+    }
+
+    return (
+      <div>
+        {/* Quiz Settings Info */}
+        <div className="mb-6 rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+          <h3 className="mb-3 text-lg font-semibold text-white">Pengaturan Quiz</h3>
+          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
+            <div className="rounded-lg bg-white/10 p-3">
+              <span className="block text-white/60">Batas Waktu</span>
+              <span className="text-lg font-medium text-white">
+                {quizDetails.settings.time_limit} menit
+              </span>
+            </div>
+            <div className="rounded-lg bg-white/10 p-3">
+              <span className="block text-white/60">Passing Score</span>
+              <span className="text-lg font-medium text-white">
+                {quizDetails.settings.passing_score}%
+              </span>
+            </div>
+            <div className="rounded-lg bg-white/10 p-3">
+              <span className="block text-white/60">Jumlah Soal</span>
+              <span className="text-lg font-medium text-white">
+                {quizDetails.settings.questions_to_show} / {quizDetails.questions.length}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quiz Questions */}
+        <div className="space-y-4">
+          {quizDetails.questions.length > 0 ? (
+            quizDetails.questions.map((question, index) => renderQuizQuestion(question, index))
+          ) : (
+            <div className="py-8 text-center text-white/50">
+              Belum ada pertanyaan dalam quiz ini.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen px-3 py-4 md:px-4 md:py-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
@@ -179,7 +278,11 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
           </div>
 
           <div className="p-5 md:p-6">
-            {content.blocks && content.blocks.length > 0 ? (
+            {isQuizContent ? (
+              // Render quiz content view
+              renderQuizContent()
+            ) : // Render regular material blocks
+            content.blocks && content.blocks.length > 0 ? (
               content.blocks.map((block, index) => renderBlock(block, index))
             ) : (
               <div className="py-8 text-center text-white/50">

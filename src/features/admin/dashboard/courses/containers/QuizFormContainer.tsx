@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { ChevronLeft, Plus, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,13 @@ import {
   QuizSettings,
 } from "@/features/admin/dashboard/courses/components/quiz";
 import { Button } from "@/shared/components/ui";
-import { useCreateQuiz, useUpdateQuizQuestion, useAddQuizQuestions, useDeleteQuizQuestion } from "../hooks/useCreateQuiz";
+import {
+  useCreateQuiz,
+  useUpdateQuizQuestion,
+  useAddQuizQuestions,
+  useDeleteQuizQuestion,
+} from "../hooks/useCreateQuiz";
+import { useConfigureQuiz, useGetQuizConfig } from "../hooks/useQuizConfig";
 
 export interface QuizItem {
   id: string;
@@ -29,6 +35,16 @@ interface QuizFormContainerProps {
   isEditMode?: boolean;
   onSave?: (quizName: string, quizItems: QuizItem[], settings: QuizSettings) => void;
 }
+
+// Default settings
+const DEFAULT_QUIZ_SETTINGS: QuizSettings = {
+  randomizeQuestions: false,
+  randomSelection: false,
+  showAllQuestions: false,
+  displayedQuestionsCount: 10,
+  passingScore: 70.0,
+  timeLimitMinutes: 60,
+};
 
 export function QuizFormContainer({
   courseId,
@@ -49,18 +65,60 @@ export function QuizFormContainer({
 
   // Use the create quiz hook (only for new quizzes)
   const { createQuiz, isCreating, progress } = useCreateQuiz(topicId || "");
-  
+
   // Use update question hook for edit mode
   const updateQuestionMutation = useUpdateQuizQuestion();
   const addQuestionMutation = useAddQuizQuestions();
   const deleteQuestionMutation = useDeleteQuizQuestion();
 
-  const [quizSettings, setQuizSettings] = useState<QuizSettings>({
-    randomizeQuestions: false,
-    showAllQuestions: false,
-    displayedQuestionsCount: 10,
-    protector: false,
-  });
+  // Quiz configuration hooks
+  const configureQuizMutation = useConfigureQuiz();
+  const { data: existingConfig, isLoading: isLoadingConfig } = useGetQuizConfig(
+    isEditMode && quizId ? quizId : ""
+  );
+
+  // Derive initial settings from existingConfig or use defaults
+  const initialSettings = useMemo<QuizSettings>(() => {
+    if (isEditMode && existingConfig) {
+      return {
+        randomizeQuestions: existingConfig.is_random_order,
+        randomSelection: existingConfig.is_random_selection,
+        showAllQuestions: false,
+        displayedQuestionsCount: existingConfig.questions_to_show,
+        passingScore: existingConfig.passing_score,
+        timeLimitMinutes: existingConfig.time_limit_minutes,
+      };
+    }
+    return DEFAULT_QUIZ_SETTINGS;
+  }, [isEditMode, existingConfig]);
+
+  const [quizSettings, setQuizSettings] = useState<QuizSettings>(DEFAULT_QUIZ_SETTINGS);
+
+  // Track if we've synced with server data
+  const [hasSyncedWithServer, setHasSyncedWithServer] = useState(false);
+
+  // Sync settings when data loads (only once)
+  const effectiveSettings = useMemo(() => {
+    if (isEditMode && existingConfig && !hasSyncedWithServer) {
+      return initialSettings;
+    }
+    return quizSettings;
+  }, [isEditMode, existingConfig, hasSyncedWithServer, initialSettings, quizSettings]);
+
+  // Update local state when settings change from server
+  const handleSettingsChange = useCallback(
+    (key: keyof QuizSettings, value: boolean | number) => {
+      if (!hasSyncedWithServer && isEditMode && existingConfig) {
+        setHasSyncedWithServer(true);
+        setQuizSettings(initialSettings);
+      }
+      setQuizSettings((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    },
+    [hasSyncedWithServer, isEditMode, existingConfig, initialSettings]
+  );
 
   const generateId = () => `quiz-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -98,24 +156,45 @@ export function QuizFormContainer({
     });
   }, []);
 
-  const deleteQuiz = useCallback(async (id: string) => {
-    const initialItemIds = new Set(initialQuizItems.map(item => item.id));
-    const isExistingQuestion = initialItemIds.has(id);
+  const deleteQuiz = useCallback(
+    async (id: string) => {
+      const initialItemIds = new Set(initialQuizItems.map((item) => item.id));
+      const isExistingQuestion = initialItemIds.has(id);
 
-    if (isEditMode && isExistingQuestion) {
-      try {
-        console.log(`Deleting question ${id}...`);
-        await deleteQuestionMutation.mutateAsync({ questionId: id });
-        console.log(`Question ${id} deleted successfully`);
-      } catch (error) {
-        console.error(`Failed to delete question ${id}:`, error);
-        setError("Gagal menghapus pertanyaan");
-        return; 
+      if (isEditMode && isExistingQuestion) {
+        try {
+          console.log(`Deleting question ${id}...`);
+          await deleteQuestionMutation.mutateAsync({ questionId: id });
+          console.log(`Question ${id} deleted successfully`);
+        } catch (error) {
+          console.error(`Failed to delete question ${id}:`, error);
+          setError("Gagal menghapus pertanyaan");
+          return;
+        }
       }
-    }
 
-    setQuizItems((prev) => prev.filter((item) => item.id !== id));
-  }, [isEditMode, initialQuizItems, deleteQuestionMutation]);
+      setQuizItems((prev) => prev.filter((item) => item.id !== id));
+    },
+    [isEditMode, initialQuizItems, deleteQuestionMutation]
+  );
+
+  // Helper to save quiz configuration
+  const saveQuizConfig = async (contentId: string) => {
+    const questionsToShow = effectiveSettings.showAllQuestions
+      ? quizItems.length
+      : effectiveSettings.displayedQuestionsCount;
+
+    await configureQuizMutation.mutateAsync({
+      contentId,
+      config: {
+        questions_to_show: questionsToShow,
+        is_random_order: effectiveSettings.randomizeQuestions,
+        is_random_selection: effectiveSettings.randomSelection,
+        passing_score: effectiveSettings.passingScore,
+        time_limit_minutes: effectiveSettings.timeLimitMinutes,
+      },
+    });
+  };
 
   const handleSave = async () => {
     if (!quizName.trim()) {
@@ -140,14 +219,14 @@ export function QuizFormContainer({
         onSave(quizName, quizItems, quizSettings);
       } else {
         setIsUpdating(true);
-        setUpdateProgress({ current: 0, total: quizItems.length });
-        
+        setUpdateProgress({ current: 0, total: quizItems.length + 1 }); // +1 for config
+
         const failedQuestions: number[] = [];
-        const initialItemIds = new Set(initialQuizItems.map(item => item.id));
+        const initialItemIds = new Set(initialQuizItems.map((item) => item.id));
 
         for (let i = 0; i < quizItems.length; i++) {
           const item = quizItems[i];
-          
+
           let questionType: "single" | "multiple" = "single";
           if (item.data.questionType === "multiple_choice") {
             questionType = item.data.isMultipleAnswer ? "multiple" : "single";
@@ -168,7 +247,7 @@ export function QuizFormContainer({
 
           try {
             const isExistingQuestion = initialItemIds.has(item.id);
-            
+
             if (isExistingQuestion) {
               console.log(`Updating question ${i + 1}/${quizItems.length}:`, questionData);
               await updateQuestionMutation.mutateAsync({
@@ -189,9 +268,22 @@ export function QuizFormContainer({
             failedQuestions.push(i);
           }
 
-          setUpdateProgress({ current: i + 1, total: quizItems.length });
+          setUpdateProgress({ current: i + 1, total: quizItems.length + 1 });
         }
 
+        // Save quiz configuration
+        try {
+          console.log("Saving quiz configuration...");
+          await saveQuizConfig(quizId!);
+          console.log("Quiz configuration saved successfully");
+        } catch (error) {
+          console.error("Failed to save quiz configuration:", error);
+          setError("Gagal menyimpan konfigurasi quiz");
+          setIsUpdating(false);
+          return;
+        }
+
+        setUpdateProgress({ current: quizItems.length + 1, total: quizItems.length + 1 });
         setIsUpdating(false);
 
         if (failedQuestions.length > 0) {
@@ -205,10 +297,22 @@ export function QuizFormContainer({
       return;
     }
 
+    // Create new quiz
     const result = await createQuiz(quizName, quizItems);
 
-    if (result.success) {
+    if (result.success && result.contentId) {
       console.log("Quiz created successfully with ID:", result.contentId);
+
+      // Configure the quiz after creation
+      try {
+        console.log("Configuring quiz...");
+        await saveQuizConfig(result.contentId);
+        console.log("Quiz configured successfully");
+      } catch (error) {
+        console.error("Failed to configure quiz:", error);
+        // Quiz is created but config failed - still redirect but show warning
+      }
+
       router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
     } else {
       setError(result.error || "Gagal membuat quiz");
@@ -218,12 +322,17 @@ export function QuizFormContainer({
     }
   };
 
-  const handleSettingsChange = (key: keyof QuizSettings, value: boolean | number) => {
-    setQuizSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+  // Show loading when fetching config in edit mode
+  if (isEditMode && isLoadingConfig) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center gap-2 text-white">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Memuat konfigurasi quiz...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -294,23 +403,21 @@ export function QuizFormContainer({
           </div>
 
           <QuizSettingsPanel
-            settings={quizSettings}
+            settings={effectiveSettings}
             totalQuestions={quizItems.length}
             onSettingsChange={handleSettingsChange}
           />
 
-          {error && (
-            <div className="rounded-lg bg-red-500/20 p-4 text-red-200">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded-lg bg-red-500/20 p-4 text-red-200">{error}</div>}
 
           {(isCreating || isUpdating) && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-white">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>
-                  {isEditMode ? "Memperbarui" : "Menyimpan"}... ({isEditMode ? updateProgress.current : progress.current}/{isEditMode ? updateProgress.total : progress.total})
+                  {isEditMode ? "Memperbarui" : "Menyimpan"}... (
+                  {isEditMode ? updateProgress.current : progress.current}/
+                  {isEditMode ? updateProgress.total : progress.total})
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">

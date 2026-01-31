@@ -6,8 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
 import { TopicCard } from "@/features/admin/dashboard/courses/components/TopicCard";
+import { ExamCard } from "@/features/admin/dashboard/courses/components/ExamCard";
 import { CourseInfoSidebar } from "@/features/admin/dashboard/courses/components/CourseInfoSidebar";
 import { useTeachingCourseDetails } from "../hooks/useTeachingCourseDetails";
+import { useGetCourseExams } from "../hooks/useGetCourseExams";
 import { Button } from "@/shared/components/ui";
 import { CourseDetailSkeleton } from "@/features/user/courses/components/CourseDetailSkeleton";
 
@@ -18,6 +20,7 @@ interface CourseDetailContainerProps {
 export function CourseDetailContainer({ courseId }: CourseDetailContainerProps) {
   const { setCourseNav } = useCourseNavigation();
   const { data: course, isLoading, isError } = useTeachingCourseDetails(courseId);
+  const { data: exams, isLoading: examsLoading } = useGetCourseExams(courseId);
 
   useEffect(() => {
     if (course) {
@@ -96,7 +99,9 @@ export function CourseDetailContainer({ courseId }: CourseDetailContainerProps) 
             <CourseInfoSidebar {...sidebarProps} />
           </div>
 
+          {/* Topics Section */}
           <div className="space-y-3">
+            <h2 className="mb-4 text-xl font-semibold text-white">Materi</h2>
             {course.topics && course.topics.length > 0 ? (
               course.topics.map((topic, index) => (
                 <TopicCard
@@ -119,6 +124,30 @@ export function CourseDetailContainer({ courseId }: CourseDetailContainerProps) 
             ) : (
               <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-white/50 backdrop-blur-sm">
                 Belum ada materi yang tersedia untuk kursus ini.
+              </div>
+            )}
+          </div>
+
+          {/* Exams Section */}
+          <div className="mt-8 space-y-3">
+            <h2 className="mb-4 text-xl font-semibold text-white">Exam</h2>
+            {examsLoading ? (
+              <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-white/50 backdrop-blur-sm">
+                Memuat exam...
+              </div>
+            ) : exams && exams.length > 0 ? (
+              exams.map((exam) => (
+                <ExamCard
+                  key={exam.exam_id}
+                  examId={exam.exam_id}
+                  courseId={courseId}
+                  title={exam.exam_name}
+                  description={exam.description}
+                />
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-white/50 backdrop-blur-sm">
+                Belum ada exam yang tersedia untuk kursus ini.
               </div>
             )}
           </div>
