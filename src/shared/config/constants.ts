@@ -62,6 +62,7 @@ export const API_ENDPOINTS = {
     ADD_QUIZ_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     ADD_QUIZ_QUESTIONS: (contentId: string) => `teacher/content/${contentId}/quiz`,
     GET_QUIZ_DETAILS: (contentId: string) => `teacher/content/${contentId}/quiz/details`,
+    QUIZ_CONFIGURE: (contentId: string) => `teacher/content/${contentId}/quiz/configure`,
     // Blocks
     ADD_TEXT_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/text`,
     ADD_MEDIA_BLOCK: (contentId: string) => `teacher/content/${contentId}/blocks/media`,
@@ -73,6 +74,15 @@ export const API_ENDPOINTS = {
     ADD_QUIZ_QUESTION: (blockId: string) => `teacher/blocks/${blockId}/questions`,
     UPDATE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
     DELETE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
+    // Exam
+    CREATE_EXAM: (courseId: string) => `teacher/courses/${courseId}/exam`,
+    ADD_EXAM_QUESTIONS: (examId: string) => `teacher/exams/${examId}/questions`,
+    GET_COURSE_EXAMS: (courseId: string) => `teacher/course/${courseId}/exams`,
+    GET_EXAM_DETAILS: (examId: string) => `teacher/exam/${examId}/details`,
+    UPDATE_EXAM: (examId: string) => `teacher/exams/${examId}`,
+    // Participants
+    PARTICIPANTS_TEMPLATE: "teacher/participants/template",
+    ADD_PARTICIPANT_BULK: "teacher/add-participant/bulk",
   },
   TEAM: {
     INFO: "/elearning/team-details",
