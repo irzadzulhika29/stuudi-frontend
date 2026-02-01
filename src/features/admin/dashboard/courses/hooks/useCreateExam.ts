@@ -17,6 +17,9 @@ export interface CreateExamRequest {
   start_time: string;
   end_time: string;
   max_attempts: number;
+  questions_to_show: number;
+  is_random_order: boolean;
+  is_random_selection: boolean;
 }
 
 interface CreateExamResponse {
