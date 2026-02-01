@@ -82,6 +82,7 @@ export const API_ENDPOINTS = {
     GET_COURSE_EXAMS: (courseId: string) => `teacher/course/${courseId}/exams`,
     GET_EXAM_DETAILS: (examId: string) => `teacher/exam/${examId}/details`,
     UPDATE_EXAM: (examId: string) => `teacher/exams/${examId}`,
+    DELETE_EXAM: (examId: string) => `teacher/exams/${examId}`,
     // Participants
     GET_ALL_PARTICIPANTS: "teacher/participants",
     PARTICIPANTS_TEMPLATE: "teacher/participants/template",

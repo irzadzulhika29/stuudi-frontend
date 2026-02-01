@@ -11,7 +11,7 @@ import {
   ManageParticipantsModal,
   TeamParticipant,
 } from "@/features/admin/dashboard/courses/components/smallcomponents/ManageParticipantsModal";
-import { ParticipantCSVRow } from "@/features/admin/dashboard/courses/components/smallcomponents/CSVUploadPreview";
+
 import { Users, Loader2 } from "lucide-react";
 import {
   useGetParticipants,
@@ -90,21 +90,6 @@ export default function ParticipantPage() {
 
   const handleRemoveParticipant = (participantId: string) => {
     setLocalParticipants((prev) => prev.filter((p) => p.id !== participantId));
-  };
-
-  const handleCSVSubmit = (data: ParticipantCSVRow[]) => {
-    const newParticipants: ParticipantData[] = data.map((row, index) => ({
-      id: `csv-${Date.now()}-${index}`,
-      team: row.namaTim,
-      team_leader: row.namaKetua,
-      school: row.asalSekolah,
-      members: [
-        { name: row.namaKetua, role: "Ketua" as const },
-        ...(row.namaAnggota1 ? [{ name: row.namaAnggota1, role: "Anggota" as const }] : []),
-        ...(row.namaAnggota2 ? [{ name: row.namaAnggota2, role: "Anggota" as const }] : []),
-      ],
-    }));
-    setLocalParticipants((prev) => [...prev, ...newParticipants]);
   };
 
   const columns: TableColumn[] = [
@@ -189,7 +174,7 @@ export default function ParticipantPage() {
         participants={modalParticipants}
         onRemoveParticipant={handleRemoveParticipant}
         onAddTeam={handleAddTeam}
-        onCSVSubmit={handleCSVSubmit}
+        onUploadSuccess={() => refetch()}
         showCSVFeatures={true}
       />
     </div>
