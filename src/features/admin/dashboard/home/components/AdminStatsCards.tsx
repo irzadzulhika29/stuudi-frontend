@@ -1,32 +1,44 @@
 import { AdminStatsCard } from "@/features/admin/dashboard/home/components/AdminStatsCard";
 
-const statsCards = [
-  {
-    title: "Total Participants",
-    value: "216",
-    footer: "+50% this week",
-    footerClassName: "text-emerald-500",
-    href: "/dashboard-admin/participant",
-  },
-  {
-    title: "Disqualified Participants",
-    value: "3",
-    footer: "+3 this week",
-    footerClassName: "text-emerald-500",
-    href:"/dashboard-admin/disqualified-participants",
-  },
-  {
-    title: "Cheating Reports",
-    value: "5",
-    footer: "2 verified this week",
-    footerClassName: "text-neutral-500",
-    href: "/dashboard-admin/cheating-report",
-  },
-];
+interface AdminStatsCardsProps {
+  totalParticipants?: number;
+  disqualifiedParticipants?: number;
+  cheatingReports?: number;
+  isLoading?: boolean;
+}
 
-export function AdminStatsCards() {
+export function AdminStatsCards({
+  totalParticipants = 0,
+  disqualifiedParticipants = 0,
+  cheatingReports = 0,
+  isLoading = false,
+}: AdminStatsCardsProps) {
+  const statsCards = [
+    {
+      title: "Total Participants",
+      value: isLoading ? "-" : totalParticipants.toString(),
+      footer: "",
+      footerClassName: "text-emerald-500",
+      href: "/dashboard-admin/participant",
+    },
+    {
+      title: "Disqualified Participants",
+      value: isLoading ? "-" : disqualifiedParticipants.toString(),
+      footer: "",
+      footerClassName: "text-emerald-500",
+      href: "/dashboard-admin/disqualified-participants",
+    },
+    {
+      title: "Cheating Reports",
+      value: isLoading ? "-" : cheatingReports.toString(),
+      footer: "",
+      footerClassName: "text-neutral-500",
+      href: "/dashboard-admin/cheating-report",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
       {statsCards.map((card) => (
         <AdminStatsCard
           key={card.title}

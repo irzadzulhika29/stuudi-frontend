@@ -1,36 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DataTable, TableColumn } from "@/features/admin/dashboard/shared/components/DataTable";
 import { DashboardHeader } from "@/features/admin/dashboard/shared/components/DashboardHeader";
-import { participantData } from "@/features/admin/dashboard/home/data/dummyData";
 import {
   GroupDetailModal,
   GroupDetailData,
 } from "@/features/admin/dashboard/components/GroupDetailModal";
-import { ManageParticipantsModal } from "@/features/admin/dashboard/courses/components/smallcomponents/ManageParticipantsModal";
-import { Users } from "lucide-react";
+import {
+  ManageParticipantsModal,
+  TeamParticipant,
+} from "@/features/admin/dashboard/courses/components/smallcomponents/ManageParticipantsModal";
+import { ParticipantCSVRow } from "@/features/admin/dashboard/courses/components/smallcomponents/CSVUploadPreview";
+import { Users, Loader2 } from "lucide-react";
+import {
+  useGetParticipants,
+  ApiParticipant,
+} from "@/features/admin/dashboard/participant/hooks/useGetParticipants";
 
-const dummyAvailableStudents = [
-  { id: "s1", name: "Alice Johnson" },
-  { id: "s2", name: "Bob Smith" },
-  { id: "s3", name: "Charlie Brown" },
-  { id: "s4", name: "Diana Ross" },
-  { id: "s5", name: "Edward Norton" },
-];
-
-const dummyParticipants = participantData.slice(0, 5).map((p, idx) => ({
-  id: `p${idx + 1}`,
-  name: p.team_leader,
-}));
+interface ParticipantData {
+  id: string;
+  team: string;
+  team_leader: string;
+  school: string;
+  members: { name: string; role: "Ketua" | "Anggota" }[];
+}
 
 export default function ParticipantPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupDetailData | null>(null);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
-  const [participants, setParticipants] = useState(dummyParticipants);
+  const [localParticipants, setLocalParticipants] = useState<ParticipantData[]>([]);
 
-  const handleShowDetail = (row: (typeof participantData)[0]) => {
+  // Fetch participants using TanStack Query
+  const { data: apiParticipants, isLoading, error, refetch } = useGetParticipants();
+
+  // Transform API response to ParticipantData format
+  const transformApiData = (apiData: ApiParticipant[]): ParticipantData[] => {
+    return apiData.map((participant) => ({
+      id: participant.elearning_user_id,
+      team: participant.team_name || "-",
+      team_leader: participant.leader_name,
+      school: participant.school,
+      members: [
+        { name: participant.leader_name, role: "Ketua" as const },
+        ...(participant.team_members?.map((member) => ({
+          name: member.name,
+          role: "Anggota" as const,
+        })) || []),
+      ],
+    }));
+  };
+
+  // Combine API data with locally added participants
+  const participantData = useMemo(() => {
+    const apiData = apiParticipants ? transformApiData(apiParticipants) : [];
+    return [...apiData, ...localParticipants];
+  }, [apiParticipants, localParticipants]);
+
+  // Transform participantData to the format expected by ManageParticipantsModal
+  const modalParticipants = participantData.map((p) => ({
+    id: p.id,
+    name: p.team,
+  }));
+
+  const handleShowDetail = (row: ParticipantData) => {
     setSelectedGroup({
       team: row.team,
       school: row.school,
@@ -39,12 +73,38 @@ export default function ParticipantPage() {
     setIsModalOpen(true);
   };
 
-  const handleAddParticipant = (student: { id: string; name: string }) => {
-    setParticipants((prev) => [...prev, { id: student.id, name: student.name }]);
+  const handleAddTeam = (team: TeamParticipant) => {
+    const newParticipant: ParticipantData = {
+      id: team.id,
+      team: team.team,
+      team_leader: team.team_leader,
+      school: team.school,
+      members: [
+        { name: team.team_leader, role: "Ketua" },
+        ...(team.member1 ? [{ name: team.member1, role: "Anggota" as const }] : []),
+        ...(team.member2 ? [{ name: team.member2, role: "Anggota" as const }] : []),
+      ],
+    };
+    setLocalParticipants((prev) => [...prev, newParticipant]);
   };
 
   const handleRemoveParticipant = (participantId: string) => {
-    setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+    setLocalParticipants((prev) => prev.filter((p) => p.id !== participantId));
+  };
+
+  const handleCSVSubmit = (data: ParticipantCSVRow[]) => {
+    const newParticipants: ParticipantData[] = data.map((row, index) => ({
+      id: `csv-${Date.now()}-${index}`,
+      team: row.namaTim,
+      team_leader: row.namaKetua,
+      school: row.asalSekolah,
+      members: [
+        { name: row.namaKetua, role: "Ketua" as const },
+        ...(row.namaAnggota1 ? [{ name: row.namaAnggota1, role: "Anggota" as const }] : []),
+        ...(row.namaAnggota2 ? [{ name: row.namaAnggota2, role: "Anggota" as const }] : []),
+      ],
+    }));
+    setLocalParticipants((prev) => [...prev, ...newParticipants]);
   };
 
   const columns: TableColumn[] = [
@@ -56,7 +116,7 @@ export default function ParticipantPage() {
       header: "Detail Kelompok",
       render: (row) => (
         <button
-          onClick={() => handleShowDetail(row as (typeof participantData)[0])}
+          onClick={() => handleShowDetail(row as unknown as ParticipantData)}
           className="font-medium text-[#F5A623] transition-colors hover:text-[#F7B731]"
         >
           Tampilkan
@@ -80,7 +140,40 @@ export default function ParticipantPage() {
         </div>
 
         <div className="rounded-xl bg-white">
-          <DataTable columns={columns} data={participantData} />
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Loader2 size={48} className="mb-4 animate-spin text-[#F5A623]" />
+              <p className="text-lg font-medium text-neutral-500">Memuat data participant...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Users size={48} className="mb-4 text-red-300" />
+              <p className="text-lg font-medium text-red-500">
+                {error instanceof Error
+                  ? error.message
+                  : "Terjadi kesalahan saat mengambil data participant"}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className="mt-4 rounded-lg bg-[#F5A623] px-4 py-2 font-medium text-white transition-colors hover:bg-[#E69612]"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          ) : participantData.length > 0 ? (
+            <DataTable
+              columns={columns}
+              data={participantData as unknown as Record<string, unknown>[]}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Users size={48} className="mb-4 text-neutral-300" />
+              <p className="text-lg font-medium text-neutral-500">Belum ada data participant</p>
+              <p className="text-sm text-neutral-400">
+                Klik &quot;Manage Participant&quot; untuk menambah tim baru atau upload CSV
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -93,10 +186,10 @@ export default function ParticipantPage() {
       <ManageParticipantsModal
         isOpen={isManageModalOpen}
         onClose={() => setIsManageModalOpen(false)}
-        participants={participants}
-        availableStudents={dummyAvailableStudents}
-        onAddParticipant={handleAddParticipant}
+        participants={modalParticipants}
         onRemoveParticipant={handleRemoveParticipant}
+        onAddTeam={handleAddTeam}
+        onCSVSubmit={handleCSVSubmit}
         showCSVFeatures={true}
       />
     </div>

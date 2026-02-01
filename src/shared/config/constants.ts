@@ -75,14 +75,18 @@ export const API_ENDPOINTS = {
     UPDATE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
     DELETE_QUESTION: (questionId: string) => `teacher/questions/${questionId}`,
     // Exam
+    GET_ALL_EXAMS: "teacher/exams",
+    GET_EXAM_DASHBOARD: (examId: string) => `teacher/exams/${examId}/dashboard`,
     CREATE_EXAM: (courseId: string) => `teacher/courses/${courseId}/exam`,
     ADD_EXAM_QUESTIONS: (examId: string) => `teacher/exams/${examId}/questions`,
     GET_COURSE_EXAMS: (courseId: string) => `teacher/course/${courseId}/exams`,
     GET_EXAM_DETAILS: (examId: string) => `teacher/exam/${examId}/details`,
     UPDATE_EXAM: (examId: string) => `teacher/exams/${examId}`,
     // Participants
+    GET_ALL_PARTICIPANTS: "teacher/participants",
     PARTICIPANTS_TEMPLATE: "teacher/participants/template",
     ADD_PARTICIPANT_BULK: "teacher/add-participant/bulk",
+    ADD_PARTICIPANT: "teacher/add-participant",
   },
   TEAM: {
     INFO: "/elearning/team-details",

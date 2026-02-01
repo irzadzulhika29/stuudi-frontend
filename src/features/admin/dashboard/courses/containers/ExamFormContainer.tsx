@@ -141,20 +141,22 @@ export function ExamFormContainer({
   // Helper to sync with server and then update local state
   const syncAndUpdate = useCallback(
     <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => {
-      if (!hasSyncedWithServer && isEditMode && examDetails) {
+      if (!hasSyncedWithServer) {
         setHasSyncedWithServer(true);
-        // Sync all local state with server data
-        setLocalExamTitle(initialValues.title);
-        setLocalExamDescription(initialValues.description);
-        setLocalExamDuration(initialValues.duration);
-        setLocalExamPassingScore(initialValues.passingScore);
-        setLocalExamStartTime(initialValues.startTime);
-        setLocalExamEndTime(initialValues.endTime);
-        setLocalExamMaxAttempts(initialValues.maxAttempts);
-        setLocalQuestionsToShow(initialValues.questionsToShow);
-        setLocalIsRandomOrder(initialValues.isRandomOrder);
-        setLocalIsRandomSelection(initialValues.isRandomSelection);
-        setLocalQuizItems(initialValues.quizItems);
+        // For edit mode, sync all local state with server data first
+        if (isEditMode && examDetails) {
+          setLocalExamTitle(initialValues.title);
+          setLocalExamDescription(initialValues.description);
+          setLocalExamDuration(initialValues.duration);
+          setLocalExamPassingScore(initialValues.passingScore);
+          setLocalExamStartTime(initialValues.startTime);
+          setLocalExamEndTime(initialValues.endTime);
+          setLocalExamMaxAttempts(initialValues.maxAttempts);
+          setLocalQuestionsToShow(initialValues.questionsToShow);
+          setLocalIsRandomOrder(initialValues.isRandomOrder);
+          setLocalIsRandomSelection(initialValues.isRandomSelection);
+          setLocalQuizItems(initialValues.quizItems);
+        }
       }
       setter(value);
     },
@@ -204,19 +206,22 @@ export function ExamFormContainer({
   );
   const setQuizItems = useCallback(
     (v: QuizItem[] | ((prev: QuizItem[]) => QuizItem[])) => {
-      if (!hasSyncedWithServer && isEditMode && examDetails) {
+      if (!hasSyncedWithServer) {
         setHasSyncedWithServer(true);
-        setLocalExamTitle(initialValues.title);
-        setLocalExamDescription(initialValues.description);
-        setLocalExamDuration(initialValues.duration);
-        setLocalExamPassingScore(initialValues.passingScore);
-        setLocalExamStartTime(initialValues.startTime);
-        setLocalExamEndTime(initialValues.endTime);
-        setLocalExamMaxAttempts(initialValues.maxAttempts);
-        setLocalQuestionsToShow(initialValues.questionsToShow);
-        setLocalIsRandomOrder(initialValues.isRandomOrder);
-        setLocalIsRandomSelection(initialValues.isRandomSelection);
-        setLocalQuizItems(initialValues.quizItems);
+        // For edit mode, sync all local state with server data first
+        if (isEditMode && examDetails) {
+          setLocalExamTitle(initialValues.title);
+          setLocalExamDescription(initialValues.description);
+          setLocalExamDuration(initialValues.duration);
+          setLocalExamPassingScore(initialValues.passingScore);
+          setLocalExamStartTime(initialValues.startTime);
+          setLocalExamEndTime(initialValues.endTime);
+          setLocalExamMaxAttempts(initialValues.maxAttempts);
+          setLocalQuestionsToShow(initialValues.questionsToShow);
+          setLocalIsRandomOrder(initialValues.isRandomOrder);
+          setLocalIsRandomSelection(initialValues.isRandomSelection);
+          setLocalQuizItems(initialValues.quizItems);
+        }
       }
       setLocalQuizItems(v);
     },
@@ -345,6 +350,9 @@ export function ExamFormContainer({
       start_time: new Date(examStartTime).toISOString(),
       end_time: new Date(examEndTime).toISOString(),
       max_attempts: examMaxAttempts,
+      questions_to_show: questionsToShow,
+      is_random_order: isRandomOrder,
+      is_random_selection: isRandomSelection,
     };
 
     const result = await createExam(examData, quizItems);
