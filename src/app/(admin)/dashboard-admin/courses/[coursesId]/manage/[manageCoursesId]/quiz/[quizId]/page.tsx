@@ -59,9 +59,7 @@ export default function QuizEditPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center text-white">
           <h2 className="text-2xl font-bold">Gagal memuat quiz</h2>
-          <p className="mt-2 text-white/60">
-            Quiz tidak ditemukan atau terjadi kesalahan.
-          </p>
+          <p className="mt-2 text-white/60">Quiz tidak ditemukan atau terjadi kesalahan.</p>
         </div>
       </div>
     );
