@@ -5,6 +5,7 @@ interface AdminStatsCardsProps {
   disqualifiedParticipants?: number;
   cheatingReports?: number;
   isLoading?: boolean;
+  examId?: string;
 }
 
 export function AdminStatsCards({
@@ -12,6 +13,7 @@ export function AdminStatsCards({
   disqualifiedParticipants = 0,
   cheatingReports = 0,
   isLoading = false,
+  examId,
 }: AdminStatsCardsProps) {
   const statsCards = [
     {
@@ -24,16 +26,16 @@ export function AdminStatsCards({
     {
       title: "Disqualified Participants",
       value: isLoading ? "-" : disqualifiedParticipants.toString(),
-      footer: "",
+      footer: examId ? "" : "Pilih exam untuk melihat detail",
       footerClassName: "text-emerald-500",
-      href: "/dashboard-admin/disqualified-participants",
+      href: examId ? `/dashboard-admin/disqualified-participants/${examId}` : undefined,
     },
     {
       title: "Cheating Reports",
       value: isLoading ? "-" : cheatingReports.toString(),
-      footer: "",
+      footer: examId ? "" : "Pilih exam untuk melihat detail",
       footerClassName: "text-neutral-500",
-      href: "/dashboard-admin/cheating-report",
+      href: examId ? `/dashboard-admin/cheating-report/${examId}` : undefined,
     },
   ];
 
