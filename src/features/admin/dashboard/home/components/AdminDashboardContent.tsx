@@ -148,6 +148,7 @@ export function AdminDashboardContent() {
           disqualifiedParticipants={examDashboard?.disqualified_participants}
           cheatingReports={examDashboard?.cheating_reports}
           isLoading={isLoadingDashboard && !!selectedExamId}
+          examId={selectedExamId}
         />
 
         {/* Leaderboard Section */}

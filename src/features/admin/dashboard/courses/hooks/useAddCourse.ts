@@ -3,11 +3,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { api, ApiError } from "@/shared/api/api";
 import { API_ENDPOINTS } from "@/shared/config/constants";
-import {
-  AddCourseRequest,
-  AddCourseResponse,
-  AddCourseData,
-} from "../types/teacherCourseTypes";
+import { AddCourseRequest, AddCourseResponse, AddCourseData } from "../types/teacherCourseTypes";
 
 export const useAddCourse = () => {
   const router = useRouter();
@@ -41,4 +37,3 @@ export const useAddCourse = () => {
     },
   });
 };
-

@@ -6,7 +6,7 @@ import React from "react";
 export interface TableColumn {
   key: string;
   header: string;
-  render?: (row: Record<string, unknown>) => React.ReactNode;
+  render?: (row: Record<string, unknown>, index?: number) => React.ReactNode;
 }
 
 // Interface untuk props DataTable
@@ -34,18 +34,10 @@ export function DataTable({ columns, data }: DataTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
             {data.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                className="transition-colors duration-200 hover:bg-gray-50"
-              >
+              <tr key={rowIndex} className="transition-colors duration-200 hover:bg-gray-50">
                 {columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className="px-6 py-4 text-center text-sm text-gray-600"
-                  >
-                    {column.render
-                      ? column.render(row)
-                      : String(row[column.key] ?? "")}
+                  <td key={column.key} className="px-6 py-4 text-center text-sm text-gray-600">
+                    {column.render ? column.render(row, rowIndex) : String(row[column.key] ?? "")}
                   </td>
                 ))}
               </tr>
