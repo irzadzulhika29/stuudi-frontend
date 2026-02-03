@@ -68,14 +68,15 @@ export default function NewMaterialPage() {
             headers: { "Content-Type": "multipart/form-data" },
           });
         } else if (content.type === "quiz") {
-          const options = content.options.map((opt) => ({
-            text: opt.text,
-            is_correct: opt.isCorrect,
-          }));
+          const options =
+            content.options?.map((opt) => ({
+              text: opt.text,
+              is_correct: opt.isCorrect,
+            })) || [];
 
           await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
             question: content.question,
-            question_type: content.isMultipleAnswer ? "multiple" : "single",
+            question_type: content.questionType || "single",
             points: content.difficulty === "hard" ? 20 : content.difficulty === "medium" ? 10 : 5,
             difficulty: content.difficulty,
             options,

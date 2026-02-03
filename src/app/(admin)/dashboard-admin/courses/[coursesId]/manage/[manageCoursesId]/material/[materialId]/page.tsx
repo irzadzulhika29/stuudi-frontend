@@ -173,14 +173,15 @@ export default function MaterialDetailPage() {
             }
           } else if (content.type === "quiz") {
             // Quiz content ID is question_id, use UPDATE_QUESTION endpoint
-            const options = content.options.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            }));
+            const options =
+              content.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [];
 
             await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(content.id), {
               question_text: content.question,
-              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              question_type: content.questionType || "single",
               difficulty: content.difficulty || "medium",
               explanation: "",
               options,
@@ -211,14 +212,15 @@ export default function MaterialDetailPage() {
               headers: { "Content-Type": "multipart/form-data" },
             });
           } else if (content.type === "quiz") {
-            const options = content.options.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            }));
+            const options =
+              content.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [];
 
             await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
               question: content.question,
-              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              question_type: content.questionType || "single",
               difficulty: content.difficulty || "medium",
               options,
             });
@@ -250,14 +252,15 @@ export default function MaterialDetailPage() {
               headers: { "Content-Type": "multipart/form-data" },
             });
           } else if (content.type === "quiz") {
-            const options = content.options.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            }));
+            const options =
+              content.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [];
 
             await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
               question: content.question,
-              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              question_type: content.questionType || "single",
               difficulty: content.difficulty,
               options,
             });
