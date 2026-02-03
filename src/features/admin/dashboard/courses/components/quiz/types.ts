@@ -1,6 +1,7 @@
 "use client";
 
-export type QuestionType = "multiple_choice" | "true_false" | "short_answer" | "matching";
+// Simplified to 3 question types: single, multiple, matching
+export type QuestionType = "single" | "multiple" | "matching";
 
 export interface QuizOption {
   id: string;
@@ -24,29 +25,20 @@ export interface BaseQuizData {
   imageUrl?: string;
 }
 
-export interface MultipleChoiceData extends BaseQuizData {
-  questionType: "multiple_choice";
-  isMultipleAnswer: boolean;
+// Choice Question (handles both single and multiple choice)
+export interface ChoiceQuestionData extends BaseQuizData {
+  questionType: "single" | "multiple";
   options: QuizOption[];
 }
 
-export interface TrueFalseData extends BaseQuizData {
-  questionType: "true_false";
-  correctAnswer: boolean;
-}
-
-export interface ShortAnswerData extends BaseQuizData {
-  questionType: "short_answer";
-  expectedAnswer: string;
-  caseSensitive: boolean;
-}
-
+// Matching Question
 export interface MatchingData extends BaseQuizData {
   questionType: "matching";
   pairs: MatchingPair[];
 }
 
-export type QuizData = MultipleChoiceData | TrueFalseData | ShortAnswerData | MatchingData;
+// Union type for all quiz data
+export type QuizData = ChoiceQuestionData | MatchingData;
 
 export interface BaseQuestionProps {
   id: string;
@@ -57,25 +49,15 @@ export interface BaseQuestionProps {
   onDifficultyChange: (difficulty: QuizDifficulty) => void;
 }
 
-export interface MultipleChoiceQuestionProps extends BaseQuestionProps {
+// Props for choice questions (single and multiple)
+export interface ChoiceQuestionProps extends BaseQuestionProps {
+  choiceType: "single" | "multiple";
   options: QuizOption[];
-  isMultipleAnswer: boolean;
   onOptionsChange: (options: QuizOption[]) => void;
-  onMultipleAnswerToggle: () => void;
+  onChoiceTypeChange: (type: "single" | "multiple") => void;
 }
 
-export interface TrueFalseQuestionProps extends BaseQuestionProps {
-  correctAnswer: boolean;
-  onCorrectAnswerChange: (value: boolean) => void;
-}
-
-export interface ShortAnswerQuestionProps extends BaseQuestionProps {
-  expectedAnswer: string;
-  caseSensitive: boolean;
-  onExpectedAnswerChange: (value: string) => void;
-  onCaseSensitiveToggle: () => void;
-}
-
+// Props for matching questions
 export interface MatchingQuestionProps extends BaseQuestionProps {
   pairs: MatchingPair[];
   onPairsChange: (pairs: MatchingPair[]) => void;

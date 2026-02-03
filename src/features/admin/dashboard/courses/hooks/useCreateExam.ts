@@ -39,11 +39,17 @@ interface ExamQuestionOption {
   is_correct: boolean;
 }
 
+interface ExamQuestionPair {
+  left: string;
+  right: string;
+}
+
 export interface ExamQuestionRequest {
   question_text: string;
-  question_type: "single" | "multiple";
+  question_type: "single" | "multiple" | "matching";
   difficulty: "easy" | "medium" | "hard";
-  options: ExamQuestionOption[];
+  options?: ExamQuestionOption[];
+  pairs?: ExamQuestionPair[];
 }
 
 interface AddExamQuestionResponse {
@@ -92,22 +98,37 @@ export const useAddExamQuestions = () => {
 function transformQuizItemToExamQuestion(item: QuizItem): ExamQuestionRequest {
   const { data } = item;
 
-  let questionType: "single" | "multiple" = "single";
-  if (data.questionType === "multiple_choice") {
-    questionType = data.isMultipleAnswer ? "multiple" : "single";
+  const baseData = {
+    question_text: data.question,
+    question_type: data.questionType,
+    difficulty: data.difficulty,
+  };
+
+  // For choice questions (single or multiple)
+  if (data.questionType === "single" || data.questionType === "multiple") {
+    return {
+      ...baseData,
+      options: data.options.map((opt) => ({
+        text: opt.text,
+        is_correct: opt.isCorrect,
+      })),
+    };
   }
 
-  const options: ExamQuestionOption[] = data.options.map((opt) => ({
-    text: opt.text,
-    is_correct: opt.isCorrect,
-  }));
+  // For matching questions
+  if (data.questionType === "matching") {
+    return {
+      ...baseData,
+      pairs:
+        data.pairs?.map((pair) => ({
+          left: pair.left,
+          right: pair.right,
+        })) || [],
+    };
+  }
 
-  return {
-    question_text: data.question,
-    question_type: questionType,
-    difficulty: data.difficulty,
-    options,
-  };
+  // Fallback (should not reach here)
+  throw new Error(`Unsupported question type: ${data.questionType}`);
 }
 
 // ========== Main Hook ==========
@@ -138,11 +159,9 @@ export const useCreateExam = (courseId: string) => {
 
     try {
       // Step 1: Create Exam
-      console.log("Creating exam:", examData);
       const examResponse = await createExamContentMutation.mutateAsync(examData);
 
       const examId = examResponse.data.exam_id;
-      console.log("Exam created with ID:", examId);
       setProgress({ current: 1, total: totalSteps, stage: "Menambah pertanyaan..." });
 
       // Step 2: Add Questions
@@ -153,14 +172,12 @@ export const useCreateExam = (courseId: string) => {
         const questionData = transformQuizItemToExamQuestion(item);
 
         try {
-          console.log(`Adding question ${i + 1}/${quizItems.length}:`, questionData);
           await addExamQuestionMutation.mutateAsync({
             examId,
             question: questionData,
           });
-          console.log(`Question ${i + 1} added successfully`);
         } catch (error) {
-          console.error(`Failed to add question ${i + 1}:`, error);
+          alert(`Failed to add question ${i + 1}:` + error);
           failedQuestions.push(i);
         }
 

@@ -1,19 +1,19 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { QuizOption, MultipleChoiceQuestionProps, QuizDifficulty } from "./types";
+import { QuizOption, ChoiceQuestionProps, QuizDifficulty } from "./types";
 import { QuizOptionItem } from "../material/QuizOptionItem";
 import { ToggleSwitch } from "@/shared/components/ui";
 
-export function MultipleChoiceQuestion({
+export function ChoiceQuestion({
   id,
   difficulty,
   options,
-  isMultipleAnswer,
+  choiceType,
   onDifficultyChange,
   onOptionsChange,
-  onMultipleAnswerToggle,
-}: MultipleChoiceQuestionProps) {
+  onChoiceTypeChange,
+}: ChoiceQuestionProps) {
   const handleOptionChange = (optionId: string, text: string) => {
     const updatedOptions = options.map((opt) => (opt.id === optionId ? { ...opt, text } : opt));
     onOptionsChange(updatedOptions);
@@ -21,16 +21,20 @@ export function MultipleChoiceQuestion({
 
   const handleToggleCorrect = (optionId: string) => {
     let updatedOptions: QuizOption[];
-    if (isMultipleAnswer) {
+
+    if (choiceType === "multiple") {
+      // Multiple choice: toggle the clicked option
       updatedOptions = options.map((opt) =>
         opt.id === optionId ? { ...opt, isCorrect: !opt.isCorrect } : opt
       );
     } else {
+      // Single choice: only one can be correct
       updatedOptions = options.map((opt) => ({
         ...opt,
         isCorrect: opt.id === optionId,
       }));
     }
+
     onOptionsChange(updatedOptions);
   };
 
@@ -48,22 +52,27 @@ export function MultipleChoiceQuestion({
     onOptionsChange([...options, newOption]);
   };
 
+  const handleChoiceTypeToggle = () => {
+    const newType = choiceType === "single" ? "multiple" : "single";
+    onChoiceTypeChange(newType);
+  };
+
   return (
     <div className="space-y-4">
       {/* Options Header */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-primary text-sm font-medium">
+          <span className="text-sm font-medium text-white">
             Pilihan Jawaban<span className="text-error">*</span>
           </span>
           <span className="text-neutral-gray">|</span>
         </div>
 
-        {/* Multiple Answer Toggle */}
+        {/* Choice Type Toggle */}
         <ToggleSwitch
-          checked={isMultipleAnswer}
-          onChange={onMultipleAnswerToggle}
-          label="Multiple Answer"
+          checked={choiceType === "multiple"}
+          onChange={handleChoiceTypeToggle}
+          label={choiceType === "multiple" ? "Multiple Choice" : "Single Choice"}
           size="sm"
         />
 
@@ -82,6 +91,13 @@ export function MultipleChoiceQuestion({
         </div>
       </div>
 
+      {/* Helper text */}
+      <p className="text-neutral-gray text-sm">
+        {choiceType === "single"
+          ? "Hanya satu jawaban yang benar"
+          : "Lebih dari satu jawaban bisa benar"}
+      </p>
+
       {/* Options List */}
       <div className="space-y-2">
         {options.map((option) => (
@@ -94,7 +110,7 @@ export function MultipleChoiceQuestion({
             onChange={handleOptionChange}
             onToggleCorrect={handleToggleCorrect}
             onDelete={handleDeleteOption}
-            isMultipleAnswer={isMultipleAnswer}
+            isMultipleAnswer={choiceType === "multiple"}
           />
         ))}
       </div>

@@ -66,9 +66,8 @@ export function MaterialForm({
       id: generateId(),
       type: "quiz",
       question: "",
-      questionType: "multiple_choice",
+      questionType: "single",
       isRequired: true,
-      isMultipleAnswer: false,
       difficulty: "medium",
       options: [
         { id: `opt-${Date.now()}-1`, text: "", isCorrect: false },
@@ -230,13 +229,9 @@ export function MaterialForm({
                   question: content.question,
                   questionType: content.questionType,
                   isRequired: content.isRequired,
-                  isMultipleAnswer: content.isMultipleAnswer,
                   difficulty: content.difficulty,
                   options: content.options,
                   imageUrl: content.imageUrl,
-                  correctAnswer: content.correctAnswer,
-                  expectedAnswer: content.expectedAnswer,
-                  caseSensitive: content.caseSensitive,
                   pairs: content.pairs,
                 };
                 return (

@@ -19,9 +19,9 @@ export function AdminStatsCards({
     {
       title: "Total Participants",
       value: isLoading ? "-" : totalParticipants.toString(),
-      footer: "",
+      footer: examId ? "" : "Pilih exam untuk melihat detail",
       footerClassName: "text-emerald-500",
-      href: "/dashboard-admin/participant",
+      href: examId ? `/dashboard-admin/participant/${examId}` : undefined,
     },
     {
       title: "Disqualified Participants",

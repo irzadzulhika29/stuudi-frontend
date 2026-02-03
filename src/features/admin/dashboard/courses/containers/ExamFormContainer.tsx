@@ -15,6 +15,10 @@ import { useCreateExam, CreateExamRequest } from "../hooks/useCreateExam";
 import { useUpdateExam } from "../hooks/useUpdateExam";
 import { useDeleteExam } from "../hooks/useDeleteExam";
 import { useGetExamDetails, ExamDetails } from "../hooks/useGetExamDetails";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/shared/api/api";
+import { API_ENDPOINTS } from "@/shared/config/constants";
+import { generateDefaultQuizItem } from "../utils/quizTransformers";
 
 export interface QuizItem {
   id: string;
@@ -39,23 +43,27 @@ function formatDateTimeLocal(isoString: string): string {
 
 // Helper to transform API questions to QuizItem format
 function transformApiQuestionsToQuizItems(examDetails: ExamDetails): QuizItem[] {
-  return examDetails.questions.map((q) => ({
-    id: q.question_id,
-    data: {
-      question: q.question_text,
-      questionType: "multiple_choice" as const,
-      isRequired: true,
-      isMultipleAnswer: q.question_type === "multiple",
-      difficulty: q.difficulty,
-      options: q.options
-        .sort((a, b) => a.sequence - b.sequence)
-        .map((opt) => ({
-          id: opt.option_id,
-          text: opt.option_text,
-          isCorrect: opt.is_correct,
-        })),
-    },
-  }));
+  return examDetails.questions.map((q) => {
+    const questionType =
+      q.question_type === "single" || q.question_type === "multiple" ? q.question_type : "single";
+
+    return {
+      id: q.question_id,
+      data: {
+        question: q.question_text,
+        questionType: questionType,
+        isRequired: true,
+        difficulty: q.difficulty,
+        options: q.options
+          .sort((a, b) => a.sequence - b.sequence)
+          .map((opt) => ({
+            id: opt.option_id,
+            text: opt.option_text,
+            isCorrect: opt.is_correct,
+          })),
+      },
+    };
+  });
 }
 
 // Default values
@@ -237,25 +245,8 @@ export function ExamFormContainer({
   const updateExamMutation = useUpdateExam(examId || "");
   const deleteExamMutation = useDeleteExam();
 
-  const generateId = () => `quiz-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
   const addQuizQuestion = useCallback(() => {
-    const newQuiz: QuizItem = {
-      id: generateId(),
-      data: {
-        question: "",
-        questionType: "multiple_choice",
-        isRequired: true,
-        isMultipleAnswer: false,
-        difficulty: "easy",
-        options: [
-          { id: `opt-${Date.now()}-1`, text: "", isCorrect: false },
-          { id: `opt-${Date.now()}-2`, text: "", isCorrect: true },
-          { id: `opt-${Date.now()}-3`, text: "", isCorrect: false },
-          { id: `opt-${Date.now()}-4`, text: "", isCorrect: false },
-        ],
-      },
-    };
+    const newQuiz = generateDefaultQuizItem("single");
     setQuizItems((prev) => [...prev, newQuiz]);
   }, [setQuizItems]);
 
@@ -284,6 +275,83 @@ export function ExamFormContainer({
       setQuizItems((prev) => prev.filter((item) => item.id !== id));
     },
     [setQuizItems]
+  );
+
+  // Mutation for updating individual question
+  const queryClient = useQueryClient();
+
+  interface UpdateQuestionData {
+    question_text: string;
+    question_type: "single" | "multiple" | "matching";
+    difficulty: "easy" | "medium" | "hard";
+    explanation: string;
+    options?: Array<{
+      text: string;
+      is_correct: boolean;
+    }>;
+    pairs?: Array<{
+      left: string;
+      right: string;
+    }>;
+  }
+
+  const updateQuestionMutation = useMutation({
+    mutationFn: async ({
+      examId,
+      questionId,
+      data,
+    }: {
+      examId: string;
+      questionId: string;
+      data: UpdateQuestionData;
+    }) => {
+      const response = await api.patch(
+        `${API_ENDPOINTS.TEACHER.ADD_EXAM_QUESTIONS(examId)}/${questionId}`,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["examDetails", examId] });
+    },
+  });
+
+  const handleUpdateQuestion = useCallback(
+    async (questionId: string, quizData: QuizData) => {
+      if (!isEditMode || !examId) {
+        // Just update local state if not in edit mode
+        updateQuizContent(questionId, quizData);
+        return;
+      }
+
+      try {
+        const requestData = {
+          question_text: quizData.question,
+          question_type: quizData.questionType,
+          difficulty: quizData.difficulty,
+          explanation: "",
+          options:
+            quizData.options?.map((opt) => ({
+              text: opt.text,
+              is_correct: opt.isCorrect,
+            })) || [],
+        };
+
+        await updateQuestionMutation.mutateAsync({
+          examId,
+          questionId,
+          data: requestData,
+        });
+
+        // Update local state after successful API call
+        updateQuizContent(questionId, quizData);
+        alert("Soal berhasil diperbarui!");
+      } catch (err) {
+        console.error("Failed to update question:", err);
+        alert("Gagal memperbarui soal. Silakan coba lagi.");
+      }
+    },
+    [isEditMode, examId, updateQuizContent, updateQuestionMutation]
   );
 
   const handleSave = async () => {
@@ -402,7 +470,7 @@ export function ExamFormContainer({
       <div className="sticky top-0 z-10">
         <div className="mb-8 flex items-center gap-4">
           <Link
-            href={`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`}
+            href={`/dashboard-admin/courses/${courseId}`}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white transition-colors hover:bg-[#E68E00]"
           >
             <ChevronLeft size={24} />
@@ -464,6 +532,8 @@ export function ExamFormContainer({
                 onDelete={() => deleteQuiz(item.id)}
                 canMoveUp={index > 0}
                 canMoveDown={index < quizItems.length - 1}
+                onSaveQuestion={isEditMode ? handleUpdateQuestion : undefined}
+                isSavingQuestion={updateQuestionMutation.isPending}
               />
             ))}
           </div>
@@ -508,7 +578,7 @@ export function ExamFormContainer({
                 disabled={
                   isCreating || updateExamMutation.isPending || deleteExamMutation.isPending
                 }
-                className="border-red-500 text-red-500 hover:!bg-red-500 hover:text-white disabled:opacity-50"
+                className="border-white text-white hover:!border-none hover:!bg-red-500 hover:text-white disabled:opacity-50"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Hapus Exam
