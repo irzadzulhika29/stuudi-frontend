@@ -154,10 +154,11 @@ function transformQuizItemToApiFormat(item: QuizItem): AddQuizQuestionRequest {
   if (data.questionType === "single" || data.questionType === "multiple") {
     return {
       ...baseData,
-      options: data.options.map((opt) => ({
-        text: opt.text,
-        is_correct: opt.isCorrect,
-      })),
+      options:
+        data.options?.map((opt) => ({
+          text: opt.text,
+          is_correct: opt.isCorrect,
+        })) || [],
     };
   }
 
