@@ -1,31 +1,21 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ChevronDownIcon, Image as ImageIcon, X } from "lucide-react";
+import { ChevronDownIcon, Image as ImageIcon, X, Save } from "lucide-react";
+import Image from "next/image";
 import { MaterialContentBox } from "./MaterialContentBox";
 import { ToggleSwitch } from "@/shared/components/ui";
-import {
-  MultipleChoiceQuestion,
-  TrueFalseQuestion,
-  ShortAnswerQuestion,
-  MatchingQuestion,
-  QuizOption,
-  MatchingPair,
-} from "../quiz";
+import { ChoiceQuestion, MatchingQuestion, QuizOption, MatchingPair } from "../quiz";
 
 import { QuizDifficulty } from "./AddContentButtons";
 
 export interface QuizData {
   question: string;
-  questionType: "multiple_choice" | "true_false" | "short_answer" | "matching";
+  questionType: "single" | "multiple" | "matching";
   isRequired: boolean;
-  isMultipleAnswer: boolean;
   difficulty: QuizDifficulty;
-  options: QuizOption[];
+  options?: QuizOption[];
   imageUrl?: string;
-  correctAnswer?: boolean;
-  expectedAnswer?: string;
-  caseSensitive?: boolean;
   pairs?: MatchingPair[];
 }
 
@@ -38,6 +28,8 @@ interface QuizBoxProps {
   onDelete?: () => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
+  onSaveQuestion?: (id: string, data: QuizData) => void;
+  isSavingQuestion?: boolean;
 }
 
 export function QuizBox({
@@ -49,8 +41,9 @@ export function QuizBox({
   onDelete,
   canMoveUp,
   canMoveDown,
+  onSaveQuestion,
+  isSavingQuestion,
 }: QuizBoxProps) {
-  const [isExpanded] = useState(true);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,9 +74,8 @@ export function QuizBox({
   };
 
   const questionTypes = [
-    { value: "multiple_choice", label: "Multiple Choice" },
-    { value: "true_false", label: "True/False" },
-    { value: "short_answer", label: "Short Answer" },
+    { value: "single", label: "Single Choice" },
+    { value: "multiple", label: "Multiple Choice" },
     { value: "matching", label: "Matching" },
   ];
 
@@ -91,22 +83,25 @@ export function QuizBox({
     onChange(id, { ...data, question });
   };
 
-  const handleTypeChange = (
-    type: "multiple_choice" | "true_false" | "short_answer" | "matching"
-  ) => {
+  const handleTypeChange = (type: "single" | "multiple" | "matching") => {
     let updatedData: QuizData = { ...data, questionType: type };
 
-    if (type === "true_false" && data.correctAnswer === undefined) {
-      updatedData = { ...updatedData, correctAnswer: true };
+    // Initialize data based on type
+    if (
+      (type === "single" || type === "multiple") &&
+      (!data.options || data.options.length === 0)
+    ) {
+      updatedData = {
+        ...updatedData,
+        options: [
+          { id: `${id}-opt-1`, text: "", isCorrect: type === "single" },
+          { id: `${id}-opt-2`, text: "", isCorrect: false },
+          { id: `${id}-opt-3`, text: "", isCorrect: false },
+          { id: `${id}-opt-4`, text: "", isCorrect: false },
+        ],
+      };
     }
-    if (type === "short_answer") {
-      if (data.expectedAnswer === undefined) {
-        updatedData = { ...updatedData, expectedAnswer: "" };
-      }
-      if (data.caseSensitive === undefined) {
-        updatedData = { ...updatedData, caseSensitive: false };
-      }
-    }
+
     if (type === "matching" && (!data.pairs || data.pairs.length === 0)) {
       updatedData = {
         ...updatedData,
@@ -133,20 +128,23 @@ export function QuizBox({
     onChange(id, { ...data, options });
   };
 
-  const handleMultipleAnswerToggle = () => {
-    onChange(id, { ...data, isMultipleAnswer: !data.isMultipleAnswer });
-  };
+  const handleChoiceTypeChange = (choiceType: "single" | "multiple") => {
+    // When switching between single and multiple, ensure correct answers are valid
+    let updatedOptions = [...(data.options || [])];
 
-  const handleCorrectAnswerChange = (value: boolean) => {
-    onChange(id, { ...data, correctAnswer: value });
-  };
+    if (choiceType === "single") {
+      // When switching to single, keep only the first correct answer
+      let foundCorrect = false;
+      updatedOptions = updatedOptions.map((opt) => {
+        if (opt.isCorrect && !foundCorrect) {
+          foundCorrect = true;
+          return opt;
+        }
+        return { ...opt, isCorrect: false };
+      });
+    }
 
-  const handleExpectedAnswerChange = (value: string) => {
-    onChange(id, { ...data, expectedAnswer: value });
-  };
-
-  const handleCaseSensitiveToggle = () => {
-    onChange(id, { ...data, caseSensitive: !data.caseSensitive });
+    onChange(id, { ...data, questionType: choiceType, options: updatedOptions });
   };
 
   const handlePairsChange = (pairs: MatchingPair[]) => {
@@ -155,47 +153,20 @@ export function QuizBox({
 
   const renderQuestionContent = () => {
     switch (data.questionType) {
-      case "multiple_choice":
+      case "single":
+      case "multiple":
         return (
-          <MultipleChoiceQuestion
+          <ChoiceQuestion
             id={id}
             question={data.question}
             difficulty={data.difficulty}
             isRequired={data.isRequired}
-            options={data.options}
-            isMultipleAnswer={data.isMultipleAnswer}
+            choiceType={data.questionType}
+            options={data.options || []}
             onQuestionChange={handleQuestionChange}
             onDifficultyChange={handleDifficultyChange}
             onOptionsChange={handleOptionsChange}
-            onMultipleAnswerToggle={handleMultipleAnswerToggle}
-          />
-        );
-      case "true_false":
-        return (
-          <TrueFalseQuestion
-            id={id}
-            question={data.question}
-            difficulty={data.difficulty}
-            isRequired={data.isRequired}
-            correctAnswer={data.correctAnswer ?? true}
-            onQuestionChange={handleQuestionChange}
-            onDifficultyChange={handleDifficultyChange}
-            onCorrectAnswerChange={handleCorrectAnswerChange}
-          />
-        );
-      case "short_answer":
-        return (
-          <ShortAnswerQuestion
-            id={id}
-            question={data.question}
-            difficulty={data.difficulty}
-            isRequired={data.isRequired}
-            expectedAnswer={data.expectedAnswer ?? ""}
-            caseSensitive={data.caseSensitive ?? false}
-            onQuestionChange={handleQuestionChange}
-            onDifficultyChange={handleDifficultyChange}
-            onExpectedAnswerChange={handleExpectedAnswerChange}
-            onCaseSensitiveToggle={handleCaseSensitiveToggle}
+            onChoiceTypeChange={handleChoiceTypeChange}
           />
         );
       case "matching":
@@ -205,7 +176,7 @@ export function QuizBox({
             question={data.question}
             difficulty={data.difficulty}
             isRequired={data.isRequired}
-            pairs={data.pairs ?? []}
+            pairs={data.pairs || []}
             onQuestionChange={handleQuestionChange}
             onDifficultyChange={handleDifficultyChange}
             onPairsChange={handlePairsChange}
@@ -223,78 +194,43 @@ export function QuizBox({
       onDelete={onDelete}
       canMoveUp={canMoveUp}
       canMoveDown={canMoveDown}
-      className="bg-gray-200"
     >
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-              className="hover:border-primary/50 flex items-center gap-2 rounded-xl bg-white px-3 py-1.5 transition-colors"
-            >
-              <svg
-                className="text-primary h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <span className="text-sm text-black">
-                {questionTypes.find((t) => t.value === data.questionType)?.label}
-              </span>
-              <ChevronDownIcon className="text-neutral-gray h-4 w-4" />
-            </button>
-            {showTypeDropdown && (
-              <div className="border-neutral-gray/20 absolute top-full left-0 z-10 mt-1 w-48 rounded-lg border bg-white py-1 shadow-lg">
-                {questionTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    type="button"
-                    onClick={() =>
-                      handleTypeChange(
-                        type.value as "multiple_choice" | "true_false" | "short_answer" | "matching"
-                      )
-                    }
-                    className={`hover:bg-neutral-light w-full px-4 py-2 text-left text-sm transition-colors ${
-                      data.questionType === type.value
-                        ? "text-primary font-medium"
-                        : "text-neutral-dark"
-                    }`}
-                  >
-                    {type.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <ToggleSwitch
-            checked={data.isRequired}
-            onChange={() => handleRequiredToggle()}
-            label="Required"
-            size="md"
+      <div className="space-y-6">
+        {/* Question Text Input */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-white">
+            Pertanyaan<span className="text-error">*</span>
+          </label>
+          <textarea
+            value={data.question}
+            onChange={(e) => handleQuestionChange(e.target.value)}
+            placeholder="Masukkan pertanyaan quiz"
+            className="text-neutral-dark border-neutral-gray/30 focus:border-primary focus:ring-primary/20 placeholder:text-neutral-gray/60 w-full rounded-lg border bg-white px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
+            rows={3}
           />
         </div>
 
-        {isExpanded && (
-          <div className="space-y-4 pl-2">
-            {/* Question Input */}
-            <div className="flex items-start gap-3">
-              <input
-                type="text"
-                value={data.question}
-                onChange={(e) => handleQuestionChange(e.target.value)}
-                placeholder="Masukkan pertanyaan di sini..."
-                className="bg-neutral-light border-neutral-gray/20 focus:border-primary focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 flex-1 rounded-lg border px-4 py-3 transition-all focus:ring-2 focus:outline-none"
+        {/* Image Upload Section */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-white">Gambar (Opsional)</label>
+          {data.imageUrl ? (
+            <div className="relative h-48 w-full">
+              <Image
+                src={data.imageUrl}
+                alt="Quiz question"
+                fill
+                className="border-neutral-gray/30 rounded-lg border object-cover"
               />
-              {/* Hidden file input */}
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="bg-error hover:bg-error/90 absolute top-2 right-2 z-10 rounded-full p-1.5 text-white shadow-lg transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -305,44 +241,77 @@ export function QuizBox({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={`bg-neutral-light hover:border-primary/30 rounded-lg border p-3 transition-colors ${
-                  data.imageUrl ? "border-primary/50 bg-primary/5" : "border-neutral-gray/20"
-                }`}
-                title="Tambah gambar"
+                className="border-neutral-gray/40 hover:border-primary hover:bg-primary/5 text-neutral-gray hover:text-primary flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-sm transition-all"
               >
-                <ImageIcon
-                  className={`h-5 w-5 ${data.imageUrl ? "text-primary" : "text-neutral-gray"}`}
-                />
+                <ImageIcon className="h-5 w-5" />
+                <span>Upload gambar (maks. 2MB)</span>
               </button>
             </div>
+          )}
+        </div>
 
-            {/* Image Preview */}
-            {data.imageUrl && (
-              <div className="relative inline-block">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={data.imageUrl}
-                  alt="Gambar soal"
-                  className="border-neutral-gray/20 max-h-48 max-w-full rounded-lg border object-contain"
-                />
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white shadow-md transition-colors hover:bg-red-600"
-                  title="Hapus gambar"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+        {/* Question Type Selector */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-white">Tipe Soal</label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+              className="border-neutral-gray/30 focus:border-primary text-neutral-dark flex w-full items-center justify-between rounded-lg border bg-white px-4 py-2.5 text-sm transition-all focus:outline-none"
+            >
+              <span>{questionTypes.find((t) => t.value === data.questionType)?.label}</span>
+              <ChevronDownIcon
+                className={`text-neutral-gray h-4 w-4 transition-transform ${showTypeDropdown ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {showTypeDropdown && (
+              <div className="border-neutral-gray/30 absolute z-10 mt-1 w-full rounded-lg border bg-white shadow-lg">
+                {questionTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() =>
+                      handleTypeChange(type.value as "single" | "multiple" | "matching")
+                    }
+                    className={`hover:bg-primary/5 text-neutral-dark w-full px-4 py-2.5 text-left text-sm transition-all first:rounded-t-lg last:rounded-b-lg ${
+                      data.questionType === type.value
+                        ? "bg-primary/10 text-primary font-medium"
+                        : ""
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
               </div>
             )}
+          </div>
+        </div>
 
-            {/* Render question-type specific content */}
-            {renderQuestionContent()}
+        {/* Question Content (Options or Matching Pairs) */}
+        {renderQuestionContent()}
+
+        {/* Required Toggle */}
+        <div className="flex items-center gap-3">
+          <ToggleSwitch checked={data.isRequired} onChange={handleRequiredToggle} size="sm" />
+          <span className="dark text-sm text-white">Pertanyaan wajib dijawab</span>
+        </div>
+
+        {/* Save Button - only show in edit mode */}
+        {onSaveQuestion && (
+          <div className="flex justify-end pt-2">
+            <button
+              type="button"
+              onClick={() => onSaveQuestion(id, data)}
+              disabled={isSavingQuestion}
+              className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" />
+              {isSavingQuestion ? "Menyimpan..." : "Simpan Soal"}
+            </button>
           </div>
         )}
       </div>
     </MaterialContentBox>
   );
 }
-
-export type { QuizOption };

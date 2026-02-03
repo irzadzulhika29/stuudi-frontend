@@ -43,7 +43,7 @@ export function MatchingQuestion({
 
         {/* Difficulty Select */}
         <div className="flex items-center gap-2">
-          <span className="text-neutral-dark text-sm">Kesulitan</span>
+          <span className="text-sm text-white">Kesulitan</span>
           <select
             value={difficulty}
             onChange={(e) => onDifficultyChange(e.target.value as QuizDifficulty)}

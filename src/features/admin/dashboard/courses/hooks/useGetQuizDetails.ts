@@ -15,10 +15,11 @@ interface QuizOption {
 interface QuizQuestion {
   question_id: string;
   text: string;
-  type: "single" | "multiple";
+  type: "single" | "multiple" | "matching";
   points: number;
   difficulty: "easy" | "medium" | "hard";
-  options: QuizOption[];
+  options?: QuizOption[];
+  pairs?: { pair_id?: string; left: string; right: string }[];
 }
 
 interface QuizSettings {

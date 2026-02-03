@@ -23,7 +23,7 @@ export function ManageTopicList({ courseId, topics, onAddNewTopic }: ManageTopic
       <div className="mb-8 flex gap-4">
         {onAddNewTopic ? (
           <Button
-            className="flex-1 hover:bg-white hover:text-gray-800"
+            className="hover:!text-primary flex-1 !border !border-white !text-white hover:bg-white"
             variant="outline"
             size="md"
             onClick={onAddNewTopic}
@@ -32,11 +32,11 @@ export function ManageTopicList({ courseId, topics, onAddNewTopic }: ManageTopic
           </Button>
         ) : (
           <Link
-            className="flex-1"
+            className="hover:!text-primary flex-1 !border !border-white !text-white hover:bg-white"
             href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/material/new`}
           >
             <Button
-              className="w-full hover:bg-white hover:text-gray-800"
+              className="hover:!text-primary flex-1 !border !border-white !text-white hover:bg-white"
               variant="outline"
               size="md"
             >
@@ -48,7 +48,11 @@ export function ManageTopicList({ courseId, topics, onAddNewTopic }: ManageTopic
           className="flex-1"
           href={`/dashboard-admin/courses/${courseId}/manage/${courseId}/exam/new`}
         >
-          <Button className="w-full hover:bg-white hover:text-gray-800" variant="outline" size="md">
+          <Button
+            className="hover:!text-primary w-full !border !border-white !text-white hover:bg-white"
+            variant="outline"
+            size="md"
+          >
             <Plus className="mr-2" size={20} /> Add Exam
           </Button>
         </Link>
