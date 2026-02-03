@@ -1,72 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, CheckCircle } from "lucide-react";
+import { PauseCircle } from "lucide-react";
 import { BaseQuestionCard } from "@/shared/components/questions/BaseQuestionCard";
 import { QuestionAnswer, SharedQuestion } from "@/shared/types/questionTypes";
+import Button from "@/shared/components/ui/Button";
+
+import { TimerDisplay } from "./TimerDisplay";
 
 interface QuizQuestionProps {
   question: SharedQuestion;
   questionNumber: number;
   totalQuestions: number;
-  elapsedTime: number;
+  startTime: number;
   onSubmit: (selectedOption: QuestionAnswer) => void;
   showFeedback: boolean;
   selectedAnswer: QuestionAnswer;
   onNext: () => void;
+  onPause?: () => void;
   isLastQuestion: boolean;
+  isCorrect?: boolean;
+  correctAnswerId?: string;
 }
 
 export function QuizQuestion({
   question,
   questionNumber,
   totalQuestions,
-  elapsedTime,
+  startTime,
   onSubmit,
   showFeedback,
   selectedAnswer,
   onNext,
+  onPause,
   isLastQuestion,
+  isCorrect,
+  correctAnswerId,
 }: QuizQuestionProps) {
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    const centisecs = Math.floor((seconds % 1) * 100);
-    return `${mins.toString().padStart(2, "0")}:${Math.floor(secs).toString().padStart(2, "0")},${centisecs.toString().padStart(2, "0")}`;
-  };
-
   const handleSelectAnswer = (answer: QuestionAnswer) => {
-    // In Quiz mode, maybe we want instant submit?
-    // Current flow: Select -> (Button enabled) -> Submit -> Feedback -> Next
-    // So we need local state if we want to "Select" before "Submit".
-    // But QuizContainer handles "optimistic update" on submit? No, handleSubmitAnswer updates state.
-    // BaseQuestionCard expects onSelectAnswer to update selection immediately.
-    // If we pass `onSubmit` to `onSelectAnswer`, it submits immediately.
-    // To keep "Select then Submit" flow, `QuizContainer` needs to handle "Selection" state separately from "Submitted Answer"?
-    // OR we just use `onSubmit` as "Select" and modify `QuizContainer` to not call API immediately?
-
-    // Actually `QuizContainer`'s `handleSubmitAnswer` calls API immediately.
-    // If we want "Select then Submit button", we need to lift "Selection" state or keep it local here.
-    // But `BaseQuestionCard` is controlled by `selectedAnswer`.
-
-    // Let's assume for this Refactor that selecting an option updates the Parent State (Selection) but DOES NOT submit APi?
-    // Refactor `QuizContainer`'s `handleSubmitAnswer` logic?
-    // The current `QuizContainer` implementation calls API immediately in `handleSubmitAnswer`.
-    // And the UI had a "Submit Answer" button.
-
-    // Let's change the flow slightly to be more seamless or adapt `QuizContainer`.
-    // Simplest: `onSelectAnswer` here calls a new prop `onSelect` (which updates local state in Container without API), and "Submit" button calls `onSubmit` (API).
-    // But `QuizContainer` doesn't have `onSelect`.
-
-    // Hack for now: We treat "Submit" as "Select" for UI purposes, but we only really "Lock in" when clicking Next?
-    // No, `saveAnswer` IS the submission.
-
-    // Okay, the previous `QuizQuestion` had local `selected` state.
-    // I should do the same here.
-    // local `currentSelection` state.
-
-    // But `BaseQuestionCard` needs `selectedAnswer` prop.
-    // I will use local state to feed `BaseQuestionCard`, then `onSubmit` sends it up.
+    // ... logic remains same
     setCurrentSelection(answer);
   };
 
@@ -98,14 +70,18 @@ export function QuizQuestion({
               {questionNumber} / {totalQuestions}
             </span>
           </div>
+          {onPause && (
+            <button
+              onClick={onPause}
+              className="ml-2 flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/20 hover:text-white"
+            >
+              <PauseCircle size={14} />
+              Kembali
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-md">
-          <Clock size={18} className="text-orange-300" />
-          <span className="font-mono text-xl font-bold tracking-widest text-white">
-            {formatTime(elapsedTime)}
-          </span>
-        </div>
+        <TimerDisplay startTime={startTime} />
       </div>
 
       <div className="rounded-3xl bg-white p-1 shadow-2xl shadow-black/20">
@@ -114,31 +90,33 @@ export function QuizQuestion({
           selectedAnswer={currentSelection} // Local selection
           onSelectAnswer={handleSelectAnswer}
           disabled={showFeedback} // Disable interaction if showing feedback
+          isCorrect={isCorrect}
+          correctAnswerId={correctAnswerId}
           className="h-auto min-h-[400px] border-none shadow-none"
         />
       </div>
 
       <div className="mt-8 flex justify-end">
         {!showFeedback ? (
-          <button
+          <Button
             onClick={handleSubmit}
-            disabled={!currentSelection && currentSelection !== 0} // Check if selected
-            className={`transform rounded-xl px-8 py-4 text-lg font-bold transition-all active:scale-95 ${
-              currentSelection || currentSelection === 0
-                ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-lg hover:shadow-orange-500/30"
-                : "cursor-not-allowed border border-white/10 bg-white/10 text-white/40"
-            }`}
+            disabled={!currentSelection && currentSelection !== 0}
+            variant="secondary"
+            size="lg"
+            className="w-full text-lg font-bold shadow-xl md:w-auto"
           >
             Jawab Pertanyaan
-          </button>
+          </Button>
         ) : (
-          <button
-            onClick={onNext}
-            className="flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-neutral-900 shadow-lg transition-all hover:bg-neutral-100"
-          >
-            {isLastQuestion ? "Selesai & Lihat Hasil" : "Pertanyaan Selanjutnya"}
-            <CheckCircle size={20} />
-          </button>
+          <div className="flex w-full items-center justify-end">
+            <Button
+              onClick={onNext}
+              variant={isLastQuestion ? "primary" : "secondary"} // Solid button
+              className="flex"
+            >
+              {isLastQuestion ? "Selesai" : "Lanjut"}
+            </Button>
+          </div>
         )}
       </div>
     </div>

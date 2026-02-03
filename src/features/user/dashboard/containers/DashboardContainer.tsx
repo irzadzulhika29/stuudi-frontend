@@ -87,7 +87,7 @@ export function DashboardContainer() {
           <TeamTable />
         </div>
 
-        <div className="pointer-events-none absolute bottom-16 -left-16 z-0 hidden h-90 w-90 lg:block">
+        <div className="pointer-events-none absolute bottom-16 -left-16 -z-10 hidden h-90 w-90 lg:block">
           <Image
             src="/images/mascot/chiby.webp"
             alt="Mascot Left"
@@ -98,7 +98,7 @@ export function DashboardContainer() {
           />
         </div>
 
-        <div className="pointer-events-none absolute -right-16 bottom-16 z-0 hidden h-90 w-90 lg:block">
+        <div className="pointer-events-none absolute -right-16 bottom-16 -z-10 hidden h-90 w-90 lg:block">
           <Image
             src="/images/mascot/chiby.webp"
             alt="Mascot Right"
