@@ -93,6 +93,23 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
             </span>
           </Link>
         </div>
+
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <h1 className="text-xl font-bold text-white md:text-2xl">{content.title}</h1>
+          <CompletionButton
+            size="sm"
+            isCompleted={content.isCompleted}
+            isLoading={markComplete.isPending || markIncomplete.isPending}
+            onToggle={() => {
+              if (content.isCompleted) {
+                markIncomplete.mutate(materiId);
+              } else {
+                markComplete.mutate(materiId);
+              }
+            }}
+          />
+        </div>
+
         <QuizContainer quiz={quizData} courseId={courseId} topicId={topicId} />
       </div>
     );

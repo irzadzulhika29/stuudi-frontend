@@ -61,6 +61,26 @@ export interface QuizAttempt {
   averageTime: number;
 }
 
+export interface QuizAttemptHistory {
+  attempt_id: string;
+  content_id: string;
+  content_title: string;
+  course_id: string;
+  course_name: string;
+  topic_id: string;
+  topic_name: string;
+  status: "completed" | "failed" | "in_progress";
+  started_at: string;
+  submitted_at?: string;
+  score: number;
+  time_limit_minutes: number;
+  time_elapsed_minutes: number;
+  time_remaining_minutes: number;
+  total_questions: number;
+  answered_questions: number;
+  progress_percentage: number;
+}
+
 export interface QuizData {
   id: string;
   title: string;
@@ -92,6 +112,10 @@ export interface QuizStartResponse {
       sequence: number;
     }[];
   }[];
+  answers?: {
+    question_id: string;
+    selected_option_id: string;
+  }[];
 }
 
 export interface QuizResultResponse {
@@ -120,6 +144,15 @@ export interface QuizResultResponse {
     correct_answer: string;
     explanation: string;
   }[];
+}
+
+export interface QuizAnswerResponse {
+  answer_id: string;
+  question_id: string;
+  is_correct: boolean;
+  points_earned: number;
+  max_points: number;
+  correct_option_id?: string;
 }
 
 export type QuizStatus = "start" | "in-progress" | "summary";

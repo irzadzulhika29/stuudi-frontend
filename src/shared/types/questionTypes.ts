@@ -26,4 +26,6 @@ export interface QuestionRendererProps {
   selectedAnswer: QuestionAnswer;
   onSelectAnswer: (answer: QuestionAnswer) => void;
   disabled?: boolean;
+  isCorrect?: boolean;
+  correctAnswerId?: string;
 }
