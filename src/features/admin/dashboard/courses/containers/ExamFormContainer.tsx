@@ -15,7 +15,7 @@ import { useCreateExam, CreateExamRequest } from "../hooks/useCreateExam";
 import { useUpdateExam } from "../hooks/useUpdateExam";
 import { useDeleteExam } from "../hooks/useDeleteExam";
 import { useGetExamDetails, ExamDetails } from "../hooks/useGetExamDetails";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/shared/api/api";
 import { API_ENDPOINTS } from "@/shared/config/constants";
 import { generateDefaultQuizItem } from "../utils/quizTransformers";
@@ -239,6 +239,8 @@ export function ExamFormContainer({
 
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isUpdatingQuestions, setIsUpdatingQuestions] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
 
   // Hooks
   const { createExam, isCreating, progress } = useCreateExam(courseId);
@@ -278,8 +280,6 @@ export function ExamFormContainer({
   );
 
   // Mutation for updating individual question
-  const queryClient = useQueryClient();
-
   interface UpdateQuestionData {
     question_text: string;
     question_type: "single" | "multiple" | "matching";
@@ -296,63 +296,51 @@ export function ExamFormContainer({
   }
 
   const updateQuestionMutation = useMutation({
-    mutationFn: async ({
-      examId,
-      questionId,
-      data,
-    }: {
-      examId: string;
-      questionId: string;
-      data: UpdateQuestionData;
-    }) => {
-      const response = await api.patch(
-        `${API_ENDPOINTS.TEACHER.ADD_EXAM_QUESTIONS(examId)}/${questionId}`,
-        data
-      );
+    mutationFn: async ({ questionId, data }: { questionId: string; data: UpdateQuestionData }) => {
+      const response = await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(questionId), data);
       return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["examDetails", examId] });
     },
   });
 
-  const handleUpdateQuestion = useCallback(
-    async (questionId: string, quizData: QuizData) => {
-      if (!isEditMode || !examId) {
-        // Just update local state if not in edit mode
-        updateQuizContent(questionId, quizData);
-        return;
-      }
+  // Mutation for deleting individual question
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      const response = await api.delete(API_ENDPOINTS.TEACHER.DELETE_QUESTION(questionId));
+      return response.data;
+    },
+  });
 
-      try {
-        const requestData = {
-          question_text: quizData.question,
-          question_type: quizData.questionType,
-          difficulty: quizData.difficulty,
-          explanation: "",
-          options:
-            quizData.options?.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            })) || [],
-        };
+  // Helper to check if ID is a valid UUID (existing question from server)
+  const isValidUUID = (id: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
 
-        await updateQuestionMutation.mutateAsync({
-          examId,
-          questionId,
-          data: requestData,
-        });
-
-        // Update local state after successful API call
-        updateQuizContent(questionId, quizData);
-        alert("Soal berhasil diperbarui!");
-      } catch (err) {
-        console.error("Failed to update question:", err);
-        alert("Gagal memperbarui soal. Silakan coba lagi.");
+  const handleDeleteQuestion = useCallback(
+    (id: string) => {
+      // If in edit mode and it's an existing question (has valid UUID), show modal
+      if (isEditMode && isValidUUID(id)) {
+        setQuestionToDelete(id);
+      } else {
+        // Just remove from local state for new questions
+        deleteQuiz(id);
       }
     },
-    [isEditMode, examId, updateQuizContent, updateQuestionMutation]
+    [isEditMode, deleteQuiz]
   );
+
+  const confirmDeleteQuestion = async () => {
+    if (!questionToDelete) return;
+
+    try {
+      await deleteQuestionMutation.mutateAsync(questionToDelete);
+      deleteQuiz(questionToDelete);
+      setQuestionToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete question:", err);
+      setError("Gagal menghapus soal. Silakan coba lagi.");
+    }
+  };
 
   const handleSave = async () => {
     // Validation
@@ -391,6 +379,9 @@ export function ExamFormContainer({
     if (isEditMode && examId) {
       // Update exam
       try {
+        setIsUpdatingQuestions(true);
+
+        // Update exam metadata first
         await updateExamMutation.mutateAsync({
           title: examTitle,
           description: examDescription,
@@ -403,11 +394,39 @@ export function ExamFormContainer({
           is_random_order: isRandomOrder,
           is_random_selection: isRandomSelection,
         });
-        console.log("Exam updated successfully");
-        router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+
+        // Update all existing questions (only those that have valid UUID format - existing questions from server)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const existingQuestions = quizItems.filter((item) => uuidRegex.test(item.id));
+
+        const updatePromises = existingQuestions.map((item) => {
+          const requestData = {
+            question_text: item.data.question,
+            question_type: item.data.questionType,
+            difficulty: item.data.difficulty,
+            explanation: "",
+            options:
+              item.data.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [],
+          };
+
+          return updateQuestionMutation.mutateAsync({
+            questionId: item.id,
+            data: requestData,
+          });
+        });
+
+        await Promise.all(updatePromises);
+
+        console.log("Exam and questions updated successfully");
+        router.push(`/dashboard-admin/courses/${courseId}`);
       } catch (err) {
         console.error("Failed to update exam:", err);
         setError("Gagal mengupdate exam");
+      } finally {
+        setIsUpdatingQuestions(false);
       }
       return;
     }
@@ -529,11 +548,9 @@ export function ExamFormContainer({
                 onChange={updateQuizContent}
                 onMoveUp={() => moveQuiz(index, "up")}
                 onMoveDown={() => moveQuiz(index, "down")}
-                onDelete={() => deleteQuiz(item.id)}
+                onDelete={() => handleDeleteQuestion(item.id)}
                 canMoveUp={index > 0}
                 canMoveDown={index < quizItems.length - 1}
-                onSaveQuestion={isEditMode ? handleUpdateQuestion : undefined}
-                isSavingQuestion={updateQuestionMutation.isPending}
               />
             ))}
           </div>
@@ -576,7 +593,11 @@ export function ExamFormContainer({
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={
-                  isCreating || updateExamMutation.isPending || deleteExamMutation.isPending
+                  isCreating ||
+                  updateExamMutation.isPending ||
+                  deleteExamMutation.isPending ||
+                  deleteQuestionMutation.isPending ||
+                  isUpdatingQuestions
                 }
                 className="border-white text-white hover:!border-none hover:!bg-red-500 hover:text-white disabled:opacity-50"
               >
@@ -587,12 +608,18 @@ export function ExamFormContainer({
             <Button
               variant="outline"
               onClick={handleSave}
-              disabled={isCreating || updateExamMutation.isPending || deleteExamMutation.isPending}
+              disabled={
+                isCreating ||
+                updateExamMutation.isPending ||
+                deleteExamMutation.isPending ||
+                deleteQuestionMutation.isPending ||
+                isUpdatingQuestions
+              }
               className="hover:!bg-primary flex-1 hover:text-white disabled:opacity-50"
             >
               {isCreating
                 ? "Menyimpan..."
-                : updateExamMutation.isPending
+                : updateExamMutation.isPending || isUpdatingQuestions
                   ? "Mengupdate..."
                   : isEditMode
                     ? "Update Exam"
@@ -624,6 +651,41 @@ export function ExamFormContainer({
                 className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600 disabled:opacity-50"
               >
                 {deleteExamMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  "Hapus"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Question Confirmation Modal */}
+      {questionToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-semibold text-neutral-800">Hapus Soal?</h3>
+            <p className="mb-6 text-neutral-600">
+              Apakah Anda yakin ingin menghapus soal ini? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setQuestionToDelete(null)}
+                disabled={deleteQuestionMutation.isPending}
+                className="rounded-lg px-4 py-2 text-neutral-600 transition-colors hover:bg-neutral-100"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmDeleteQuestion}
+                disabled={deleteQuestionMutation.isPending}
+                className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+              >
+                {deleteQuestionMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Menghapus...

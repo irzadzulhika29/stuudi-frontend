@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ChevronDownIcon, Image as ImageIcon, X, Save } from "lucide-react";
+import { ChevronDownIcon, Image as ImageIcon, X } from "lucide-react";
 import Image from "next/image";
 import { MaterialContentBox } from "./MaterialContentBox";
 import { ToggleSwitch } from "@/shared/components/ui";
@@ -28,8 +28,6 @@ interface QuizBoxProps {
   onDelete?: () => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
-  onSaveQuestion?: (id: string, data: QuizData) => void;
-  isSavingQuestion?: boolean;
 }
 
 export function QuizBox({
@@ -41,8 +39,6 @@ export function QuizBox({
   onDelete,
   canMoveUp,
   canMoveDown,
-  onSaveQuestion,
-  isSavingQuestion,
 }: QuizBoxProps) {
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -296,21 +292,6 @@ export function QuizBox({
           <ToggleSwitch checked={data.isRequired} onChange={handleRequiredToggle} size="sm" />
           <span className="dark text-sm text-white">Pertanyaan wajib dijawab</span>
         </div>
-
-        {/* Save Button - only show in edit mode */}
-        {onSaveQuestion && (
-          <div className="flex justify-end pt-2">
-            <button
-              type="button"
-              onClick={() => onSaveQuestion(id, data)}
-              disabled={isSavingQuestion}
-              className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Save className="h-4 w-4" />
-              {isSavingQuestion ? "Menyimpan..." : "Simpan Soal"}
-            </button>
-          </div>
-        )}
       </div>
     </MaterialContentBox>
   );
