@@ -95,7 +95,7 @@ export default function CheatingReportPage() {
   }
 
   const tableData =
-    data?.suspicious_attempts.map((attempt, index) => ({
+    data?.suspicious_attempts?.map((attempt, index) => ({
       ...attempt,
       no: index + 1,
     })) || [];
