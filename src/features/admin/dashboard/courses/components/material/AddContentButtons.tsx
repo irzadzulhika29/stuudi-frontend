@@ -32,15 +32,11 @@ export interface QuizContent {
   id: string;
   type: "quiz";
   question: string;
-  questionType: "multiple_choice" | "true_false" | "short_answer" | "matching";
+  questionType: "single" | "multiple" | "matching";
   isRequired: boolean;
-  isMultipleAnswer: boolean;
   difficulty: QuizDifficulty;
-  options: QuizOption[];
+  options?: QuizOption[];
   imageUrl?: string;
-  correctAnswer?: boolean;
-  expectedAnswer?: string;
-  caseSensitive?: boolean;
   pairs?: { id: string; left: string; right: string }[];
 }
 

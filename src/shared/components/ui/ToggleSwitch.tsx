@@ -23,7 +23,7 @@ const ToggleSwitch = forwardRef<HTMLButtonElement, ToggleSwitchProps>(
       disabled = false,
       className = "",
     },
-    ref,
+    ref
   ) => {
     const sizes = {
       sm: {
@@ -62,12 +62,12 @@ const ToggleSwitch = forwardRef<HTMLButtonElement, ToggleSwitchProps>(
         aria-checked={checked}
         disabled={disabled}
         onClick={handleClick}
-        className={`relative ${currentSize.track} rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+        className={`relative ${currentSize.track} focus:ring-primary/30 rounded-full transition-colors duration-200 focus:ring-2 focus:outline-none ${
           checked ? "bg-primary" : "bg-neutral-gray/30"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
       >
         <span
-          className={`absolute left-0.5 top-0.5 ${currentSize.thumb} bg-white rounded-full shadow-md transition-all duration-200 ${
+          className={`absolute top-0.5 left-0.5 ${currentSize.thumb} rounded-full bg-white shadow-md transition-all duration-200 ${
             checked ? currentSize.translate : "translate-x-0"
           }`}
         />
@@ -81,27 +81,21 @@ const ToggleSwitch = forwardRef<HTMLButtonElement, ToggleSwitchProps>(
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         {labelPosition === "left" && (
-          <span
-            className={`${currentSize.labelText} text-neutral-dark ${
-              disabled ? "opacity-50" : ""
-            }`}
-          >
+          <span className={`${currentSize.labelText} text-white ${disabled ? "opacity-50" : ""}`}>
             {label}
           </span>
         )}
         {toggle}
         {labelPosition === "right" && (
           <span
-            className={`${currentSize.labelText} text-neutral-dark ${
-              disabled ? "opacity-50" : ""
-            }`}
+            className={`${currentSize.labelText} text-neutral-dark ${disabled ? "opacity-50" : ""}`}
           >
             {label}
           </span>
         )}
       </div>
     );
-  },
+  }
 );
 
 ToggleSwitch.displayName = "ToggleSwitch";
