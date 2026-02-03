@@ -52,13 +52,15 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
         // Handle both field name formats
         const apiQuestion = question as unknown as ApiQuestionResponse;
         const questionText = question.question_text || apiQuestion.text || "";
-        const questionType: "single" | "multiple" | "matching" =
-          question.question_type || apiQuestion.type || "single";
+        const questionType = (question.question_type || apiQuestion.type || "single") as
+          | "single"
+          | "multiple"
+          | "matching";
 
         const options: QuizOption[] =
           question.options?.map((opt) => ({
-            id: opt.option_id || opt.option_id || "",
-            text: opt.option_text || opt.option_text || "",
+            id: opt.option_id || "",
+            text: opt.option_text || "",
             isCorrect: opt.is_correct,
           })) || [];
 
