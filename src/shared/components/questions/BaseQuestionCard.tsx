@@ -15,6 +15,8 @@ export function BaseQuestionCard({
   selectedAnswer,
   onSelectAnswer,
   className = "",
+  disabled,
+  isCorrect,
 }: BaseQuestionCardProps) {
   return (
     <div
@@ -40,7 +42,7 @@ export function BaseQuestionCard({
         </p>
 
         <div className="flex-1">
-          {renderQuestionContent({ question, selectedAnswer, onSelectAnswer })}
+          {renderQuestionContent({ question, selectedAnswer, onSelectAnswer, disabled, isCorrect })}
         </div>
       </div>
     </div>

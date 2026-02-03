@@ -39,7 +39,7 @@ export const API_ENDPOINTS = {
     CONTENT_INCOMPLETE: (id: string) => `student/content/${id}/incomplete`,
     QUIZ: {
       START: (contentId: string) => `student/content/${contentId}/quiz/start`,
-      ANSWER: (attemptId: string) => `student/exams-attempt/${attemptId}/answers`,
+      ANSWER: (attemptId: string) => `student/quiz-attempts/${attemptId}/answers`,
       SUBMIT: (attemptId: string) => `student/quiz-attempts/${attemptId}/submit`,
       RESULT: (attemptId: string) => `student/quiz-attempts/${attemptId}/result`,
     },
