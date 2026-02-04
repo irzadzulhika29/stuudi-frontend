@@ -1,29 +1,17 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { ChevronLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { QuizBox, QuizData } from "@/features/admin/dashboard/courses/components/material";
 import {
   ExamMetadataForm,
   ExamConfigPanel,
   ExamProgressIndicator,
+  QuizQuestionsSection,
+  ExamFormActions,
 } from "@/features/admin/dashboard/courses/components/exam";
-import { Button } from "@/shared/components/ui";
-import { useCreateExam, CreateExamRequest } from "../hooks/useCreateExam";
-import { useUpdateExam } from "../hooks/useUpdateExam";
-import { useDeleteExam } from "../hooks/useDeleteExam";
-import { useGetExamDetails, ExamDetails } from "../hooks/useGetExamDetails";
-import { useMutation } from "@tanstack/react-query";
-import { api } from "@/shared/api/api";
-import { API_ENDPOINTS } from "@/shared/config/constants";
-import { generateDefaultQuizItem } from "../utils/quizTransformers";
-
-export interface QuizItem {
-  id: string;
-  data: QuizData;
-}
+import { ConfirmDeleteModal } from "@/shared/components/ui/ConfirmDeleteModal";
+import { useExamFormState } from "../hooks/useExamFormState";
+import { useExamFormHandlers } from "../hooks/useExamFormHandlers";
 
 interface ExamFormContainerProps {
   courseId: string;
@@ -32,445 +20,75 @@ interface ExamFormContainerProps {
   isEditMode?: boolean;
 }
 
-// Helper to format ISO date to datetime-local input format
-function formatDateTimeLocal(isoString: string): string {
-  if (!isoString) return "";
-  const date = new Date(isoString);
-  const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - offset * 60 * 1000);
-  return localDate.toISOString().slice(0, 16);
-}
-
-// Helper to transform API questions to QuizItem format
-function transformApiQuestionsToQuizItems(examDetails: ExamDetails): QuizItem[] {
-  return examDetails.questions.map((q) => {
-    const questionType =
-      q.question_type === "single" || q.question_type === "multiple" ? q.question_type : "single";
-
-    return {
-      id: q.question_id,
-      data: {
-        question: q.question_text,
-        questionType: questionType,
-        isRequired: true,
-        difficulty: q.difficulty,
-        options: q.options
-          .sort((a, b) => a.sequence - b.sequence)
-          .map((opt) => ({
-            id: opt.option_id,
-            text: opt.option_text,
-            isCorrect: opt.is_correct,
-          })),
-      },
-    };
-  });
-}
-
-// Default values
-const DEFAULT_EXAM_STATE = {
-  title: "",
-  description: "",
-  duration: 120,
-  passingScore: 70.0,
-  startTime: "",
-  endTime: "",
-  maxAttempts: 2,
-  questionsToShow: 5,
-  isRandomOrder: false,
-  isRandomSelection: false,
-  quizItems: [] as QuizItem[],
-};
-
 export function ExamFormContainer({
   courseId,
   manageCoursesId,
   examId,
   isEditMode = false,
 }: ExamFormContainerProps) {
-  const router = useRouter();
+  // State management
+  const {
+    examDetails,
+    isLoadingExam,
+    examTitle,
+    examDescription,
+    examDuration,
+    examPassingScore,
+    examStartTime,
+    examEndTime,
+    examMaxAttempts,
+    questionsToShow,
+    isRandomOrder,
+    isRandomSelection,
+    quizItems,
+    setExamTitle,
+    setExamDescription,
+    setExamDuration,
+    setExamPassingScore,
+    setExamStartTime,
+    setExamEndTime,
+    setExamMaxAttempts,
+    setQuestionsToShow,
+    setIsRandomOrder,
+    setIsRandomSelection,
+    setQuizItems,
+    addQuizQuestion,
+    updateQuizContent,
+    moveQuiz,
+    deleteQuiz,
+  } = useExamFormState({ examId, isEditMode });
 
-  // Fetch exam details if in edit mode
-  const { data: examDetails, isLoading: isLoadingExam } = useGetExamDetails(
-    isEditMode && examId ? examId : ""
-  );
-
-  // Derive initial values from API data
-  const initialValues = useMemo(() => {
-    if (isEditMode && examDetails) {
-      return {
-        title: examDetails.title,
-        description: examDetails.description,
-        duration: examDetails.duration,
-        passingScore: examDetails.passing_score,
-        startTime: formatDateTimeLocal(examDetails.start_time),
-        endTime: formatDateTimeLocal(examDetails.end_time),
-        maxAttempts: examDetails.max_attempts,
-        questionsToShow: examDetails.questions_to_show,
-        isRandomOrder: examDetails.is_random_order,
-        isRandomSelection: examDetails.is_random_selection,
-        quizItems: transformApiQuestionsToQuizItems(examDetails),
-      };
-    }
-    return DEFAULT_EXAM_STATE;
-  }, [isEditMode, examDetails]);
-
-  // Track if user has started editing (to stop syncing with server)
-  const [hasSyncedWithServer, setHasSyncedWithServer] = useState(false);
-
-  // Exam Metadata - local state for user edits
-  const [localExamTitle, setLocalExamTitle] = useState("");
-  const [localExamDescription, setLocalExamDescription] = useState("");
-  const [localExamDuration, setLocalExamDuration] = useState(120);
-  const [localExamPassingScore, setLocalExamPassingScore] = useState(70.0);
-  const [localExamStartTime, setLocalExamStartTime] = useState("");
-  const [localExamEndTime, setLocalExamEndTime] = useState("");
-  const [localExamMaxAttempts, setLocalExamMaxAttempts] = useState(2);
-  const [localQuestionsToShow, setLocalQuestionsToShow] = useState(5);
-  const [localIsRandomOrder, setLocalIsRandomOrder] = useState(false);
-  const [localIsRandomSelection, setLocalIsRandomSelection] = useState(false);
-  const [localQuizItems, setLocalQuizItems] = useState<QuizItem[]>([]);
-
-  // Effective values: use server data until user starts editing
-  const examTitle = hasSyncedWithServer ? localExamTitle : initialValues.title;
-  const examDescription = hasSyncedWithServer ? localExamDescription : initialValues.description;
-  const examDuration = hasSyncedWithServer ? localExamDuration : initialValues.duration;
-  const examPassingScore = hasSyncedWithServer ? localExamPassingScore : initialValues.passingScore;
-  const examStartTime = hasSyncedWithServer ? localExamStartTime : initialValues.startTime;
-  const examEndTime = hasSyncedWithServer ? localExamEndTime : initialValues.endTime;
-  const examMaxAttempts = hasSyncedWithServer ? localExamMaxAttempts : initialValues.maxAttempts;
-  const questionsToShow = hasSyncedWithServer
-    ? localQuestionsToShow
-    : initialValues.questionsToShow;
-  const isRandomOrder = hasSyncedWithServer ? localIsRandomOrder : initialValues.isRandomOrder;
-  const isRandomSelection = hasSyncedWithServer
-    ? localIsRandomSelection
-    : initialValues.isRandomSelection;
-  const quizItems = hasSyncedWithServer ? localQuizItems : initialValues.quizItems;
-
-  // Helper to sync with server and then update local state
-  const syncAndUpdate = useCallback(
-    <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => {
-      if (!hasSyncedWithServer) {
-        setHasSyncedWithServer(true);
-        // For edit mode, sync all local state with server data first
-        if (isEditMode && examDetails) {
-          setLocalExamTitle(initialValues.title);
-          setLocalExamDescription(initialValues.description);
-          setLocalExamDuration(initialValues.duration);
-          setLocalExamPassingScore(initialValues.passingScore);
-          setLocalExamStartTime(initialValues.startTime);
-          setLocalExamEndTime(initialValues.endTime);
-          setLocalExamMaxAttempts(initialValues.maxAttempts);
-          setLocalQuestionsToShow(initialValues.questionsToShow);
-          setLocalIsRandomOrder(initialValues.isRandomOrder);
-          setLocalIsRandomSelection(initialValues.isRandomSelection);
-          setLocalQuizItems(initialValues.quizItems);
-        }
-      }
-      setter(value);
-    },
-    [hasSyncedWithServer, isEditMode, examDetails, initialValues]
-  );
-
-  // Wrapped setters that sync first
-  const setExamTitle = useCallback(
-    (v: string) => syncAndUpdate(setLocalExamTitle, v),
-    [syncAndUpdate]
-  );
-  const setExamDescription = useCallback(
-    (v: string) => syncAndUpdate(setLocalExamDescription, v),
-    [syncAndUpdate]
-  );
-  const setExamDuration = useCallback(
-    (v: number) => syncAndUpdate(setLocalExamDuration, v),
-    [syncAndUpdate]
-  );
-  const setExamPassingScore = useCallback(
-    (v: number) => syncAndUpdate(setLocalExamPassingScore, v),
-    [syncAndUpdate]
-  );
-  const setExamStartTime = useCallback(
-    (v: string) => syncAndUpdate(setLocalExamStartTime, v),
-    [syncAndUpdate]
-  );
-  const setExamEndTime = useCallback(
-    (v: string) => syncAndUpdate(setLocalExamEndTime, v),
-    [syncAndUpdate]
-  );
-  const setExamMaxAttempts = useCallback(
-    (v: number) => syncAndUpdate(setLocalExamMaxAttempts, v),
-    [syncAndUpdate]
-  );
-  const setQuestionsToShow = useCallback(
-    (v: number) => syncAndUpdate(setLocalQuestionsToShow, v),
-    [syncAndUpdate]
-  );
-  const setIsRandomOrder = useCallback(
-    (v: boolean) => syncAndUpdate(setLocalIsRandomOrder, v),
-    [syncAndUpdate]
-  );
-  const setIsRandomSelection = useCallback(
-    (v: boolean) => syncAndUpdate(setLocalIsRandomSelection, v),
-    [syncAndUpdate]
-  );
-  const setQuizItems = useCallback(
-    (v: QuizItem[] | ((prev: QuizItem[]) => QuizItem[])) => {
-      if (!hasSyncedWithServer) {
-        setHasSyncedWithServer(true);
-        // For edit mode, sync all local state with server data first
-        if (isEditMode && examDetails) {
-          setLocalExamTitle(initialValues.title);
-          setLocalExamDescription(initialValues.description);
-          setLocalExamDuration(initialValues.duration);
-          setLocalExamPassingScore(initialValues.passingScore);
-          setLocalExamStartTime(initialValues.startTime);
-          setLocalExamEndTime(initialValues.endTime);
-          setLocalExamMaxAttempts(initialValues.maxAttempts);
-          setLocalQuestionsToShow(initialValues.questionsToShow);
-          setLocalIsRandomOrder(initialValues.isRandomOrder);
-          setLocalIsRandomSelection(initialValues.isRandomSelection);
-          setLocalQuizItems(initialValues.quizItems);
-        }
-      }
-      setLocalQuizItems(v);
-    },
-    [hasSyncedWithServer, isEditMode, examDetails, initialValues]
-  );
-
-  const [error, setError] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isUpdatingQuestions, setIsUpdatingQuestions] = useState(false);
-  const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
-
-  // Hooks
-  const { createExam, isCreating, progress } = useCreateExam(courseId);
-  const updateExamMutation = useUpdateExam(examId || "");
-  const deleteExamMutation = useDeleteExam();
-
-  const addQuizQuestion = useCallback(() => {
-    const newQuiz = generateDefaultQuizItem("single");
-    setQuizItems((prev) => [...prev, newQuiz]);
-  }, [setQuizItems]);
-
-  const updateQuizContent = useCallback(
-    (id: string, data: QuizData) => {
-      setQuizItems((prev) => prev.map((item) => (item.id === id ? { ...item, data } : item)));
-    },
-    [setQuizItems]
-  );
-
-  const moveQuiz = useCallback(
-    (index: number, direction: "up" | "down") => {
-      setQuizItems((prev) => {
-        const newItems = [...prev];
-        const targetIndex = direction === "up" ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= newItems.length) return prev;
-        [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
-        return newItems;
-      });
-    },
-    [setQuizItems]
-  );
-
-  const deleteQuiz = useCallback(
-    (id: string) => {
-      setQuizItems((prev) => prev.filter((item) => item.id !== id));
-    },
-    [setQuizItems]
-  );
-
-  // Mutation for updating individual question
-  interface UpdateQuestionData {
-    question_text: string;
-    question_type: "single" | "multiple" | "matching";
-    difficulty: "easy" | "medium" | "hard";
-    explanation: string;
-    options?: Array<{
-      text: string;
-      is_correct: boolean;
-    }>;
-    pairs?: Array<{
-      left: string;
-      right: string;
-    }>;
-  }
-
-  const updateQuestionMutation = useMutation({
-    mutationFn: async ({ questionId, data }: { questionId: string; data: UpdateQuestionData }) => {
-      const response = await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(questionId), data);
-      return response.data;
-    },
+  // Handlers
+  const {
+    error,
+    showDeleteConfirm,
+    isLoading,
+    isCreating,
+    isUpdatingQuestions,
+    progress,
+    setShowDeleteConfirm,
+    handleSave,
+    handleDeleteExam,
+    handleDeleteQuestion,
+    deleteExamMutation,
+  } = useExamFormHandlers({
+    courseId,
+    manageCoursesId,
+    examId,
+    isEditMode,
+    quizItems,
+    examTitle,
+    examDescription,
+    examDuration,
+    examPassingScore,
+    examStartTime,
+    examEndTime,
+    examMaxAttempts,
+    questionsToShow,
+    isRandomOrder,
+    isRandomSelection,
+    deleteQuiz,
   });
-
-  // Mutation for deleting individual question
-  const deleteQuestionMutation = useMutation({
-    mutationFn: async (questionId: string) => {
-      const response = await api.delete(API_ENDPOINTS.TEACHER.DELETE_QUESTION(questionId));
-      return response.data;
-    },
-  });
-
-  // Helper to check if ID is a valid UUID (existing question from server)
-  const isValidUUID = (id: string) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id);
-  };
-
-  const handleDeleteQuestion = useCallback(
-    (id: string) => {
-      // If in edit mode and it's an existing question (has valid UUID), show modal
-      if (isEditMode && isValidUUID(id)) {
-        setQuestionToDelete(id);
-      } else {
-        // Just remove from local state for new questions
-        deleteQuiz(id);
-      }
-    },
-    [isEditMode, deleteQuiz]
-  );
-
-  const confirmDeleteQuestion = async () => {
-    if (!questionToDelete) return;
-
-    try {
-      await deleteQuestionMutation.mutateAsync(questionToDelete);
-      deleteQuiz(questionToDelete);
-      setQuestionToDelete(null);
-    } catch (err) {
-      console.error("Failed to delete question:", err);
-      setError("Gagal menghapus soal. Silakan coba lagi.");
-    }
-  };
-
-  const handleSave = async () => {
-    // Validation
-    if (!examTitle.trim()) {
-      setError("Judul exam harus diisi");
-      return;
-    }
-
-    if (!examDescription.trim()) {
-      setError("Deskripsi exam harus diisi");
-      return;
-    }
-
-    if (!examStartTime) {
-      setError("Waktu mulai harus diisi");
-      return;
-    }
-
-    if (!examEndTime) {
-      setError("Waktu selesai harus diisi");
-      return;
-    }
-
-    if (new Date(examStartTime) >= new Date(examEndTime)) {
-      setError("Waktu selesai harus setelah waktu mulai");
-      return;
-    }
-
-    if (quizItems.length === 0) {
-      setError("Exam harus memiliki minimal 1 pertanyaan");
-      return;
-    }
-
-    setError(null);
-
-    if (isEditMode && examId) {
-      // Update exam
-      try {
-        setIsUpdatingQuestions(true);
-
-        // Update exam metadata first
-        await updateExamMutation.mutateAsync({
-          title: examTitle,
-          description: examDescription,
-          duration: examDuration,
-          passing_score: examPassingScore,
-          start_time: new Date(examStartTime).toISOString(),
-          end_time: new Date(examEndTime).toISOString(),
-          max_attempts: examMaxAttempts,
-          questions_to_show: questionsToShow,
-          is_random_order: isRandomOrder,
-          is_random_selection: isRandomSelection,
-        });
-
-        // Update all existing questions (only those that have valid UUID format - existing questions from server)
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        const existingQuestions = quizItems.filter((item) => uuidRegex.test(item.id));
-
-        const updatePromises = existingQuestions.map((item) => {
-          const requestData = {
-            question_text: item.data.question,
-            question_type: item.data.questionType,
-            difficulty: item.data.difficulty,
-            explanation: "",
-            options:
-              item.data.options?.map((opt) => ({
-                text: opt.text,
-                is_correct: opt.isCorrect,
-              })) || [],
-          };
-
-          return updateQuestionMutation.mutateAsync({
-            questionId: item.id,
-            data: requestData,
-          });
-        });
-
-        await Promise.all(updatePromises);
-
-        console.log("Exam and questions updated successfully");
-        router.push(`/dashboard-admin/courses/${courseId}`);
-      } catch (err) {
-        console.error("Failed to update exam:", err);
-        setError("Gagal mengupdate exam");
-      } finally {
-        setIsUpdatingQuestions(false);
-      }
-      return;
-    }
-
-    // Prepare exam data
-    const examData: CreateExamRequest = {
-      title: examTitle,
-      description: examDescription,
-      duration: examDuration,
-      passing_score: examPassingScore,
-      start_time: new Date(examStartTime).toISOString(),
-      end_time: new Date(examEndTime).toISOString(),
-      max_attempts: examMaxAttempts,
-      questions_to_show: questionsToShow,
-      is_random_order: isRandomOrder,
-      is_random_selection: isRandomSelection,
-    };
-
-    const result = await createExam(examData, quizItems);
-
-    if (result.success) {
-      console.log("Exam created successfully with ID:", result.examId);
-      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
-    } else {
-      setError(result.error || "Gagal membuat exam");
-      if (result.failedQuestions && result.failedQuestions.length > 0) {
-        console.error("Failed questions indices:", result.failedQuestions);
-      }
-    }
-  };
-
-  const handleDeleteExam = async () => {
-    if (!examId) return;
-
-    try {
-      await deleteExamMutation.mutateAsync(examId);
-      console.log("Exam deleted successfully");
-      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
-    } catch (err) {
-      console.error("Failed to delete exam:", err);
-      setError("Gagal menghapus exam");
-      setShowDeleteConfirm(false);
-    }
-  };
 
   // Show loading state when fetching exam details
   if (isEditMode && isLoadingExam) {
@@ -486,6 +104,7 @@ export function ExamFormContainer({
 
   return (
     <div className="min-h-screen">
+      {/* Header */}
       <div className="sticky top-0 z-10">
         <div className="mb-8 flex items-center gap-4">
           <Link
@@ -536,168 +155,51 @@ export function ExamFormContainer({
         )}
 
         {/* Quiz Questions Section */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white">Soal Exam</h2>
+        <QuizQuestionsSection
+          quizItems={quizItems}
+          onAddQuestion={addQuizQuestion}
+          onUpdateContent={updateQuizContent}
+          onMoveQuiz={moveQuiz}
+          onDeleteQuestion={handleDeleteQuestion}
+          onClearAll={() => setQuizItems([])}
+        />
 
-          <div className="space-y-4">
-            {quizItems.map((item, index) => (
-              <QuizBox
-                key={item.id}
-                id={item.id}
-                data={item.data}
-                onChange={updateQuizContent}
-                onMoveUp={() => moveQuiz(index, "up")}
-                onMoveDown={() => moveQuiz(index, "down")}
-                onDelete={() => handleDeleteQuestion(item.id)}
-                canMoveUp={index > 0}
-                canMoveDown={index < quizItems.length - 1}
-              />
-            ))}
-          </div>
+        {/* Error Message */}
+        {error && <div className="mt-6 rounded-lg bg-red-500/20 p-4 text-red-200">{error}</div>}
 
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg p-2 transition-all"
-              title="Hapus semua"
-              onClick={() => setQuizItems([])}
-            >
-              <Trash2 className="hover:text-gray h-5 w-5 text-white" />
-            </button>
-            <button
-              type="button"
-              onClick={addQuizQuestion}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/50 bg-transparent px-6 py-3 text-white transition-all hover:border-white hover:bg-white/20"
-            >
-              <Plus className="h-5 w-5" />
-              <span className="font-medium">Tambah Pertanyaan</span>
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && <div className="rounded-lg bg-red-500/20 p-4 text-red-200">{error}</div>}
-
-          {/* Progress Indicator */}
-          {isCreating && (
+        {/* Progress Indicator */}
+        {isCreating && (
+          <div className="mt-6">
             <ExamProgressIndicator
               stage={progress.stage}
               current={progress.current}
               total={progress.total}
             />
-          )}
-
-          {/* Submit Button */}
-          <div className="flex gap-3">
-            {isEditMode && examId && (
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={
-                  isCreating ||
-                  updateExamMutation.isPending ||
-                  deleteExamMutation.isPending ||
-                  deleteQuestionMutation.isPending ||
-                  isUpdatingQuestions
-                }
-                className="border-white text-white hover:!border-none hover:!bg-red-500 hover:text-white disabled:opacity-50"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Hapus Exam
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              onClick={handleSave}
-              disabled={
-                isCreating ||
-                updateExamMutation.isPending ||
-                deleteExamMutation.isPending ||
-                deleteQuestionMutation.isPending ||
-                isUpdatingQuestions
-              }
-              className="hover:!bg-primary flex-1 hover:text-white disabled:opacity-50"
-            >
-              {isCreating
-                ? "Menyimpan..."
-                : updateExamMutation.isPending || isUpdatingQuestions
-                  ? "Mengupdate..."
-                  : isEditMode
-                    ? "Update Exam"
-                    : "Simpan Exam"}
-            </Button>
           </div>
+        )}
+
+        {/* Submit Button */}
+        <div className="mt-6">
+          <ExamFormActions
+            isEditMode={isEditMode}
+            isLoading={isLoading}
+            isCreating={isCreating}
+            isUpdating={isUpdatingQuestions}
+            onSave={handleSave}
+            onDelete={isEditMode && examId ? () => setShowDeleteConfirm(true) : undefined}
+          />
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="mb-2 text-lg font-semibold text-neutral-800">Hapus Exam?</h3>
-            <p className="mb-6 text-neutral-600">
-              Apakah Anda yakin ingin menghapus exam ini? Tindakan ini tidak dapat dibatalkan.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={deleteExamMutation.isPending}
-                className="rounded-lg px-4 py-2 text-neutral-600 transition-colors hover:bg-neutral-100"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleDeleteExam}
-                disabled={deleteExamMutation.isPending}
-                className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-              >
-                {deleteExamMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Menghapus...
-                  </>
-                ) : (
-                  "Hapus"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Question Confirmation Modal */}
-      {questionToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="mb-2 text-lg font-semibold text-neutral-800">Hapus Soal?</h3>
-            <p className="mb-6 text-neutral-600">
-              Apakah Anda yakin ingin menghapus soal ini? Tindakan ini tidak dapat dibatalkan.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setQuestionToDelete(null)}
-                disabled={deleteQuestionMutation.isPending}
-                className="rounded-lg px-4 py-2 text-neutral-600 transition-colors hover:bg-neutral-100"
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmDeleteQuestion}
-                disabled={deleteQuestionMutation.isPending}
-                className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-              >
-                {deleteQuestionMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Menghapus...
-                  </>
-                ) : (
-                  "Hapus"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Exam Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteExam}
+        title="Hapus Exam?"
+        message="Apakah Anda yakin ingin menghapus exam ini? Tindakan ini tidak dapat dibatalkan."
+        isLoading={deleteExamMutation.isPending}
+      />
     </div>
   );
 }
