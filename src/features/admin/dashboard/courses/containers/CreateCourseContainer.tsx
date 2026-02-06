@@ -81,8 +81,7 @@ export function CreateCourseContainer() {
           showToast("Course berhasil ditambahkan!", "success");
         },
         onError: (error) => {
-          const message =
-            error.response?.data?.message || "Gagal menambahkan course";
+          const message = error.response?.data?.message || "Gagal menambahkan course";
           showToast(message, "error");
         },
       }
@@ -90,28 +89,26 @@ export function CreateCourseContainer() {
   };
 
   return (
-    <div className="min-h-screen ">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex items-center gap-4">
           <Link
             href="/dashboard-admin/courses"
-            className="w-10 h-10 bg-[#FF9D00] rounded-full flex items-center justify-center text-white hover:bg-[#E68E00] transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF9D00] text-white transition-colors hover:bg-[#E68E00]"
           >
             <ChevronLeft size={24} />
           </Link>
-          <span className="text-white text-lg">Course/Course Details</span>
+          <span className="text-lg text-white">Course/Course Details</span>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-8">Tambah Kelas</h1>
+        <h1 className="mb-8 text-3xl font-bold text-white">Tambah Kelas</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
+        <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
           <CourseInput
             label="Nama Courses"
             placeholder="Course 1"
             value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             required
           />
 
@@ -120,9 +117,7 @@ export function CreateCourseContainer() {
             placeholder="Lorem ipsum dolor sit amet..."
             rows={4}
             value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             required
           />
 
@@ -136,7 +131,7 @@ export function CreateCourseContainer() {
 
             {thumbnailPreview && (
               <div className="relative mt-4 w-full max-w-md">
-                <div className="relative aspect-video rounded-lg overflow-hidden border border-white/20">
+                <div className="relative aspect-video overflow-hidden rounded-lg border border-white/20">
                   <Image
                     src={thumbnailPreview}
                     alt="Thumbnail preview"
@@ -147,13 +142,11 @@ export function CreateCourseContainer() {
                 <button
                   type="button"
                   onClick={handleRemoveThumbnail}
-                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-lg"
+                  className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-colors hover:bg-red-600"
                 >
                   <X size={16} />
                 </button>
-                <p className="mt-2 text-sm text-white/60">
-                  {thumbnailFile?.name}
-                </p>
+                <p className="mt-2 text-sm text-white/60">{thumbnailFile?.name}</p>
               </div>
             )}
           </div>
@@ -162,7 +155,7 @@ export function CreateCourseContainer() {
             <button
               type="submit"
               disabled={isPending}
-              className="flex items-center gap-2 px-6 py-3 bg-[#D77211] text-white rounded-full font-medium border border-white hover:bg-[#C06010] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex cursor-pointer items-center gap-2 rounded-full border border-white bg-[#D77211] px-6 py-3 font-medium text-white transition-all hover:bg-[#C06010] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? (
                 <>

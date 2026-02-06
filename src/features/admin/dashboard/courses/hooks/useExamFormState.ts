@@ -18,7 +18,7 @@ const DEFAULT_EXAM_STATE = {
   startTime: "",
   endTime: "",
   maxAttempts: 2,
-  questionsToShow: 5,
+  questionsToShow: 0, // Will be set to total questions count
   isRandomOrder: false,
   isRandomSelection: false,
   quizItems: [] as QuizItem[],
@@ -38,6 +38,11 @@ export function useExamFormState({ examId, isEditMode }: UseExamFormStateProps) 
   // Derive initial values from API data
   const initialValues = useMemo(() => {
     if (isEditMode && examDetails) {
+      const questions = transformApiQuestionsToQuizItems(examDetails);
+      // Default questionsToShow to total questions count if not set or is 0
+      const questionsToShowValue =
+        examDetails.questions_to_show > 0 ? examDetails.questions_to_show : questions.length;
+
       return {
         title: examDetails.title,
         description: examDetails.description,
@@ -46,10 +51,10 @@ export function useExamFormState({ examId, isEditMode }: UseExamFormStateProps) 
         startTime: formatDateTimeLocal(examDetails.start_time),
         endTime: formatDateTimeLocal(examDetails.end_time),
         maxAttempts: examDetails.max_attempts,
-        questionsToShow: examDetails.questions_to_show,
+        questionsToShow: questionsToShowValue,
         isRandomOrder: examDetails.is_random_order,
         isRandomSelection: examDetails.is_random_selection,
-        quizItems: transformApiQuestionsToQuizItems(examDetails),
+        quizItems: questions,
       };
     }
     return DEFAULT_EXAM_STATE;
@@ -79,14 +84,17 @@ export function useExamFormState({ examId, isEditMode }: UseExamFormStateProps) 
   const examStartTime = hasSyncedWithServer ? localExamStartTime : initialValues.startTime;
   const examEndTime = hasSyncedWithServer ? localExamEndTime : initialValues.endTime;
   const examMaxAttempts = hasSyncedWithServer ? localExamMaxAttempts : initialValues.maxAttempts;
-  const questionsToShow = hasSyncedWithServer
-    ? localQuestionsToShow
-    : initialValues.questionsToShow;
   const isRandomOrder = hasSyncedWithServer ? localIsRandomOrder : initialValues.isRandomOrder;
   const isRandomSelection = hasSyncedWithServer
     ? localIsRandomSelection
     : initialValues.isRandomSelection;
   const quizItems = hasSyncedWithServer ? localQuizItems : initialValues.quizItems;
+
+  // questionsToShow defaults to total questions count if 0 or not set
+  const rawQuestionsToShow = hasSyncedWithServer
+    ? localQuestionsToShow
+    : initialValues.questionsToShow;
+  const questionsToShow = rawQuestionsToShow > 0 ? rawQuestionsToShow : quizItems.length;
 
   // Helper to sync with server and then update local state
   const syncAndUpdate = useCallback(
