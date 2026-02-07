@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ExamHeader } from "../components/ExamHeader";
 import { ExamTimerBar } from "../components/ExamTimerBar";
 import { QuestionCard } from "../components/QuestionCard";
 import { QuestionNavigation } from "../components/QuestionNavigation";
 import { ExamFooter } from "../components/ExamFooter";
 import { ExamSummary } from "../components/ExamSummary";
-import { AlertTriangle, CheckCircle2, Maximize } from "lucide-react";
+import { ExamSkeleton } from "../components/ExamSkeleton";
+import { ExamSuccessScreen } from "../components/ExamSuccessScreen";
+import { ViolationWarning } from "../components/ViolationWarning";
+import { AlertTriangle, Maximize } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
@@ -18,19 +21,18 @@ import {
   setCurrentIndex,
   setAnswer,
   toggleFlag,
-  setLives,
-  decrementTime,
   finishExam,
 } from "@/shared/store/slices/examSlice";
 import { examService } from "../services/examService";
 import { dashboardService } from "@/features/user/dashboard/services/dashboardService";
+import { useRouter } from "next/navigation";
+
+// Custom hooks for cleaner code
+import { useExamTimer, useFullscreenGuard, useExamPersistence } from "../hooks";
 
 interface ExamContainerProps {
   stream: MediaStream | null;
 }
-
-import { useRouter } from "next/navigation";
-import Loading from "@/app/loading";
 
 export function ExamContainer({ stream }: ExamContainerProps) {
   const dispatch = useAppDispatch();
@@ -38,21 +40,19 @@ export function ExamContainer({ stream }: ExamContainerProps) {
 
   const {
     view,
-    currentQuestionIndex, // Updated name
+    currentQuestionIndex,
     answers,
     flaggedQuestions,
     lives,
     maxLives,
-    timeRemaining,
     isInitialized,
-    examData, // Use real data
+    examData,
   } = useAppSelector((state) => state.exam);
 
-  // Fullscreen state tracking
-  const [showFullscreenOverlay, setShowFullscreenOverlay] = useState(false);
-
-  // Track if user has interacted/started to prevent initial penalty
-  const [hasInteracted, setHasInteracted] = useState(false);
+  // Use custom hooks
+  const { timeRemaining } = useExamTimer();
+  const { showOverlay, enterFullscreen } = useFullscreenGuard({ enabled: view !== "finished" });
+  const { clearCache } = useExamPersistence();
 
   // Hydrate exam data on refresh
   useEffect(() => {
@@ -63,117 +63,25 @@ export function ExamContainer({ stream }: ExamContainerProps) {
       if (examId) {
         const fetchExam = async () => {
           try {
+            console.log("[ExamContainer] Fetching/Resuming exam with ID:", examId);
             const response = await dashboardService.resumeExam(examId);
+            console.log("[ExamContainer] Exam data fetched successfully", response);
             const payload = examService.transformExamToReduxPayload(response);
             dispatch(initializeExam(payload));
           } catch (error) {
-            console.error("Failed to restore exam session", error);
-            // Handle error (e.g., redirect to dashboard or show error)
+            console.error("[ExamContainer] Failed to restore exam session", error);
           }
         };
         fetchExam();
+      } else {
+        console.warn("[ExamContainer] No exam code found in URL params");
       }
     }
   }, [dispatch, isInitialized, examData]);
 
-  // Sync flags to LocalStorage
-  useEffect(() => {
-    if (examData?.exam_id && flaggedQuestions) {
-      localStorage.setItem(`exam_flags_${examData.exam_id}`, JSON.stringify(flaggedQuestions));
-    }
-  }, [flaggedQuestions, examData?.exam_id]);
-
-  useEffect(() => {
-    if (view === "finished") return;
-
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
-        setShowFullscreenOverlay(true);
-        // Only enforce fullscreen, do not penalize here.
-        // Penalty is strictly for visibility change (tab switch).
-      } else if (document.fullscreenElement) {
-        setShowFullscreenOverlay(false);
-        setHasInteracted(true);
-      }
-    };
-
-    const handleVisibilityChange = async () => {
-      if (document.hidden && hasInteracted && examData?.attempt_id) {
-        // Tab Switched -> Record Violation
-        try {
-          // Optimistic update? No, let's wait for API to be accurate.
-          const result = await examService.recordTabSwitch(examData.attempt_id);
-
-          if (result) {
-            dispatch(setLives(result.lives_remaining));
-
-            // Show warning toast if available and not disqualified
-            if (result.warning_message && !result.is_disqualified) {
-              // Using built-in alert/toast or custom UI?
-              // Since we don't have a global toast setup visible, let's use a temporary console log or simple alert for now
-              // Better: Use a small local state to show a "Toast" component
-              console.warn(result.warning_message);
-              // alert(result.warning_message); // Alert pauses execution, bad for UX.
-              // TODO: Implement proper toast. For now, we rely on the Red Flash or the overlay.
-            }
-
-            if (result.is_disqualified) {
-              // Handle disqualification if needed, usually lives <= 0 handles it
-            }
-          }
-        } catch (e) {
-          console.error("Failed to record tab switch", e);
-        }
-      }
-    };
-
-    // Polling backup
-    const fullscreenPolling = setInterval(() => {
-      if (!document.fullscreenElement && !showFullscreenOverlay && view !== "intro") {
-        setShowFullscreenOverlay(true);
-      }
-    }, 1000);
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearInterval(fullscreenPolling);
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [view, showFullscreenOverlay, hasInteracted, examData?.attempt_id, dispatch]);
-
-  useEffect(() => {
-    if (timeRemaining <= 0 || lives <= 0 || view === "finished") return;
-
-    const timer = setInterval(() => {
-      dispatch(decrementTime());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeRemaining, lives, view, dispatch]);
-
   // Loading / Hydrating UI
   if (!isInitialized || !examData) {
-    return (
-      <div className="relative flex min-h-screen flex-col gap-6 overflow-hidden p-6">
-        {/* Blurred Background Skeleton */}
-        <div className="pointer-events-none absolute inset-0 z-0 opacity-50 blur-xl">
-          <div className="flex h-full flex-col gap-6 p-6">
-            <div className="h-20 w-full animate-pulse rounded-2xl bg-white/10"></div>
-            <div className="h-16 w-full animate-pulse rounded-2xl bg-white/10"></div>
-            <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-4">
-              <div className="h-full animate-pulse rounded-3xl bg-white/10 lg:col-span-3"></div>
-              <div className="h-64 animate-pulse rounded-2xl bg-white/10"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Loading Spinner Overlay */}
-        <Loading />
-      </div>
-    );
+    return <ExamSkeleton />;
   }
 
   const currentQuestion = examData.questions[currentQuestionIndex];
@@ -181,6 +89,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   const flaggedSet = new Set(flaggedQuestions); // flaggedQuestions is string[]
 
   const handleNavigate = (index: number) => {
+    console.log("[ExamContainer] Navigating to question index:", index);
     dispatch(setCurrentIndex(index));
     if (view === "summary") {
       dispatch(setView("exam"));
@@ -189,64 +98,86 @@ export function ExamContainer({ stream }: ExamContainerProps) {
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
-      dispatch(setCurrentIndex(currentQuestionIndex - 1));
+      handleNavigate(currentQuestionIndex - 1);
     }
   };
 
   const handleNext = () => {
     if (currentQuestionIndex < examData.questions.length - 1) {
-      dispatch(setCurrentIndex(currentQuestionIndex + 1));
+      handleNavigate(currentQuestionIndex + 1);
     }
   };
 
   const handleSelectAnswer = async (answer: QuestionAnswer) => {
+    console.log("[ExamContainer] Answer selected:", { questionId: currentQuestionId, answer });
     dispatch(setAnswer({ questionId: currentQuestionId, answer }));
 
     // Background save to API
     if (examData?.attempt_id) {
-      await examService.saveAnswer(examData.attempt_id, currentQuestionId, answer);
+      try {
+        await examService.saveAnswer(examData.attempt_id, currentQuestionId, answer);
+        console.log("[ExamContainer] Answer saved to API successfully");
+      } catch (error) {
+        console.error("[ExamContainer] Failed to save answer to API", error);
+      }
+    }
+  };
+
+  const handleClearAnswer = async () => {
+    console.log("[ExamContainer] Clearing answer for:", currentQuestionId);
+
+    // 1. Update local state immediately
+    dispatch(setAnswer({ questionId: currentQuestionId, answer: null }));
+
+    // 2. Call API to clear answer
+    if (examData?.attempt_id) {
+      try {
+        await examService.clearAnswer(examData.attempt_id, currentQuestionId);
+        console.log("[ExamContainer] Answer cleared from API successfully");
+      } catch (error) {
+        console.error("[ExamContainer] Failed to clear answer from API", error);
+        // Optional: We could revert state here if needed, but for now we trust the optimistic update
+      }
     }
   };
 
   const handleToggleFlag = () => {
+    console.log("[ExamContainer] Toggling flag for question:", currentQuestionId);
     dispatch(toggleFlag(currentQuestionId));
   };
 
   // ... rest of the handlers ...
+
+  // (Assuming handleFinishAttempt, handleBackToExam, handleConfirmSubmit are here as before)
   const handleFinishAttempt = () => {
+    console.log("[ExamContainer] Finishing attempt, viewing summary");
     dispatch(setView("summary"));
   };
 
   const handleBackToExam = () => {
+    console.log("[ExamContainer] Returning to exam from summary");
     dispatch(setView("exam"));
   };
 
   const handleConfirmSubmit = async () => {
     if (!examData?.attempt_id) return;
 
-    console.log("Submitting exam...", { attemptId: examData.attempt_id });
+    console.log("[ExamContainer] Submitting exam...", { attemptId: examData.attempt_id });
 
     try {
       const result = await examService.submitExam(examData.attempt_id);
-      console.log("Exam submitted successfully", result);
+      console.log("[ExamContainer] Exam submitted successfully", result);
 
+      // Clear cached data using hook
       if (examData.exam_id) {
-        localStorage.removeItem(`exam_flags_${examData.exam_id}`);
+        clearCache(examData.exam_id);
       }
 
       dispatch(finishExam());
 
       router.replace("/dashboard");
     } catch (error) {
-      console.error("Failed to submit exam", error);
-    }
-  };
-
-  const handleReenterFullscreen = async () => {
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch (err) {
-      console.error("Failed to enter fullscreen:", err);
+      console.error("[ExamContainer] Failed to submit exam", error);
     }
   };
 
@@ -272,21 +203,11 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   if (view === "finished") {
     const answeredCount = Object.keys(answers).length;
     return (
-      <div className="flex min-h-screen items-center justify-center p-8">
-        <div className="max-w-lg rounded-3xl border border-green-500/30 bg-green-500/10 p-10 text-center">
-          <CheckCircle2 size={64} className="mx-auto mb-6 text-green-500" />
-          <h2 className="mb-4 text-3xl font-bold text-white">Ujian Selesai!</h2>
-          <p className="mb-2 text-lg text-white/70">Jawaban Anda telah berhasil dikumpulkan.</p>
-          <p className="mb-8 text-white/50">
-            {answeredCount} dari {examData.questions.length} soal terjawab
-          </p>
-          <Link href="/dashboard">
-            <Button variant="glow" size="lg">
-              Kembali ke Dashboard
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <ExamSuccessScreen
+        answeredCount={answeredCount}
+        totalQuestions={examData.questions.length}
+        examTitle={examData.title}
+      />
     );
   }
 
@@ -317,12 +238,13 @@ export function ExamContainer({ stream }: ExamContainerProps) {
         <div className="lg:col-span-3">
           <QuestionCard
             question={currentQuestion}
-            selectedAnswer={answers[currentQuestionId] || null} // selectedAnswer might be complex object
+            selectedAnswer={answers[currentQuestionId] || null}
             onSelectAnswer={handleSelectAnswer}
+            onClearAnswer={handleClearAnswer}
           />
         </div>
 
-        <div>
+        <div className="flex h-fit justify-center">
           <QuestionNavigation
             questions={examData.questions}
             currentIndex={currentQuestionIndex}
@@ -343,19 +265,11 @@ export function ExamContainer({ stream }: ExamContainerProps) {
         onNext={handleNext}
       />
 
-      {/* Lives Warning & Overlay (Keep same logic) */}
-      {lives < maxLives && lives > 0 && !showFullscreenOverlay && (
-        <div className="animate-fade-in fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-red-500/50 bg-red-500/90 px-6 py-3 text-white shadow-2xl">
-          <div className="flex items-center gap-3">
-            <AlertTriangle size={20} />
-            <span className="font-semibold">Perhatian! Sisa nyawa: {lives}</span>
-          </div>
-        </div>
-      )}
+      <ViolationWarning lives={lives} maxLives={maxLives} isVisible={!showOverlay} />
 
-      {showFullscreenOverlay && lives > 0 && (
+      {showOverlay && lives > 0 && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-neutral-950 p-6"
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-neutral-950 p-6"
           style={{
             position: "fixed",
             top: 0,
@@ -379,7 +293,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
             <Button
               variant="glow"
               size="lg"
-              onClick={handleReenterFullscreen}
+              onClick={enterFullscreen}
               className="w-full py-6 text-base font-semibold"
             >
               Aktifkan Fullscreen

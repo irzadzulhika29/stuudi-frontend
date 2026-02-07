@@ -36,7 +36,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
   const topbarUser = {
     name: user?.username || getDisplayName(),
-    role: user?.roleName || user?.user_type || "Participant",
     email: user?.email,
     avatar: user?.avatar,
     xp: user?.total_exp,

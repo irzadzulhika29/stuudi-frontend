@@ -6,7 +6,9 @@ export interface Course {
   enrollment_code: string;
   student_count: number;
   is_enrolled: boolean;
+  is_completed: boolean;
   progress_percentage: number;
+  enrolled_at: string;
   created_at: string;
 }
 
@@ -168,7 +170,7 @@ export interface ApiContentBlock {
 export interface ApiQuizQuestion {
   question_id: string;
   question_text: string;
-  question_type: "multiple_choice" | "true_false" | "short_answer" | "matching";
+  question_type: "multiple_choice" | "true_false" | "short_answer" | "matching" | "multiple";
   points: number;
   options?: ApiQuizOption[];
 }
@@ -197,7 +199,7 @@ export interface ContentBlock {
 export interface QuizQuestion {
   questionId: string;
   questionText: string;
-  questionType: "multiple_choice" | "true_false" | "short_answer" | "matching";
+  questionType: "multiple_choice" | "true_false" | "short_answer" | "matching" | "multiple";
   points: number;
   options: QuizOption[];
 }
@@ -206,6 +208,7 @@ export interface QuizOption {
   optionId: string;
   optionText: string;
   isCorrect?: boolean;
+  sequence?: number;
 }
 
 // Transformed type for content details (used in components)

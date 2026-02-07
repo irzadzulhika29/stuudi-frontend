@@ -11,11 +11,14 @@ import { useEnrollCourse } from "../hooks/useEnrollCourse";
 import { useUser } from "@/features/auth/shared/hooks/useUser";
 import { useCourseNavigation } from "../context/CourseNavigationContext";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 export function CoursesContainer() {
   const { clearNav } = useCourseNavigation();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const { data: user } = useUser();
   const { data, isLoading } = useMyCourses();
@@ -35,9 +38,24 @@ export function CoursesContainer() {
   }, [clearNav]);
 
   const courses = data?.courses || [];
-  const filteredCourses = searchQuery
-    ? courses.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredCourses = debouncedSearch
+    ? courses.filter((c) => c.name.toLowerCase().includes(debouncedSearch.toLowerCase()))
     : courses;
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  };
 
   return (
     <>
@@ -78,13 +96,13 @@ export function CoursesContainer() {
               placeholder="Cari kelas.."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border-2 border-white/30 bg-white/10 py-3 pr-4 pl-12 text-white placeholder-white/60 backdrop-blur-sm transition-all focus:border-white/50 focus:bg-white/15 focus:outline-none"
+              className="w-full rounded-full border border-white/10 bg-white/5 py-3 pr-4 pl-12 text-white placeholder-white/50 backdrop-blur-md transition-all focus:border-white/30 focus:bg-white/10 focus:ring-4 focus:ring-white/5 focus:outline-none"
             />
           </div>
 
           <button
             onClick={() => setShowJoinModal(true)}
-            className="bg-secondary-light hover:bg-secondary-default rounded-full p-3 text-white shadow-lg transition-colors"
+            className="flex items-center justify-center rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20 active:scale-95"
             title="Tambah Kelas"
           >
             <Plus size={24} />
@@ -92,34 +110,45 @@ export function CoursesContainer() {
         </div>
 
         {isLoading ? (
-          <CourseListSkeleton count={6} />
+          <CourseListSkeleton count={3} />
         ) : filteredCourses.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+          >
             {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.course_id}
-                id={course.course_id}
-                title={course.name}
-                thumbnail={course.image_url}
-                progress={course.progress_percentage}
-                isEnrolled={true}
-              />
+              <motion.div key={course.course_id} variants={itemVariants}>
+                <CourseCard
+                  id={course.course_id}
+                  title={course.name}
+                  thumbnail={course.image_url}
+                  description={course.description}
+                  progress={course.progress_percentage}
+                  isEnrolled={true}
+                  isCompleted={course.is_completed}
+                  enrolledAt={course.enrolled_at}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
-          <EmptyState
-            title={searchQuery ? "Tidak ditemukan" : "Belum ada kelas"}
-            description={
-              searchQuery
-                ? `Tidak ada kelas yang cocok dengan "${searchQuery}"`
-                : "Yuk tambah kelas pertamamu dengan klik tombol +"
-            }
-            actionLabel="Tambah Kelas"
-            actionIcon={<Plus size={20} />}
-            onAction={() => setShowJoinModal(true)}
-            imageSrc="/images/mascot/chiby.webp"
-            className="text-white"
-          />
+          <div className="mt-20 flex justify-center">
+            <EmptyState
+              title={searchQuery ? "Tidak ditemukan" : "Belum ada kelas"}
+              description={
+                searchQuery
+                  ? `Tidak ada kelas yang cocok dengan "${searchQuery}"`
+                  : "Yuk tambah kelas pertamamu dengan klik tombol +"
+              }
+              actionLabel="Tambah Kelas"
+              actionIcon={<Plus size={20} />}
+              onAction={() => setShowJoinModal(true)}
+              imageSrc="/images/mascot/chiby.webp"
+              className="scale-90 text-white opacity-80 transition-opacity hover:opacity-100"
+            />
+          </div>
         )}
       </div>
 

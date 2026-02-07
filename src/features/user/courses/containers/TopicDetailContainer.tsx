@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ChevronLeft, Check } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
 import { CourseInfoSidebar } from "@/features/user/courses/components/CourseInfoSidebar";
 import { useCourseTopics } from "../hooks/useCourseTopics";
@@ -16,6 +17,8 @@ interface TopicDetailContainerProps {
 }
 
 export function TopicDetailContainer({ courseId, topicId }: TopicDetailContainerProps) {
+  const searchParams = useSearchParams();
+  const openNoteId = searchParams.get("noteId") || undefined;
   const { setTopicNav } = useCourseNavigation();
   const {
     data: courseTopics,
@@ -95,6 +98,7 @@ export function TopicDetailContainer({ courseId, topicId }: TopicDetailContainer
               topicId={topicId}
               showPeople={false}
               showLastAccessed={false}
+              openNoteId={openNoteId}
             />
           </div>
 
@@ -135,6 +139,7 @@ export function TopicDetailContainer({ courseId, topicId }: TopicDetailContainer
               topicId={topicId}
               showPeople={false}
               showLastAccessed={false}
+              openNoteId={openNoteId}
             />
           </div>
         </div>

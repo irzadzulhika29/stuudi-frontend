@@ -38,7 +38,7 @@ export function QuestionNavigation({
   };
 
   return (
-    <div className="max-w-max rounded-2xl bg-white/10 p-4 backdrop-blur-md">
+    <div className="max-w-full rounded-2xl bg-white/10 p-4 backdrop-blur-md">
       <h3 className="mb-4 text-sm font-semibold text-white">Navigasi soal</h3>
 
       <div className="grid grid-cols-5 gap-2">

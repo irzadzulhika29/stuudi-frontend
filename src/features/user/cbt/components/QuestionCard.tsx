@@ -8,9 +8,15 @@ interface QuestionCardProps {
   question: ExamQuestion;
   selectedAnswer: QuestionAnswer;
   onSelectAnswer: (answer: QuestionAnswer) => void;
+  onClearAnswer: () => void;
 }
 
-export function QuestionCard({ question, selectedAnswer, onSelectAnswer }: QuestionCardProps) {
+export function QuestionCard({
+  question,
+  selectedAnswer,
+  onSelectAnswer,
+  onClearAnswer,
+}: QuestionCardProps) {
   // Map ExamQuestion to SharedQuestion
   const sharedQuestion: SharedQuestion = {
     id: question.question_id,
@@ -27,12 +33,27 @@ export function QuestionCard({ question, selectedAnswer, onSelectAnswer }: Quest
     })),
   };
 
+  const hasAnswer = selectedAnswer !== null && selectedAnswer !== undefined;
+
   return (
-    <BaseQuestionCard
-      question={sharedQuestion}
-      selectedAnswer={selectedAnswer}
-      onSelectAnswer={onSelectAnswer}
-    />
+    <div className="flex flex-col gap-4">
+      <BaseQuestionCard
+        question={sharedQuestion}
+        selectedAnswer={selectedAnswer}
+        onSelectAnswer={onSelectAnswer}
+      />
+
+      {hasAnswer && (
+        <div className="flex justify-start">
+          <button
+            onClick={onClearAnswer}
+            className="text-xs text-white/50 transition-colors hover:text-white"
+          >
+            Reset Jawaban
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
