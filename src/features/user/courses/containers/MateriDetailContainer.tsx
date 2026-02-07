@@ -124,7 +124,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
       : { current: 0, total: 100 },
   };
 
-  const renderBlock = (block: ContentBlock, index: number) => {
+  const renderBlock = (block: ContentBlock) => {
     switch (block.type) {
       case "text":
         return (
@@ -172,7 +172,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
               <QuizBlockQuestion
                 key={question.questionId}
                 question={question}
-                questionNumber={index + qIndex + 1}
+                questionNumber={qIndex + 1}
               />
             ))}
           </div>
@@ -223,7 +223,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
 
           <div className="p-5 md:p-6">
             {content.blocks.length > 0 ? (
-              content.blocks.map((block, index) => renderBlock(block, index))
+              content.blocks.map((block) => renderBlock(block))
             ) : (
               <div className="py-8 text-center text-white/50">
                 Belum ada konten pada materi ini.

@@ -34,6 +34,17 @@ export const examService = {
       return false;
     }
   },
+
+  async clearAnswer(attemptId: string, questionId: string): Promise<boolean> {
+    try {
+      await api.delete(`/student/exams-attempt/${attemptId}/questions/${questionId}`);
+      return true;
+    } catch (error) {
+      console.error("Failed to clear answer", error);
+      return false;
+    }
+  },
+
   transformExamToReduxPayload(response: ExamResumeResponse) {
     // Map response to ExamData
     const examData: ExamData = {

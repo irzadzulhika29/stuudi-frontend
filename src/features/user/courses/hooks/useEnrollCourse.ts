@@ -16,6 +16,7 @@ export const useEnrollCourse = () => {
       showToast("Berhasil mendaftar ke kelas!", "success");
       queryClient.invalidateQueries({ queryKey: ["browse-courses"] });
       queryClient.invalidateQueries({ queryKey: ["my-courses"] });
+      queryClient.invalidateQueries({ queryKey: ["enrolled-courses"] });
       router.push(`/courses/${data.course_id}`);
     },
     onError: (error: AxiosError<ApiError>) => {

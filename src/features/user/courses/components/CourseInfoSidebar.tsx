@@ -16,10 +16,12 @@ export function CourseInfoSidebar({
   totalParticipants = 0,
   lastAccessed,
   notes: initialNotes = [],
+  courseId,
   topicId,
   showPeople = true,
   showLastAccessed = true,
   readOnly = false,
+  openNoteId,
 }: CourseInfoSidebarProps) {
   const queryClient = useQueryClient();
   // Track local notes for when no topicId is present
@@ -131,6 +133,8 @@ export function CourseInfoSidebar({
         onDeleteNote={handleDeleteNote}
         level="course"
         readOnly={readOnly}
+        courseId={courseId}
+        openNoteId={openNoteId}
       />
 
       {showPeople && teachers.length > 0 && (

@@ -3,35 +3,49 @@
 import { Search, Plus } from "lucide-react";
 import { CourseCard } from "@/shared/components/courses";
 import { DashboardHeader } from "@/features/admin/dashboard/shared/components/DashboardHeader";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTeachingCourses } from "@/features/admin/dashboard/courses/hooks/useTeachingCourses";
+import { useEnrollCourse } from "@/features/user/courses/hooks/useEnrollCourse";
 import { JoinClassModal } from "@/shared/components/ui/JoinClassModal";
 import { CourseListSkeleton } from "@/features/user/courses/components/CourseListSkeleton";
+import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
 
 export function CoursesContainer() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showJoinModal, setShowJoinModal] = useState(false);
   const router = useRouter();
+  const { clearNav } = useCourseNavigation();
 
-  const { data, isLoading, isError } = useTeachingCourses();
+  const {
+    data: teachingData,
+    isLoading: isTeachingLoading,
+    isError: isTeachingError,
+  } = useTeachingCourses();
+  const { mutate: enroll, isPending: isEnrolling } = useEnrollCourse();
 
-  console.log("Teaching Courses Data:", data);
-  console.log("isLoading:", isLoading);
-  console.log("isError:", isError);
+  // Clear sidebar navigation when visiting courses list
+  useEffect(() => {
+    clearNav();
+  }, [clearNav]);
+
+  console.log("Teaching Courses Data:", teachingData);
 
   const filteredCourses = useMemo(() => {
-    const courses = data?.courses ?? [];
+    const courses = teachingData?.courses ?? [];
     if (!searchQuery.trim()) return courses;
 
     return courses.filter((course) =>
       course.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [data, searchQuery]);
+  }, [teachingData, searchQuery]);
 
   const handleJoinClass = (code: string) => {
-    console.log("Admin joining class with code:", code);
-    setShowJoinModal(false);
+    enroll(code, {
+      onSuccess: () => {
+        setShowJoinModal(false);
+      },
+    });
   };
 
   const handleAddClass = () => {
@@ -67,16 +81,19 @@ export function CoursesContainer() {
           </button>
         </div>
 
-        {isLoading && <CourseListSkeleton count={6} />}
+        {/* Teaching Courses Section */}
+        <h2 className="mb-4 text-xl font-bold text-white">Kelas Mengajar</h2>
 
-        {isError && (
-          <div className="rounded-xl bg-red-500/20 p-4 text-center text-white">
+        {isTeachingLoading && <CourseListSkeleton count={3} />}
+
+        {isTeachingError && (
+          <div className="mb-8 rounded-xl bg-red-500/20 p-4 text-center text-white">
             Gagal memuat data courses. Silakan coba lagi.
           </div>
         )}
 
-        {!isLoading && !isError && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {!isTeachingLoading && !isTeachingError && (
+          <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
                 <CourseCard
@@ -84,14 +101,19 @@ export function CoursesContainer() {
                   id={course.course_id}
                   title={course.name}
                   thumbnail={course.image_url}
+                  description={course.description}
                   studentCount={course.student_count}
                   progress={0}
                   basePath="/dashboard-admin/courses"
+                  showUnenrollMenu={true}
+                  isEnrolled={true}
                 />
               ))
             ) : (
-              <div className="col-span-full py-12 text-center text-white/60">
-                {searchQuery ? "Tidak ada kelas yang ditemukan." : "Belum ada kelas."}
+              <div className="col-span-full py-8 text-center text-white/60">
+                {searchQuery
+                  ? "Tidak ada kelas mengajar yang ditemukan."
+                  : "Belum ada kelas mengajar."}
               </div>
             )}
           </div>
@@ -104,6 +126,7 @@ export function CoursesContainer() {
         showAddClass={true}
         onJoinClass={handleJoinClass}
         onAddClass={handleAddClass}
+        isLoading={isEnrolling}
       />
     </>
   );
