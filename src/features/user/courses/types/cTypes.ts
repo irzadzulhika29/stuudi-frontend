@@ -15,10 +15,12 @@ export interface CourseInfoSidebarProps {
   totalParticipants?: number;
   lastAccessed?: string;
   notes?: Note[];
+  courseId?: string;
   topicId?: string;
   showPeople?: boolean;
   showLastAccessed?: boolean;
   readOnly?: boolean;
+  openNoteId?: string;
 }
 
 export interface Note {

@@ -1,10 +1,11 @@
-"use client";
-
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Check, X } from "lucide-react";
 import { quizService } from "../services/quizService";
-import { QuizQuestion, QuizOption } from "../types/courseTypes";
+import { QuizQuestion } from "../types/courseTypes";
+import { SingleChoiceQuestion } from "@/shared/components/questions/SingleChoiceQuestion";
+import { MultipleChoiceQuestion } from "@/shared/components/questions/MultipleChoiceQuestion";
+import { SharedQuestion, QuestionType, QuestionAnswer } from "@/shared/types/questionTypes";
 
 interface QuizBlockQuestionProps {
   question: QuizQuestion;
@@ -12,7 +13,9 @@ interface QuizBlockQuestionProps {
 }
 
 export function QuizBlockQuestion({ question, questionNumber }: QuizBlockQuestionProps) {
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  // State can hold single string (radio) or array of strings (checkbox)
+  const [selectedAnswer, setSelectedAnswer] = useState<QuestionAnswer>(null);
+
   const [result, setResult] = useState<{
     isCorrect: boolean;
     correctOptionId: string;
@@ -20,8 +23,8 @@ export function QuizBlockQuestion({ question, questionNumber }: QuizBlockQuestio
 
   const checkAnswerMutation = useMutation({
     mutationFn: () => {
-      if (!selectedOptionId) throw new Error("No option selected");
-      return quizService.checkAnswer(question.questionId, selectedOptionId);
+      if (!selectedAnswer) throw new Error("No option selected");
+      return quizService.checkAnswer(question.questionId, selectedAnswer as string | string[]);
     },
     onSuccess: (data) => {
       setResult({
@@ -33,78 +36,65 @@ export function QuizBlockQuestion({ question, questionNumber }: QuizBlockQuestio
 
   const isSubmitted = result !== null;
 
-  const getOptionStyle = (option: QuizOption) => {
+  const sharedType: QuestionType = question.questionType === "multiple" ? "multiple" : "single";
+
+  const sharedQuestion: SharedQuestion = {
+    id: question.questionId,
+    text: question.questionText,
+    type: sharedType,
+    points: question.points,
+    options: question.options.map((opt) => ({
+      id: opt.optionId,
+      text: opt.optionText,
+      sequence: opt.sequence,
+    })),
+  };
+
+  const handleSelectAnswer = (ans: QuestionAnswer) => {
     if (!isSubmitted) {
-      if (selectedOptionId === option.optionId) {
-        return "border-primary-light bg-primary-light/20";
-      }
-      return "border-white/20 hover:border-white/40";
+      setSelectedAnswer(ans);
     }
-
-    // After submission
-    if (option.optionId === result.correctOptionId) {
-      return "border-emerald-500 bg-emerald-500/20";
-    }
-    if (option.optionId === selectedOptionId && !result.isCorrect) {
-      return "border-red-500 bg-red-500/20";
-    }
-    return "border-white/20 opacity-50";
   };
 
-  const getOptionIcon = (option: QuizOption) => {
-    if (!isSubmitted) return null;
-
-    if (option.optionId === result.correctOptionId) {
-      return <Check size={18} className="text-emerald-500" />;
-    }
-    if (option.optionId === selectedOptionId && !result.isCorrect) {
-      return <X size={18} className="text-red-500" />;
-    }
-    return null;
-  };
+  const hasSelection = Array.isArray(selectedAnswer) ? selectedAnswer.length > 0 : !!selectedAnswer;
 
   return (
-    <div className="mb-6 rounded-xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm md:p-6">
+    <div className="mb-6 rounded-xl border border-white/10 bg-white p-5 md:p-6">
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-medium text-white">Pertanyaan {questionNumber}</span>
+        <span className="text-sm font-light text-gray-500">Pertanyaan {questionNumber}</span>
         <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-red-500">
           {question.points} Poin
         </span>
       </div>
 
-      <p className="mb-4 font-medium text-white">{question.questionText}</p>
+      <p className="mb-4 font-medium text-black">{question.questionText}</p>
 
-      <div className="space-y-3">
-        {question.options.map((option, index) => (
-          <label
-            key={option.optionId}
-            className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all ${getOptionStyle(option)} ${
-              isSubmitted ? "pointer-events-none" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              name={`quiz-${question.questionId}`}
-              checked={selectedOptionId === option.optionId}
-              onChange={() => !isSubmitted && setSelectedOptionId(option.optionId)}
-              disabled={isSubmitted}
-              className="accent-primary-light h-4 w-4"
-            />
-            <span className="flex-1 text-sm text-white">
-              {String.fromCharCode(65 + index)}. {option.optionText}
-            </span>
-            {getOptionIcon(option)}
-          </label>
-        ))}
-      </div>
+      {sharedType === "multiple" ? (
+        <MultipleChoiceQuestion
+          question={sharedQuestion}
+          selectedAnswer={selectedAnswer || []}
+          onSelectAnswer={handleSelectAnswer}
+          disabled={isSubmitted}
+          isCorrect={isSubmitted ? result.isCorrect : undefined}
+        />
+      ) : (
+        <SingleChoiceQuestion
+          question={sharedQuestion}
+          selectedAnswer={selectedAnswer as string}
+          onSelectAnswer={handleSelectAnswer}
+          disabled={isSubmitted}
+          isCorrect={isSubmitted ? result.isCorrect : undefined}
+          correctAnswerId={result?.correctOptionId}
+        />
+      )}
 
       {!isSubmitted && (
         <div className="mt-6 flex justify-end">
           <button
             onClick={() => checkAnswerMutation.mutate()}
-            disabled={!selectedOptionId || checkAnswerMutation.isPending}
+            disabled={!hasSelection || checkAnswerMutation.isPending}
             className={`rounded-lg px-6 py-2.5 font-medium transition-colors ${
-              selectedOptionId && !checkAnswerMutation.isPending
+              hasSelection && !checkAnswerMutation.isPending
                 ? "bg-primary-light hover:bg-primary-light/90 text-white"
                 : "cursor-not-allowed bg-white/20 text-white/50"
             }`}

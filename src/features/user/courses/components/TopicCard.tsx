@@ -1,8 +1,9 @@
 "use client";
 
 import { ChevronUp, Check, Lock } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 export interface Material {
   id: string;
@@ -32,19 +33,11 @@ export function TopicCard({
   isAdmin = false,
 }: TopicCardProps) {
   const [isExpanded, setIsExpanded] = useState(status === "locked" ? false : defaultExpanded);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState(0);
-
   const isLocked = status === "locked";
-
-  useEffect(() => {
-    if (contentRef.current) {
-      setContentHeight(contentRef.current.scrollHeight);
-    }
-  }, [materials]);
-
   const completedCount = materials.filter((m) => m.isCompleted).length;
   const isAllCompleted = completedCount === materials.length;
+  const progressPercent =
+    materials.length > 0 ? Math.round((completedCount / materials.length) * 100) : 0;
 
   const getStatusBadge = () => {
     if (isLocked) {
@@ -57,9 +50,13 @@ export function TopicCard({
     }
     if (status === "completed" || isAllCompleted) {
       return (
-        <span className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white">
+        <motion.span
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white"
+        >
           Selesai
-        </span>
+        </motion.span>
       );
     }
     if (status === "in-progress") {
@@ -85,14 +82,20 @@ export function TopicCard({
   };
 
   return (
-    <div className={`overflow-hidden rounded-xl shadow-sm ${isLocked ? "opacity-70" : ""}`}>
-      <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`overflow-hidden rounded-xl shadow-sm ${isLocked ? "opacity-70" : ""}`}
+    >
+      <motion.div
         className={`border-l-4 bg-white p-5 transition-colors duration-200 ${
           isLocked
             ? "cursor-not-allowed border-neutral-400"
             : "border-primary-light cursor-pointer hover:bg-neutral-50"
         }`}
         onClick={handleCardClick}
+        whileHover={!isLocked ? { x: 4 } : {}}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -120,49 +123,84 @@ export function TopicCard({
             >
               {description}
             </p>
-          </div>
-          <div className="flex flex-shrink-0 items-center gap-2.5">
-            {getStatusBadge()}
-            {!isLocked && (
-              <div
-                className={`bg-primary-light flex h-8 w-8 items-center justify-center rounded-full text-white transition-all duration-300 ${
-                  isExpanded ? "rotate-0" : "rotate-180"
-                }`}
-              >
-                <ChevronUp size={18} />
+
+            {/* Progress Indicator */}
+            {!isLocked && materials.length > 0 && (
+              <div className="mt-3 flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200">
+                  <motion.div
+                    className="h-full rounded-full bg-emerald-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
+                </div>
+                <span className="text-xs font-medium text-neutral-500">
+                  {completedCount}/{materials.length}
+                </span>
               </div>
             )}
           </div>
-        </div>
-      </div>
-
-      {!isLocked && (
-        <div
-          className="overflow-hidden transition-all duration-400 ease-out"
-          style={{
-            maxHeight: isExpanded ? `${contentHeight}px` : "0px",
-          }}
-        >
-          <div ref={contentRef} className="border-t border-white/20 bg-white/10 backdrop-blur-sm">
-            {materials.map((material, index) => (
-              <Link
-                key={material.id}
-                href={
-                  isAdmin
-                    ? `/dashboard-admin/courses/${courseId}/manage/${courseId}/material/${material.id}`
-                    : `/courses/${courseId}/topic/${id}/materi/${material.id}`
-                }
-                className={`hover:bg-primary-light/20 flex items-center justify-between px-5 py-3.5 transition-all duration-200 ${
-                  index !== materials.length - 1 ? "border-b border-white/10" : ""
-                }`}
+          <div className="flex shrink-0 items-center gap-2.5">
+            {getStatusBadge()}
+            {!isLocked && (
+              <motion.div
+                className="bg-primary-light flex h-8 w-8 items-center justify-center rounded-full text-white"
+                animate={{ rotate: isExpanded ? 0 : 180 }}
+                transition={{ duration: 0.3 }}
               >
-                <span className="text-sm text-white">{material.title}</span>
-                {material.isCompleted && <Check className="text-white" size={18} />}
-              </Link>
-            ))}
+                <ChevronUp size={18} />
+              </motion.div>
+            )}
           </div>
         </div>
-      )}
-    </div>
+      </motion.div>
+
+      {/* Animated Accordion Content */}
+      <AnimatePresence initial={false}>
+        {!isLocked && isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-white/20 bg-white/10 backdrop-blur-sm">
+              {materials.map((material, index) => (
+                <motion.div
+                  key={material.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link
+                    href={
+                      isAdmin
+                        ? `/dashboard-admin/courses/${courseId}/manage/${courseId}/material/${material.id}`
+                        : `/courses/${courseId}/topic/${id}/materi/${material.id}`
+                    }
+                    className={`hover:bg-primary-light/20 flex items-center justify-between px-5 py-3.5 transition-all duration-200 ${
+                      index !== materials.length - 1 ? "border-b border-white/10" : ""
+                    }`}
+                  >
+                    <span className="text-sm text-white">{material.title}</span>
+                    {material.isCompleted && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500 }}
+                      >
+                        <Check className="text-emerald-400" size={18} />
+                      </motion.div>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

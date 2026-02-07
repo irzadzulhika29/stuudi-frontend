@@ -261,7 +261,10 @@ function QuizContainerInner({ quiz, courseId, topicId, onStatusChange }: QuizCon
       }));
 
       try {
-        const response = await quizService.saveAnswer(attemptId, currentQ.id, selectedOptionIds[0]);
+        // Determine payload based on question type or selection count
+        const payload = currentQ.type === "multiple" ? selectedOptionIds : selectedOptionIds[0];
+
+        const response = await quizService.saveAnswer(attemptId, currentQ.id, payload);
 
         // Show feedback (could pass is_correct to UI if needed, for now just show feedback mode)
         // Ideally we need to tell QuizQuestion if it was correct.
@@ -373,10 +376,24 @@ function QuizContainerInner({ quiz, courseId, topicId, onStatusChange }: QuizCon
         <QuizSummary
           correctAnswers={lastResult.correct_answers}
           totalQuestions={lastResult.total_questions}
-          averageTime={0} // Computed from time_taken if needed, or 0
+          averageTime={(() => {
+            // Calculate average time if not provided or 0
+            if (lastResult.average_answer_time) return lastResult.average_answer_time;
+
+            // Parse time_taken (e.g., "10s" -> 10)
+            const totalSeconds = parseInt(lastResult.time_taken.replace(/\D/g, "") || "0");
+            if (totalSeconds > 0 && lastResult.total_questions > 0) {
+              return totalSeconds / lastResult.total_questions;
+            }
+            return 0;
+          })()}
           expEarned={lastResult.exp_gained || 0}
+          score={lastResult.score}
+          status={lastResult.status}
+          passingScore={lastResult.passing_score}
           onRetake={handleRetake}
           onBack={handleBack}
+          questionResults={lastResult.question_results}
         />
       )}
 

@@ -76,10 +76,11 @@ const transformBlock = (block: ApiContentBlock): ContentBlock => ({
     questionType: q.question_type,
     points: q.points,
     options:
-      q.options?.map((opt) => ({
+      q.options?.map((opt, index) => ({
         optionId: opt.option_id,
         optionText: opt.option_text,
         isCorrect: opt.is_correct,
+        sequence: index + 1,
       })) || [],
   })),
 });
@@ -110,6 +111,8 @@ export const courseService = {
   async getMyCourses(): Promise<MyCoursesResponse> {
     const url = API_ENDPOINTS.COURSES.MY;
     const response = await api.get<ApiResponse<MyCoursesResponse>>(url);
+    console.log("My courses API response:", response.data);
+    console.log("My courses raw data:", response.data.data);
     return response.data.data;
   },
 
@@ -170,5 +173,10 @@ export const courseService = {
       isCompleted: response.data.data.is_completed,
       completedAt: response.data.data.completed_at,
     };
+  },
+
+  async unenrollCourse(courseId: string): Promise<void> {
+    const url = `/student/courses/${courseId}/unenroll`;
+    await api.delete<ApiResponse<null>>(url);
   },
 };

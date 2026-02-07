@@ -49,7 +49,7 @@ export function Topbar({ user }: TopbarProps) {
               <p className="text-sm leading-tight font-semibold text-white transition-opacity group-hover:opacity-90">
                 {user?.name || "User Name"}
               </p>
-              <p className="text-xs text-white/70">{user?.email || ""}</p>
+              <p className="text-xs text-white/70">{user?.role || user?.email || ""}</p>
             </div>
 
             {/* XP/User Circle with Shining Effect */}
