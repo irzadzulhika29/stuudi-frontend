@@ -5,19 +5,16 @@ import { LoginRequest, LoginResponse } from "@/features/auth/shared/types/authTy
 import { ROUTES } from "@/shared/config/constants";
 import { ApiError } from "@/shared/api/api";
 import { AxiosError } from "axios";
+import { useToast } from "@/shared/components/ui/Toast";
 
 export const useLogin = () => {
   const router = useRouter();
+  const { showProgressToast, showToast } = useToast();
 
   return useMutation<LoginResponse, AxiosError<ApiError>, LoginRequest>({
     mutationFn: (data: LoginRequest) => authService.login(data),
     onSuccess: (data) => {
-      console.log("Login successful", data);
-      console.log("User type from API:", data.user_type);
-      console.log("Role name from response:", data.roleName);
-
       // Role-based redirect: students go to /dashboard, teachers go to /dashboard-admin
-      // Check both user_type (from API response) and roleName (from JWT token)
       const userType = data.user_type?.toLowerCase();
       const roleName = data.roleName?.toLowerCase();
 
@@ -29,11 +26,14 @@ export const useLogin = () => {
 
       const redirectPath = isStudent ? ROUTES.DASHBOARD : ROUTES.ADMIN_DASHBOARD;
 
-      console.log("Is student:", isStudent, "| Redirecting to:", redirectPath);
-      router.push(redirectPath);
+      // Show progress toast then redirect
+      showProgressToast("Login berhasil! Mengarahkan ke dashboard...", 1500, () => {
+        router.push(redirectPath);
+      });
     },
     onError: (error) => {
       console.error("Login failed", error);
+      showToast("Login gagal. Silakan coba lagi.", "error");
     },
   });
 };

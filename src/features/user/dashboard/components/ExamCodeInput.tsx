@@ -22,14 +22,12 @@ export function ExamCodeInput() {
 
     setIsLoading(true);
     setError("");
-    console.log("Submitting exam code:", code);
 
     try {
-      const data = await dashboardService.accessExam(code);
-      console.log("Exam accessed successfully:", data);
+      await dashboardService.accessExam(code);
+
       router.push(`/cbt/check?code=${encodeURIComponent(code)}`);
     } catch (err: unknown) {
-      console.log("Error accessing exam:", err);
       let message =
         (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
         "Invalid exam code or access denied.";

@@ -10,7 +10,7 @@ import { ExamSummary } from "../components/ExamSummary";
 import { ExamSkeleton } from "../components/ExamSkeleton";
 import { ExamSuccessScreen } from "../components/ExamSuccessScreen";
 import { ViolationWarning } from "../components/ViolationWarning";
-import { AlertTriangle, Maximize } from "lucide-react";
+import { AlertTriangle, Maximize, Loader2 } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
@@ -19,7 +19,6 @@ import {
   initializeExam,
   setView,
   setCurrentIndex,
-  setAnswer,
   toggleFlag,
   finishExam,
 } from "@/shared/store/slices/examSlice";
@@ -28,7 +27,7 @@ import { dashboardService } from "@/features/user/dashboard/services/dashboardSe
 import { useRouter } from "next/navigation";
 
 // Custom hooks for cleaner code
-import { useExamTimer, useFullscreenGuard, useExamPersistence } from "../hooks";
+import { useExamTimer, useFullscreenGuard, useExamPersistence, useAutoSave } from "../hooks";
 
 interface ExamContainerProps {
   stream: MediaStream | null;
@@ -53,6 +52,9 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   const { timeRemaining } = useExamTimer();
   const { showOverlay, enterFullscreen } = useFullscreenGuard({ enabled: view !== "finished" });
   const { clearCache } = useExamPersistence();
+  const { saveAnswer, isSaving, lastSavedTime, saveError } = useAutoSave({
+    attemptId: examData?.attempt_id,
+  });
 
   // Hydrate exam data on refresh
   useEffect(() => {
@@ -63,9 +65,8 @@ export function ExamContainer({ stream }: ExamContainerProps) {
       if (examId) {
         const fetchExam = async () => {
           try {
-            console.log("[ExamContainer] Fetching/Resuming exam with ID:", examId);
             const response = await dashboardService.resumeExam(examId);
-            console.log("[ExamContainer] Exam data fetched successfully", response);
+
             const payload = examService.transformExamToReduxPayload(response);
             dispatch(initializeExam(payload));
           } catch (error) {
@@ -89,7 +90,6 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   const flaggedSet = new Set(flaggedQuestions); // flaggedQuestions is string[]
 
   const handleNavigate = (index: number) => {
-    console.log("[ExamContainer] Navigating to question index:", index);
     dispatch(setCurrentIndex(index));
     if (view === "summary") {
       dispatch(setView("exam"));
@@ -108,41 +108,17 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     }
   };
 
-  const handleSelectAnswer = async (answer: QuestionAnswer) => {
-    console.log("[ExamContainer] Answer selected:", { questionId: currentQuestionId, answer });
-    dispatch(setAnswer({ questionId: currentQuestionId, answer }));
-
-    // Background save to API
-    if (examData?.attempt_id) {
-      try {
-        await examService.saveAnswer(examData.attempt_id, currentQuestionId, answer);
-        console.log("[ExamContainer] Answer saved to API successfully");
-      } catch (error) {
-        console.error("[ExamContainer] Failed to save answer to API", error);
-      }
-    }
+  const handleSelectAnswer = (answer: QuestionAnswer) => {
+    // console.log("[ExamContainer] Answer selected:", { questionId: currentQuestionId, answer });
+    saveAnswer(currentQuestionId, answer);
   };
 
-  const handleClearAnswer = async () => {
-    console.log("[ExamContainer] Clearing answer for:", currentQuestionId);
-
-    // 1. Update local state immediately
-    dispatch(setAnswer({ questionId: currentQuestionId, answer: null }));
-
-    // 2. Call API to clear answer
-    if (examData?.attempt_id) {
-      try {
-        await examService.clearAnswer(examData.attempt_id, currentQuestionId);
-        console.log("[ExamContainer] Answer cleared from API successfully");
-      } catch (error) {
-        console.error("[ExamContainer] Failed to clear answer from API", error);
-        // Optional: We could revert state here if needed, but for now we trust the optimistic update
-      }
-    }
+  const handleClearAnswer = () => {
+    // console.log("[ExamContainer] Clearing answer for:", currentQuestionId);
+    saveAnswer(currentQuestionId, null);
   };
 
   const handleToggleFlag = () => {
-    console.log("[ExamContainer] Toggling flag for question:", currentQuestionId);
     dispatch(toggleFlag(currentQuestionId));
   };
 
@@ -150,23 +126,18 @@ export function ExamContainer({ stream }: ExamContainerProps) {
 
   // (Assuming handleFinishAttempt, handleBackToExam, handleConfirmSubmit are here as before)
   const handleFinishAttempt = () => {
-    console.log("[ExamContainer] Finishing attempt, viewing summary");
     dispatch(setView("summary"));
   };
 
   const handleBackToExam = () => {
-    console.log("[ExamContainer] Returning to exam from summary");
     dispatch(setView("exam"));
   };
 
   const handleConfirmSubmit = async () => {
     if (!examData?.attempt_id) return;
 
-    console.log("[ExamContainer] Submitting exam...", { attemptId: examData.attempt_id });
-
     try {
-      const result = await examService.submitExam(examData.attempt_id);
-      console.log("[ExamContainer] Exam submitted successfully", result);
+      await examService.submitExam(examData.attempt_id);
 
       // Clear cached data using hook
       if (examData.exam_id) {
@@ -228,11 +199,24 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     <div className="flex min-h-screen flex-col gap-6 p-6">
       <ExamHeader title={examData.title} subject={examData.subject || ""} stream={stream} />
 
-      <ExamTimerBar
-        currentQuestion={currentQuestionIndex + 1}
-        timeRemaining={timeRemaining}
-        lives={lives}
-      />
+      <div className="flex items-center justify-between">
+        <ExamTimerBar
+          currentQuestion={currentQuestionIndex + 1}
+          timeRemaining={timeRemaining}
+          lives={lives}
+        />
+        <div className="text-xs text-white/50">
+          {isSaving ? (
+            <span className="flex items-center gap-1 text-yellow-500">
+              <Loader2 size={12} className="animate-spin" /> Saving...
+            </span>
+          ) : saveError ? (
+            <span className="text-red-500">{saveError}</span>
+          ) : lastSavedTime ? (
+            <span className="text-green-500">Saved</span>
+          ) : null}
+        </div>
+      </div>
 
       <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="lg:col-span-3">

@@ -2,19 +2,12 @@ import { MetadataRoute } from "next";
 import { siteConfig } from "@/shared/config/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const routes = [
-        "",
-        "/login",
-        "/register",
-        "/tentang-kami",
-        "/faq",
-        "/bantuan",
-    ].map((route) => ({
-        url: `${siteConfig.url}${route}`,
-        lastModified: new Date().toISOString(),
-        changeFrequency: "daily" as const,
-        priority: route === "" ? 1 : 0.8,
-    }));
+  const routes = ["", "/login", "/produk", "/tentang-kami"].map((route) => ({
+    url: `${siteConfig.url}${route}`,
+    lastModified: new Date().toISOString(),
+    changeFrequency: "weekly" as const,
+    priority: route === "" ? 1 : route === "/login" ? 0.9 : 0.7,
+  }));
 
-    return [...routes];
+  return [...routes];
 }

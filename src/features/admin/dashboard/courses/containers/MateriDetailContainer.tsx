@@ -39,10 +39,8 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
 
   useEffect(() => {
     if (content) {
-      console.log("DEBUG: Admin Content Details:", content);
     }
     if (quizDetails) {
-      console.log("DEBUG: Admin Quiz Details:", quizDetails);
     }
   }, [content, quizDetails]);
 

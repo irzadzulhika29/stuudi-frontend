@@ -2,12 +2,12 @@ import { MetadataRoute } from "next";
 import { siteConfig } from "@/shared/config/seo";
 
 export default function robots(): MetadataRoute.Robots {
-    return {
-        rules: {
-            userAgent: "*",
-            allow: "/",
-            disallow: ["/api/", "/dashboard/", "/courses/"],
-        },
-        sitemap: `${siteConfig.url}/sitemap.xml`,
-    };
+  return {
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      disallow: ["/api/", "/dashboard/", "/dashboard-admin/", "/courses/", "/cbt/", "/team/"],
+    },
+    sitemap: `${siteConfig.url}/sitemap.xml`,
+  };
 }

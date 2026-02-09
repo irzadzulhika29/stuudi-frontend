@@ -10,11 +10,13 @@ import { dashboardService } from "@/features/user/dashboard/services/dashboardSe
 import { ExamAccessData } from "@/features/user/dashboard/types/dashboardTypes";
 import { useAppDispatch } from "@/shared/store/hooks";
 import { initializeExam } from "@/shared/store/slices/examSlice";
+import { useToast } from "@/shared/components/ui/Toast";
 
 function CheckContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { showToast } = useToast();
   const examCode = searchParams.get("code");
 
   const [examData, setExamData] = useState<ExamAccessData | null>(null);
@@ -52,9 +54,7 @@ function CheckContent() {
 
     setIsStarting(true);
     try {
-      console.log("[CBT] Starting exam for:", examData.exam_id);
       const response = await dashboardService.startExam(examData.exam_id);
-      console.log("[CBT] Exam started successfully:", response);
 
       // Initialize Redux state with exam data
       dispatch(
@@ -68,7 +68,7 @@ function CheckContent() {
     } catch (err) {
       console.error("Failed to start exam:", err);
       // Show error toast or alert
-      alert("Gagal memulai ujian. Silakan coba lagi.");
+      showToast("Gagal memulai ujian. Silakan coba lagi.", "error");
       setIsStarting(false);
     }
   };

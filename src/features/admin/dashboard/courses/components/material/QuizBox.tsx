@@ -14,6 +14,7 @@ import {
 } from "../quiz";
 
 import { QuizDifficulty } from "./AddContentButtons";
+import { useToast } from "@/shared/components/ui/Toast";
 
 export interface QuizData {
   question: string;
@@ -53,16 +54,17 @@ export function QuizBox({
   const [isExpanded] = useState(true);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
-        alert("Mohon pilih file gambar yang valid");
+        showToast("Mohon pilih file gambar yang valid", "warning");
         return;
       }
       if (file.size > 2 * 1024 * 1024) {
-        alert("Ukuran file maksimal 2MB");
+        showToast("Ukuran file maksimal 2MB", "warning");
         return;
       }
       const imageUrl = URL.createObjectURL(file);

@@ -138,11 +138,11 @@ export const useCreateExam = (courseId: string) => {
 
     try {
       // Step 1: Create Exam
-      console.log("Creating exam:", examData);
+
       const examResponse = await createExamContentMutation.mutateAsync(examData);
 
       const examId = examResponse.data.exam_id;
-      console.log("Exam created with ID:", examId);
+
       setProgress({ current: 1, total: totalSteps, stage: "Menambah pertanyaan..." });
 
       // Step 2: Add Questions
@@ -153,12 +153,10 @@ export const useCreateExam = (courseId: string) => {
         const questionData = transformQuizItemToExamQuestion(item);
 
         try {
-          console.log(`Adding question ${i + 1}/${quizItems.length}:`, questionData);
           await addExamQuestionMutation.mutateAsync({
             examId,
             question: questionData,
           });
-          console.log(`Question ${i + 1} added successfully`);
         } catch (error) {
           console.error(`Failed to add question ${i + 1}:`, error);
           failedQuestions.push(i);

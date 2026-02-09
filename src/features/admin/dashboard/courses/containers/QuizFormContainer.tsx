@@ -163,9 +163,7 @@ export function QuizFormContainer({
 
       if (isEditMode && isExistingQuestion) {
         try {
-          console.log(`Deleting question ${id}...`);
           await deleteQuestionMutation.mutateAsync({ questionId: id });
-          console.log(`Question ${id} deleted successfully`);
         } catch (error) {
           console.error(`Failed to delete question ${id}:`, error);
           setError("Gagal menghapus pertanyaan");
@@ -249,19 +247,15 @@ export function QuizFormContainer({
             const isExistingQuestion = initialItemIds.has(item.id);
 
             if (isExistingQuestion) {
-              console.log(`Updating question ${i + 1}/${quizItems.length}:`, questionData);
               await updateQuestionMutation.mutateAsync({
                 questionId: item.id,
                 question: questionData,
               });
-              console.log(`Question ${i + 1} updated successfully`);
             } else {
-              console.log(`Adding new question ${i + 1}/${quizItems.length}:`, questionData);
               await addQuestionMutation.mutateAsync({
                 contentId: quizId!,
                 question: questionData,
               });
-              console.log(`Question ${i + 1} added successfully`);
             }
           } catch (error) {
             console.error(`Failed to save question ${i + 1}:`, error);
@@ -273,9 +267,7 @@ export function QuizFormContainer({
 
         // Save quiz configuration
         try {
-          console.log("Saving quiz configuration...");
           await saveQuizConfig(quizId!);
-          console.log("Quiz configuration saved successfully");
         } catch (error) {
           console.error("Failed to save quiz configuration:", error);
           setError("Gagal menyimpan konfigurasi quiz");
@@ -291,7 +283,6 @@ export function QuizFormContainer({
           return;
         }
 
-        console.log("Quiz updated successfully");
         router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
       }
       return;
@@ -301,13 +292,9 @@ export function QuizFormContainer({
     const result = await createQuiz(quizName, quizItems);
 
     if (result.success && result.contentId) {
-      console.log("Quiz created successfully with ID:", result.contentId);
-
       // Configure the quiz after creation
       try {
-        console.log("Configuring quiz...");
         await saveQuizConfig(result.contentId);
-        console.log("Quiz configured successfully");
       } catch (error) {
         console.error("Failed to configure quiz:", error);
         // Quiz is created but config failed - still redirect but show warning

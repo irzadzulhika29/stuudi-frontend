@@ -106,3 +106,9 @@ export const STORAGE_KEYS = {
   REFRESH_TOKEN: "refresh_token",
   USER: "user_data",
 } as const;
+
+export const SUPPORT_CONTACT = {
+  NAME: "Zakwan",
+  PHONE: "+62 852-2605-5932",
+  WHATSAPP_URL: "https://wa.me/6285226055932",
+} as const;

@@ -9,8 +9,9 @@ import {
   ExamMetadataForm,
   ExamConfigPanel,
   ExamProgressIndicator,
+  ExamActionButtons,
+  ExamDeleteModal,
 } from "@/features/admin/dashboard/courses/components/exam";
-import { Button } from "@/shared/components/ui";
 import { useCreateExam, CreateExamRequest } from "../hooks/useCreateExam";
 import { useUpdateExam } from "../hooks/useUpdateExam";
 import { useDeleteExam } from "../hooks/useDeleteExam";
@@ -335,7 +336,7 @@ export function ExamFormContainer({
           is_random_order: isRandomOrder,
           is_random_selection: isRandomSelection,
         });
-        console.log("Exam updated successfully");
+
         router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
       } catch (err) {
         console.error("Failed to update exam:", err);
@@ -361,7 +362,6 @@ export function ExamFormContainer({
     const result = await createExam(examData, quizItems);
 
     if (result.success) {
-      console.log("Exam created successfully with ID:", result.examId);
       router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
     } else {
       setError(result.error || "Gagal membuat exam");
@@ -376,7 +376,7 @@ export function ExamFormContainer({
 
     try {
       await deleteExamMutation.mutateAsync(examId);
-      console.log("Exam deleted successfully");
+
       router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
     } catch (err) {
       console.error("Failed to delete exam:", err);
@@ -500,72 +500,26 @@ export function ExamFormContainer({
           )}
 
           {/* Submit Button */}
-          <div className="flex gap-3">
-            {isEditMode && examId && (
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={
-                  isCreating || updateExamMutation.isPending || deleteExamMutation.isPending
-                }
-                className="border-red-500 text-red-500 hover:!bg-red-500 hover:text-white disabled:opacity-50"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Hapus Exam
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              onClick={handleSave}
-              disabled={isCreating || updateExamMutation.isPending || deleteExamMutation.isPending}
-              className="hover:!bg-primary flex-1 hover:text-white disabled:opacity-50"
-            >
-              {isCreating
-                ? "Menyimpan..."
-                : updateExamMutation.isPending
-                  ? "Mengupdate..."
-                  : isEditMode
-                    ? "Update Exam"
-                    : "Simpan Exam"}
-            </Button>
-          </div>
+          {/* Submit Buttons */}
+          <ExamActionButtons
+            isEditMode={isEditMode}
+            isCreating={isCreating}
+            isUpdating={updateExamMutation.isPending}
+            isDeleting={deleteExamMutation.isPending}
+            onSave={handleSave}
+            onDeleteRequest={() => setShowDeleteConfirm(true)}
+            examId={examId}
+          />
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="mb-2 text-lg font-semibold text-neutral-800">Hapus Exam?</h3>
-            <p className="mb-6 text-neutral-600">
-              Apakah Anda yakin ingin menghapus exam ini? Tindakan ini tidak dapat dibatalkan.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={deleteExamMutation.isPending}
-                className="rounded-lg px-4 py-2 text-neutral-600 transition-colors hover:bg-neutral-100"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleDeleteExam}
-                disabled={deleteExamMutation.isPending}
-                className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-              >
-                {deleteExamMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Menghapus...
-                  </>
-                ) : (
-                  "Hapus"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExamDeleteModal
+        isOpen={showDeleteConfirm}
+        isDeleting={deleteExamMutation.isPending}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteExam}
+      />
     </div>
   );
 }

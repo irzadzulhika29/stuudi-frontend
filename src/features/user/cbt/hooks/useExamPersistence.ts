@@ -20,9 +20,6 @@ export function useExamPersistence() {
   useEffect(() => {
     if (examId && Object.keys(answers).length > 0) {
       try {
-        console.log(
-          `[useExamPersistence] Saving ${Object.keys(answers).length} answers for exam ${examId}`
-        );
         localStorage.setItem(`${STORAGE_KEY_PREFIX}${examId}`, JSON.stringify(answers));
       } catch (e) {
         console.error("Failed to persist answers to localStorage:", e);
@@ -34,9 +31,6 @@ export function useExamPersistence() {
   useEffect(() => {
     if (examId && flaggedQuestions) {
       try {
-        console.log(
-          `[useExamPersistence] Saving ${flaggedQuestions.length} flags for exam ${examId}`
-        );
         localStorage.setItem(`${FLAGS_KEY_PREFIX}${examId}`, JSON.stringify(flaggedQuestions));
       } catch (e) {
         console.error("Failed to persist flags to localStorage:", e);
@@ -47,12 +41,8 @@ export function useExamPersistence() {
   // Get cached answers for an exam
   const getCachedAnswers = useCallback((id: string): Record<string, QuestionAnswer> | null => {
     try {
-      console.log(`[useExamPersistence] Loading answers for exam ${id}`);
       const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}${id}`);
-      const parsed = stored ? JSON.parse(stored) : null;
-      if (parsed)
-        console.log(`[useExamPersistence] Found ${Object.keys(parsed).length} cached answers`);
-      return parsed;
+      return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
@@ -61,7 +51,6 @@ export function useExamPersistence() {
   // Get cached flags for an exam
   const getCachedFlags = useCallback((id: string): string[] | null => {
     try {
-      console.log(`[useExamPersistence] Loading flags for exam ${id}`);
       const stored = localStorage.getItem(`${FLAGS_KEY_PREFIX}${id}`);
       return stored ? JSON.parse(stored) : null;
     } catch {
@@ -72,7 +61,6 @@ export function useExamPersistence() {
   // Clear all cached data for an exam (call on submit)
   const clearCache = useCallback((id: string) => {
     try {
-      console.log(`[useExamPersistence] Clearing cache for exam ${id}`);
       localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
       localStorage.removeItem(`${FLAGS_KEY_PREFIX}${id}`);
     } catch (e) {

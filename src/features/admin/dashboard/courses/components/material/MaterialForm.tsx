@@ -13,6 +13,7 @@ import {
   QuizContent,
 } from "./AddContentButtons";
 import Link from "next/link";
+import { useToast } from "@/shared/components/ui/Toast";
 
 interface MaterialFormProps {
   courseId: string;
@@ -39,6 +40,7 @@ export function MaterialForm({
 }: MaterialFormProps) {
   const [materialName, setMaterialName] = useState(initialMaterialName);
   const [contents, setContents] = useState<MaterialContent[]>(initialContents);
+  const { showToast } = useToast();
 
   const generateId = () => `content-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -141,13 +143,13 @@ export function MaterialForm({
           await onDeleteContent(id, content.type);
         } catch (error) {
           console.error("Failed to delete content:", error);
-          alert("Gagal menghapus. Silakan coba lagi.");
+          showToast("Gagal menghapus. Silakan coba lagi.", "error");
           return;
         }
       }
       setContents((prev) => prev.filter((c) => c.id !== id));
     },
-    [isEditMode, onDeleteContent, contents]
+    [isEditMode, onDeleteContent, contents, showToast]
   );
 
   const handleSave = () => {

@@ -8,11 +8,9 @@ export const useTeachingCourseDetails = (courseId: string) => {
   return useQuery<TeachingCourseDetails>({
     queryKey: ["teachingCourse", courseId],
     queryFn: async () => {
-      console.log("Fetching teaching course details for:", courseId);
       const response = await api.get<ApiResponse<TeachingCourseDetails>>(
         API_ENDPOINTS.TEACHER.COURSE_DETAIL(courseId)
       );
-      console.log("Teaching course details response:", response.data);
       return response.data.data;
     },
     enabled: !!courseId,

@@ -122,11 +122,7 @@ interface DeleteQuizQuestionResponse {
 
 // Hook for deleting a quiz question
 export const useDeleteQuizQuestion = () => {
-  return useMutation<
-    DeleteQuizQuestionResponse,
-    AxiosError<ApiError>,
-    { questionId: string }
-  >({
+  return useMutation<DeleteQuizQuestionResponse, AxiosError<ApiError>, { questionId: string }>({
     mutationFn: async ({ questionId }) => {
       const response = await api.delete<DeleteQuizQuestionResponse>(
         API_ENDPOINTS.TEACHER.DELETE_QUESTION(questionId)
@@ -139,7 +135,7 @@ export const useDeleteQuizQuestion = () => {
 // Helper function to transform QuizItem to API format
 function transformQuizItemToApiFormat(item: QuizItem): AddQuizQuestionRequest {
   const { data } = item;
-  
+
   let questionType: "single" | "multiple" = "single";
   if (data.questionType === "multiple_choice") {
     questionType = data.isMultipleAnswer ? "multiple" : "single";
@@ -154,7 +150,7 @@ function transformQuizItemToApiFormat(item: QuizItem): AddQuizQuestionRequest {
     question_text: data.question,
     question_type: questionType,
     difficulty: data.difficulty,
-    explanation: "", 
+    explanation: "",
     options,
   };
 }
@@ -174,22 +170,18 @@ export const useCreateQuiz = (topicId: string) => {
   const addQuizContentMutation = useAddQuizContent(topicId);
   const addQuizQuestionMutation = useAddQuizQuestions();
 
-  const createQuiz = async (
-    quizName: string,
-    quizItems: QuizItem[]
-  ): Promise<CreateQuizResult> => {
+  const createQuiz = async (quizName: string, quizItems: QuizItem[]): Promise<CreateQuizResult> => {
     setIsCreating(true);
     setProgress({ current: 0, total: quizItems.length + 1 });
 
     try {
-      console.log("Creating quiz content:", quizName);
       const quizContentResponse = await addQuizContentMutation.mutateAsync({
         title: quizName,
         type: "quiz",
       });
 
       const contentId = quizContentResponse.data.content_id;
-      console.log("Quiz content created with ID:", contentId);
+
       setProgress({ current: 1, total: quizItems.length + 1 });
 
       const failedQuestions: number[] = [];
@@ -199,12 +191,10 @@ export const useCreateQuiz = (topicId: string) => {
         const questionData = transformQuizItemToApiFormat(item);
 
         try {
-          console.log(`Adding question ${i + 1}/${quizItems.length}:`, questionData);
           await addQuizQuestionMutation.mutateAsync({
             contentId,
             question: questionData,
           });
-          console.log(`Question ${i + 1} added successfully`);
         } catch (error) {
           console.error(`Failed to add question ${i + 1}:`, error);
           failedQuestions.push(i);

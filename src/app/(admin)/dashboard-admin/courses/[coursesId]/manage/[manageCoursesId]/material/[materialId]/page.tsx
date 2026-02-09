@@ -19,6 +19,7 @@ import {
   QuizContent,
   QuizOption,
 } from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
+import { useToast } from "@/shared/components/ui/Toast";
 
 // Helper to check if ID is a valid UUID (existing from API)
 function isValidUUID(id: string): boolean {
@@ -94,35 +95,23 @@ export default function MaterialDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch content details when editing
-  const {
-    data: contentData,
-    isLoading,
-    error,
-  } = useGetContentDetails(isEditMode ? materialId : null);
+  const { data: contentData, isLoading } = useGetContentDetails(isEditMode ? materialId : null);
 
   // Debug logs
-  console.log("=== MaterialDetailPage Debug ===");
-  console.log("materialId:", materialId);
-  console.log("topicIdFromQuery:", topicIdFromQuery);
-  console.log("isEditMode:", isEditMode);
-  console.log("isLoading:", isLoading);
-  console.log("error:", error);
-  console.log("contentData:", contentData);
 
   // Transform API data to form format
   const initialContents = useMemo(() => {
     if (!contentData?.data?.blocks) {
-      console.log("No blocks found in contentData");
       return [];
     }
     const transformed = transformBlocksToContents(contentData.data.blocks);
-    console.log("Transformed contents:", transformed);
+
     return transformed;
   }, [contentData]);
 
   const initialMaterialName = contentData?.data?.title || "";
-  console.log("initialMaterialName:", initialMaterialName);
-  console.log("initialContents:", initialContents);
+
+  const { showToast } = useToast();
 
   const addContentMutation = useAddContent(topicId);
 
@@ -132,7 +121,7 @@ export default function MaterialDetailPage() {
 
   const handleSave = async (materialName: string, contents: MaterialContent[]) => {
     if (!materialName.trim()) {
-      alert("Nama materi harus diisi");
+      showToast("Nama materi harus diisi", "warning");
       return;
     }
 
@@ -272,7 +261,7 @@ export default function MaterialDetailPage() {
       handleBack();
     } catch (error) {
       console.error("Failed to save material:", error);
-      alert("Gagal menyimpan materi. Silakan coba lagi.");
+      showToast("Gagal menyimpan materi. Silakan coba lagi.", "error");
     } finally {
       setIsSaving(false);
     }

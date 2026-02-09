@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Input from "@/shared/components/ui/Input";
 import Button from "@/shared/components/ui/Button";
-import { usePasswordVisibility } from "../hooks/usePasswordVisibility";
+import { usePasswordVisibility } from "@/features/auth/shared/hooks/usePasswordVisibility";
 import { useLogin } from "../hooks/useLogin";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, AlertCircle } from "lucide-react";
