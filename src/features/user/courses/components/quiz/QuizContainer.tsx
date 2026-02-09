@@ -7,6 +7,7 @@ import { QuizStart } from "./QuizStart";
 import { QuizQuestion } from "./QuizQuestion";
 import { QuizSummary } from "./QuizSummary";
 import { useQuizLogic } from "./useQuizLogic";
+import { useEffect } from "react";
 
 interface QuizContainerProps {
   quiz: QuizData;
