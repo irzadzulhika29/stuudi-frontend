@@ -20,6 +20,7 @@ import {
   QuizOption,
 } from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
 import { useToast } from "@/shared/components/ui/Toast";
+import { ApiQuestionResponse } from "@/features/admin/dashboard/courses/utils/quizTransformers";
 
 function isValidUUID(id: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -162,7 +163,7 @@ export default function MaterialDetailPage() {
 
           if (content.type === "text") {
             await api.patch(API_ENDPOINTS.TEACHER.UPDATE_BLOCK_TEXT(content.id), {
-              title: materialName,
+              text_content: content.content,
             });
           } else if (content.type === "media") {
             const formData = new FormData();

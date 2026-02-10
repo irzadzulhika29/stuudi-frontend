@@ -45,7 +45,7 @@ export function QuizFormContainer({
     quizName,
     setQuizName,
     error: formError,
-    setError: setFormError,
+    // setError: setFormError, // Not used directly, managed by hooks
     effectiveSettings,
     handleSettingsChange,
     isLoadingConfig,
@@ -62,139 +62,25 @@ export function QuizFormContainer({
       isEditMode,
     });
 
-      if (isEditMode && isExistingQuestion) {
-        try {
-          await deleteQuestionMutation.mutateAsync({ questionId: id });
-        } catch (error) {
-          console.error(`Failed to delete question ${id}:`, error);
-          setError("Gagal menghapus pertanyaan");
-          return;
-        }
-      }
+  // Use custom hook for saving
+  const {
+    handleSave,
+    isLoading: isSaving,
+    progress,
+    saveError,
+    // setSaveError,
+  } = useQuizSave({
+    courseId,
+    manageCoursesId,
+    topicId,
+    quizId,
+    isEditMode,
+    initialQuizItems,
+    onSave,
+  });
 
-      setQuizItems((prev) => prev.filter((item) => item.id !== id));
-    },
-    [isEditMode, initialQuizItems, deleteQuestionMutation]
-  );
-
-  // Helper to save quiz configuration
-  const saveQuizConfig = async (contentId: string) => {
-    const questionsToShow = effectiveSettings.showAllQuestions
-      ? quizItems.length
-      : effectiveSettings.displayedQuestionsCount;
-
-    await configureQuizMutation.mutateAsync({
-      contentId,
-      config: {
-        questions_to_show: questionsToShow,
-        is_random_order: effectiveSettings.randomizeQuestions,
-        is_random_selection: effectiveSettings.randomSelection,
-        passing_score: effectiveSettings.passingScore,
-        time_limit_minutes: effectiveSettings.timeLimitMinutes,
-      },
-    });
-  };
-
-  // Handle save button click
-  const onSaveClick = async () => {
-    setError(null);
-
-    if (isEditMode) {
-      if (onSave) {
-        onSave(quizName, quizItems, quizSettings);
-      } else {
-        setIsUpdating(true);
-        setUpdateProgress({ current: 0, total: quizItems.length + 1 }); // +1 for config
-
-        const failedQuestions: number[] = [];
-        const initialItemIds = new Set(initialQuizItems.map((item) => item.id));
-
-        for (let i = 0; i < quizItems.length; i++) {
-          const item = quizItems[i];
-
-          let questionType: "single" | "multiple" = "single";
-          if (item.data.questionType === "multiple_choice") {
-            questionType = item.data.isMultipleAnswer ? "multiple" : "single";
-          }
-
-          const options = item.data.options.map((opt) => ({
-            text: opt.text,
-            is_correct: opt.isCorrect,
-          }));
-
-          const questionData = {
-            question_text: item.data.question,
-            question_type: questionType,
-            difficulty: item.data.difficulty,
-            explanation: "",
-            options,
-          };
-
-          try {
-            const isExistingQuestion = initialItemIds.has(item.id);
-
-            if (isExistingQuestion) {
-              await updateQuestionMutation.mutateAsync({
-                questionId: item.id,
-                question: questionData,
-              });
-            } else {
-              await addQuestionMutation.mutateAsync({
-                contentId: quizId!,
-                question: questionData,
-              });
-            }
-          } catch (error) {
-            console.error(`Failed to save question ${i + 1}:`, error);
-            failedQuestions.push(i);
-          }
-
-          setUpdateProgress({ current: i + 1, total: quizItems.length + 1 });
-        }
-
-        // Save quiz configuration
-        try {
-          await saveQuizConfig(quizId!);
-        } catch (error) {
-          console.error("Failed to save quiz configuration:", error);
-          setError("Gagal menyimpan konfigurasi quiz");
-          setIsUpdating(false);
-          return;
-        }
-
-        setUpdateProgress({ current: quizItems.length + 1, total: quizItems.length + 1 });
-        setIsUpdating(false);
-
-        if (failedQuestions.length > 0) {
-          setError(`${failedQuestions.length} pertanyaan gagal disimpan`);
-          return;
-        }
-
-        router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
-      }
-      return;
-    }
-
-    // Create new quiz
-    const result = await createQuiz(quizName, quizItems);
-
-    if (result.success && result.contentId) {
-      // Configure the quiz after creation
-      try {
-        await saveQuizConfig(result.contentId);
-      } catch (error) {
-        console.error("Failed to configure quiz:", error);
-        // Quiz is created but config failed - still redirect but show warning
-      }
-
-      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
-    } else {
-      setError(result.error || "Gagal membuat quiz");
-      if (result.failedQuestions && result.failedQuestions.length > 0) {
-        console.error("Failed questions indices:", result.failedQuestions);
-      }
-    }
-  };
+  // Combine errors
+  const error = formError || saveError;
 
   // Show loading when fetching config in edit mode
   if (isEditMode && isLoadingConfig) {
@@ -294,7 +180,7 @@ export function QuizFormContainer({
           {error && <div className="rounded-lg bg-red-500/20 p-4 text-red-200">{error}</div>}
 
           {/* Progress Display */}
-          {isLoading && (
+          {isSaving && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-white">
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -307,7 +193,7 @@ export function QuizFormContainer({
                 <div
                   className="bg-primary h-full transition-all duration-300"
                   style={{
-                    width: `${(progress.current / progress.total) * 100}%`,
+                    width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%`,
                   }}
                 />
               </div>
@@ -317,11 +203,11 @@ export function QuizFormContainer({
           {/* Save Button */}
           <Button
             variant="outline"
-            onClick={onSaveClick}
-            disabled={isLoading}
+            onClick={() => handleSave(quizName, quizItems, effectiveSettings)}
+            disabled={isSaving}
             className="hover:!bg-primary w-full hover:text-white disabled:opacity-50"
           >
-            {isLoading ? (isEditMode ? "Memperbarui..." : "Menyimpan...") : "Simpan"}
+            {isSaving ? (isEditMode ? "Memperbarui..." : "Menyimpan...") : "Simpan"}
           </Button>
         </div>
       </div>
