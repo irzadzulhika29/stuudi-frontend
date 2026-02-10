@@ -134,6 +134,18 @@ export default function MaterialDetailPage() {
         // For edit mode, we already have the content ID
         contentId = materialId;
 
+        // Update Material Title if changed
+        if (materialName !== initialMaterialName) {
+          try {
+            await api.patch(API_ENDPOINTS.TEACHER.UPDATE_CONTENT(contentId), {
+              title: materialName,
+            });
+          } catch (error) {
+            console.error("Failed to update material title:", error);
+            // Continue to update blocks even if title update fails
+          }
+        }
+
         // Update existing blocks (only those with valid UUID from API)
         for (const content of contents) {
           // Skip new content that doesn't have a valid UUID yet
@@ -143,7 +155,7 @@ export default function MaterialDetailPage() {
 
           if (content.type === "text") {
             await api.patch(API_ENDPOINTS.TEACHER.UPDATE_BLOCK_TEXT(content.id), {
-              text_content: content.content,
+              title: materialName,
             });
           } else if (content.type === "media") {
             const formData = new FormData();

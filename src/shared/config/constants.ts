@@ -55,9 +55,11 @@ export const API_ENDPOINTS = {
     COURSE_DETAIL: (id: string) => `student/courses/${id}`,
     ADD_TOPIC: (courseId: string) => `teacher/courses/${courseId}/topics`,
     DELETE_TOPIC: (topicId: string) => `teacher/topics/${topicId}`,
+    UPDATE_TOPIC: (topicId: string) => `teacher/topics/${topicId}`,
     // Content (Material/Quiz)
     ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     CONTENT_DETAIL: (contentId: string) => `teacher/content/${contentId}`,
+    UPDATE_CONTENT: (contentId: string) => `teacher/content/${contentId}`,
     // Quiz
     ADD_QUIZ_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     ADD_QUIZ_QUESTIONS: (contentId: string) => `teacher/content/${contentId}/quiz`,

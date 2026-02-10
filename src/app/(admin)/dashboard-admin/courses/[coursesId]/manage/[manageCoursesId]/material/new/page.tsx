@@ -21,10 +21,9 @@ export default function NewMaterialPage() {
   const topicId = searchParams.get("topicId") || "";
 
   if (!topicId) {
-    console.error("NewMaterialPage: No topicId found in search params!");
+    alert("No topicId found in search params!");
   }
 
-  // Using key to force re-render when topicId changes if needed, but not strictly necessary here.
   const addContentMutation = useAddContent(topicId);
 
   const { showToast } = useToast();
@@ -34,12 +33,6 @@ export default function NewMaterialPage() {
   };
 
   const handleSave = async (materialName: string, contents: MaterialContent[]) => {
-    // console.log("Starting save material...", {
-    //   materialName,
-    //   contentsCount: contents.length,
-    //   topicId,
-    // });
-
     if (!materialName.trim()) {
       showToast("Nama materi harus diisi", "warning");
       return;
@@ -69,10 +62,6 @@ export default function NewMaterialPage() {
             text_content: content.content,
           });
         } else if (content.type === "media" && content.file) {
-          // console.log("Adding media block...", {
-          //   file: content.file.name,
-          //   type: content.file.type,
-          // });
           const formData = new FormData();
           formData.append("file", content.file);
           formData.append("media_type", content.file.type.startsWith("image/") ? "image" : "video");
@@ -81,14 +70,16 @@ export default function NewMaterialPage() {
             headers: { "Content-Type": "multipart/form-data" },
           });
         } else if (content.type === "quiz") {
-          const options = content.options.map((opt) => ({
-            text: opt.text,
-            is_correct: opt.isCorrect,
-            id: opt.id,
-          }));
+          const options =
+            content.options?.map((opt) => ({
+              text: opt.text,
+              is_correct: opt.isCorrect,
+            })) || [];
 
           await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
             question: content.question,
+            question_type: content.questionType || "single",
+            points: content.difficulty === "hard" ? 20 : content.difficulty === "medium" ? 10 : 5,
             difficulty: content.difficulty,
             options,
           });
