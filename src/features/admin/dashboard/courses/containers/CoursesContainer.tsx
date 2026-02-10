@@ -29,8 +29,6 @@ export function CoursesContainer() {
     clearNav();
   }, [clearNav]);
 
-  console.log("Teaching Courses Data:", teachingData);
-
   const filteredCourses = useMemo(() => {
     const courses = teachingData?.courses ?? [];
     if (!searchQuery.trim()) return courses;

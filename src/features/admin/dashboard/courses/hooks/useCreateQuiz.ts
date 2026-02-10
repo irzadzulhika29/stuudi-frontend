@@ -143,11 +143,22 @@ export const useDeleteQuizQuestion = () => {
 function transformQuizItemToApiFormat(item: QuizItem): AddQuizQuestionRequest {
   const { data } = item;
 
+  let questionType: "single" | "multiple" = "single";
+  if (data.questionType === "multiple_choice") {
+    questionType = data.isMultipleAnswer ? "multiple" : "single";
+  }
+
+  const options: QuizQuestionOption[] = data.options.map((opt) => ({
+    text: opt.text,
+    is_correct: opt.isCorrect,
+  }));
+
   const baseData = {
     question_text: data.question,
     question_type: data.questionType,
     difficulty: data.difficulty,
     explanation: "",
+    options,
   };
 
   // For choice questions (single or multiple)
@@ -198,14 +209,13 @@ export const useCreateQuiz = (topicId: string) => {
     setProgress({ current: 0, total: quizItems.length + 1 });
 
     try {
-      console.log("Creating quiz content:", quizName);
       const quizContentResponse = await addQuizContentMutation.mutateAsync({
         title: quizName,
         type: "quiz",
       });
 
       const contentId = quizContentResponse.data.content_id;
-      console.log("Quiz content created with ID:", contentId);
+
       setProgress({ current: 1, total: quizItems.length + 1 });
 
       const failedQuestions: number[] = [];
@@ -215,12 +225,10 @@ export const useCreateQuiz = (topicId: string) => {
         const questionData = transformQuizItemToApiFormat(item);
 
         try {
-          console.log(`Adding question ${i + 1}/${quizItems.length}:`, questionData);
           await addQuizQuestionMutation.mutateAsync({
             contentId,
             question: questionData,
           });
-          console.log(`Question ${i + 1} added successfully`);
         } catch (error) {
           console.error(`Failed to add question ${i + 1}:`, error);
           failedQuestions.push(i);

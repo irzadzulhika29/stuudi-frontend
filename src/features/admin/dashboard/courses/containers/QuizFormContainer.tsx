@@ -62,28 +62,138 @@ export function QuizFormContainer({
       isEditMode,
     });
 
-  // Use custom hooks for save logic
-  const { handleSave, isLoading, progress, saveError, setSaveError } = useQuizSave({
-    courseId,
-    manageCoursesId,
-    topicId,
-    quizId,
-    isEditMode,
-    initialQuizItems,
-    onSave,
-  });
+      if (isEditMode && isExistingQuestion) {
+        try {
+          await deleteQuestionMutation.mutateAsync({ questionId: id });
+        } catch (error) {
+          console.error(`Failed to delete question ${id}:`, error);
+          setError("Gagal menghapus pertanyaan");
+          return;
+        }
+      }
 
-  // Combine errors from form and save
-  const error = formError || saveError;
-  const setError = (err: string | null) => {
-    setFormError(err);
-    setSaveError(err);
+      setQuizItems((prev) => prev.filter((item) => item.id !== id));
+    },
+    [isEditMode, initialQuizItems, deleteQuestionMutation]
+  );
+
+  // Helper to save quiz configuration
+  const saveQuizConfig = async (contentId: string) => {
+    const questionsToShow = effectiveSettings.showAllQuestions
+      ? quizItems.length
+      : effectiveSettings.displayedQuestionsCount;
+
+    await configureQuizMutation.mutateAsync({
+      contentId,
+      config: {
+        questions_to_show: questionsToShow,
+        is_random_order: effectiveSettings.randomizeQuestions,
+        is_random_selection: effectiveSettings.randomSelection,
+        passing_score: effectiveSettings.passingScore,
+        time_limit_minutes: effectiveSettings.timeLimitMinutes,
+      },
+    });
   };
 
   // Handle save button click
   const onSaveClick = async () => {
     setError(null);
-    await handleSave(quizName, quizItems, effectiveSettings);
+
+    if (isEditMode) {
+      if (onSave) {
+        onSave(quizName, quizItems, quizSettings);
+      } else {
+        setIsUpdating(true);
+        setUpdateProgress({ current: 0, total: quizItems.length + 1 }); // +1 for config
+
+        const failedQuestions: number[] = [];
+        const initialItemIds = new Set(initialQuizItems.map((item) => item.id));
+
+        for (let i = 0; i < quizItems.length; i++) {
+          const item = quizItems[i];
+
+          let questionType: "single" | "multiple" = "single";
+          if (item.data.questionType === "multiple_choice") {
+            questionType = item.data.isMultipleAnswer ? "multiple" : "single";
+          }
+
+          const options = item.data.options.map((opt) => ({
+            text: opt.text,
+            is_correct: opt.isCorrect,
+          }));
+
+          const questionData = {
+            question_text: item.data.question,
+            question_type: questionType,
+            difficulty: item.data.difficulty,
+            explanation: "",
+            options,
+          };
+
+          try {
+            const isExistingQuestion = initialItemIds.has(item.id);
+
+            if (isExistingQuestion) {
+              await updateQuestionMutation.mutateAsync({
+                questionId: item.id,
+                question: questionData,
+              });
+            } else {
+              await addQuestionMutation.mutateAsync({
+                contentId: quizId!,
+                question: questionData,
+              });
+            }
+          } catch (error) {
+            console.error(`Failed to save question ${i + 1}:`, error);
+            failedQuestions.push(i);
+          }
+
+          setUpdateProgress({ current: i + 1, total: quizItems.length + 1 });
+        }
+
+        // Save quiz configuration
+        try {
+          await saveQuizConfig(quizId!);
+        } catch (error) {
+          console.error("Failed to save quiz configuration:", error);
+          setError("Gagal menyimpan konfigurasi quiz");
+          setIsUpdating(false);
+          return;
+        }
+
+        setUpdateProgress({ current: quizItems.length + 1, total: quizItems.length + 1 });
+        setIsUpdating(false);
+
+        if (failedQuestions.length > 0) {
+          setError(`${failedQuestions.length} pertanyaan gagal disimpan`);
+          return;
+        }
+
+        router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+      }
+      return;
+    }
+
+    // Create new quiz
+    const result = await createQuiz(quizName, quizItems);
+
+    if (result.success && result.contentId) {
+      // Configure the quiz after creation
+      try {
+        await saveQuizConfig(result.contentId);
+      } catch (error) {
+        console.error("Failed to configure quiz:", error);
+        // Quiz is created but config failed - still redirect but show warning
+      }
+
+      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+    } else {
+      setError(result.error || "Gagal membuat quiz");
+      if (result.failedQuestions && result.failedQuestions.length > 0) {
+        console.error("Failed questions indices:", result.failedQuestions);
+      }
+    }
   };
 
   // Show loading when fetching config in edit mode

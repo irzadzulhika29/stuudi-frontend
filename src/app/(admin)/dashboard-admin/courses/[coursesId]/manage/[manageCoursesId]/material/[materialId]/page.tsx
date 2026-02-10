@@ -19,7 +19,7 @@ import {
   QuizContent,
   QuizOption,
 } from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
-import { ApiQuestionResponse } from "@/features/admin/dashboard/courses/utils/quizTransformers";
+import { useToast } from "@/shared/components/ui/Toast";
 
 function isValidUUID(id: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -109,17 +109,16 @@ export default function MaterialDetailPage() {
 
   const initialContents = useMemo(() => {
     if (!contentData?.data?.blocks) {
-      console.log("No blocks found in contentData");
       return [];
     }
     const transformed = transformBlocksToContents(contentData.data.blocks);
-    console.log("Transformed contents:", transformed);
+
     return transformed;
   }, [contentData]);
 
   const initialMaterialName = contentData?.data?.title || "";
-  console.log("initialMaterialName:", initialMaterialName);
-  console.log("initialContents:", initialContents);
+
+  const { showToast } = useToast();
 
   const addContentMutation = useAddContent(topicId);
 
@@ -129,7 +128,7 @@ export default function MaterialDetailPage() {
 
   const handleSave = async (materialName: string, contents: MaterialContent[]) => {
     if (!materialName.trim()) {
-      alert("Nama materi harus diisi");
+      showToast("Nama materi harus diisi", "warning");
       return;
     }
 
@@ -142,6 +141,18 @@ export default function MaterialDetailPage() {
         // For edit mode, we already have the content ID
         contentId = materialId;
 
+        // Update Material Title if changed
+        if (materialName !== initialMaterialName) {
+          try {
+            await api.patch(API_ENDPOINTS.TEACHER.UPDATE_CONTENT(contentId), {
+              title: materialName,
+            });
+          } catch (error) {
+            console.error("Failed to update material title:", error);
+            // Continue to update blocks even if title update fails
+          }
+        }
+
         // Update existing blocks (only those with valid UUID from API)
         for (const content of contents) {
           // Skip new content that doesn't have a valid UUID yet
@@ -151,7 +162,7 @@ export default function MaterialDetailPage() {
 
           if (content.type === "text") {
             await api.patch(API_ENDPOINTS.TEACHER.UPDATE_BLOCK_TEXT(content.id), {
-              text_content: content.content,
+              title: materialName,
             });
           } else if (content.type === "media") {
             const formData = new FormData();
@@ -272,7 +283,7 @@ export default function MaterialDetailPage() {
       handleBack();
     } catch (error) {
       console.error("Failed to save material:", error);
-      alert("Gagal menyimpan materi. Silakan coba lagi.");
+      showToast("Gagal menyimpan materi. Silakan coba lagi.", "error");
     } finally {
       setIsSaving(false);
     }

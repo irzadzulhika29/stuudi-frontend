@@ -1,23 +1,24 @@
-"use client";
-
-import { motion } from "framer-motion";
-
 export default function Loading() {
   return (
     <div className="fixed inset-0 z-9999 flex items-start justify-center bg-white/10 backdrop-blur-sm">
       <div className="relative h-1 w-full overflow-hidden">
-        <motion.div
-          className="via-secondary absolute top-0 left-0 h-full w-full bg-linear-to-r from-transparent to-transparent"
-          initial={{ x: "-100%" }}
-          animate={{ x: "100%" }}
-          transition={{
-            duration: 0.8,
-            ease: "easeInOut",
-            repeat: Infinity,
+        <div
+          className="absolute top-0 left-0 h-full w-[30%] bg-linear-to-r from-transparent via-orange-500 to-transparent"
+          style={{
+            animation: "loading-bar 0.8s ease-in-out infinite",
           }}
-          style={{ width: "30%" }}
         />
       </div>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          @keyframes loading-bar {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+          }
+        `,
+        }}
+      />
     </div>
   );
 }

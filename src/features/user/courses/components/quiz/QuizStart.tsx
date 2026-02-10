@@ -32,7 +32,6 @@ export function QuizStart({ quiz, onStart, onResume, onContinue }: QuizStartProp
   useEffect(() => {
     const fetchAttempts = async () => {
       try {
-        console.log("[QuizStart] Fetching attempts for quiz:", quiz.id);
         const data = await quizService.getQuizAttempts(quiz.id);
 
         // Filter and Sort by Date Descending (Latest first)

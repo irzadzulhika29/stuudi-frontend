@@ -55,9 +55,11 @@ export const API_ENDPOINTS = {
     COURSE_DETAIL: (id: string) => `student/courses/${id}`,
     ADD_TOPIC: (courseId: string) => `teacher/courses/${courseId}/topics`,
     DELETE_TOPIC: (topicId: string) => `teacher/topics/${topicId}`,
+    UPDATE_TOPIC: (topicId: string) => `teacher/topics/${topicId}`,
     // Content (Material/Quiz)
     ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     CONTENT_DETAIL: (contentId: string) => `teacher/content/${contentId}`,
+    UPDATE_CONTENT: (contentId: string) => `teacher/content/${contentId}`,
     // Quiz
     ADD_QUIZ_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     ADD_QUIZ_QUESTIONS: (contentId: string) => `teacher/content/${contentId}/quiz`,
@@ -106,4 +108,10 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: "access_token",
   REFRESH_TOKEN: "refresh_token",
   USER: "user_data",
+} as const;
+
+export const SUPPORT_CONTACT = {
+  NAME: "Zakwan",
+  PHONE: "+62 852-2605-5932",
+  WHATSAPP_URL: "https://wa.me/6285226055932",
 } as const;

@@ -1,10 +1,12 @@
-import { Trash2, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Plus, Pencil, X, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/shared/components/ui";
+import { Button, Input } from "@/shared/components/ui";
 import Link from "next/link";
 import { TopicMaterialItem } from "./smallcomponents/TopicMaterialItem";
 import { useDeleteTopic } from "../hooks/useDeleteTopic";
+import { useUpdateTopic } from "../hooks/useUpdateTopic";
 import { ConfirmDeleteModal } from "@/shared/components/ui/ConfirmDeleteModal";
+import { useToast } from "@/shared/components/ui/Toast";
 
 export interface Material {
   id: string;
@@ -38,11 +40,27 @@ export function ManageTopicItem({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
+
+  // Edit Mode State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(title);
+  const [editDescription, setEditDescription] = useState(description);
+
   const deleteTopic = useDeleteTopic();
+  const updateTopic = useUpdateTopic(id);
+  const { showToast } = useToast();
 
   useEffect(() => {
     setOrderedMaterials(materials);
   }, [materials]);
+
+  // Sync state when props change (unless editing)
+  useEffect(() => {
+    if (!isEditing) {
+      setEditTitle(title);
+      setEditDescription(description);
+    }
+  }, [title, description, isEditing]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -72,8 +90,52 @@ export function ManageTopicItem({
     deleteTopic.mutate(id, {
       onSuccess: () => {
         setIsDeleteModalOpen(false);
+        showToast("Topik berhasil dihapus", "success");
+      },
+      onError: () => {
+        showToast("Gagal menghapus topik", "error");
       },
     });
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+    // Ensure expanded when editing to show description
+    if (!isExpanded) setIsExpanded(true);
+  };
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(false);
+    setEditTitle(title);
+    setEditDescription(description);
+  };
+
+  const handleSaveEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!editTitle.trim()) {
+      showToast("Judul topik tidak boleh kosong", "error");
+      return;
+    }
+
+    updateTopic.mutate(
+      {
+        title: editTitle,
+        description: editDescription,
+      },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+          showToast("Topik berhasil diperbarui", "success");
+        },
+        onError: (error) => {
+          console.error("Update failed:", error);
+          showToast("Gagal memperbarui topik", "error");
+        },
+      }
+    );
   };
 
   return (
@@ -89,25 +151,81 @@ export function ManageTopicItem({
                 >
                   {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </button>
-                <h3 className="text-xl font-bold text-neutral-800">{title}</h3>
+
+                {isEditing ? (
+                  <div className="mr-4 flex-1">
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="h-9 text-lg font-bold"
+                      placeholder="Judul Topik"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                ) : (
+                  <h3 className="text-xl font-bold text-neutral-800">{title}</h3>
+                )}
               </div>
 
               <div
-                className={`transition-all duration-300 ${isExpanded ? "max-h-40 opacity-100" : "max-h-0 overflow-hidden opacity-0"}`}
+                className={`transition-all duration-300 ${isExpanded ? "max-h-60 opacity-100" : "max-h-0 overflow-hidden opacity-0"}`}
               >
-                <p className="ml-8 max-w-3xl text-sm leading-relaxed text-neutral-500">
-                  {description}
-                </p>
+                {isEditing ? (
+                  <div className="mt-2 mr-4 ml-8" onClick={(e) => e.stopPropagation()}>
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      className="focus:border-primary focus:ring-primary w-full rounded-md border border-neutral-300 p-2 text-sm focus:ring-1 focus:outline-none"
+                      rows={3}
+                      placeholder="Deskripsi Topik"
+                    />
+                  </div>
+                ) : (
+                  <p className="ml-8 max-w-3xl text-sm leading-relaxed text-neutral-500">
+                    {description}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <button
-                onClick={handleDeleteClick}
-                className="p-2 text-neutral-300 transition-colors hover:text-red-500"
-              >
-                <Trash2 size={20} />
-              </button>
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={updateTopic.isPending}
+                    className="p-2 text-green-500 transition-colors hover:text-green-600 disabled:opacity-50"
+                    title="Simpan"
+                  >
+                    <Check size={20} />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={updateTopic.isPending}
+                    className="p-2 text-neutral-400 transition-colors hover:text-neutral-600 disabled:opacity-50"
+                    title="Batal"
+                  >
+                    <X size={20} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleEditClick}
+                    className="hover:text-primary p-2 text-neutral-400 transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil size={20} />
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
+                    className="p-2 text-neutral-300 transition-colors hover:text-red-500"
+                    title="Hapus"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -115,7 +233,7 @@ export function ManageTopicItem({
         <div
           className="overflow-hidden bg-white transition-all duration-300 ease-out"
           style={{
-            maxHeight: isExpanded ? `${contentHeight + 200}px` : "0px",
+            maxHeight: isExpanded ? `${contentHeight + 400}px` : "0px",
           }}
         >
           <div ref={contentRef} className="px-5 pt-2 pb-6">

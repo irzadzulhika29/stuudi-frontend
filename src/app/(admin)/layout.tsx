@@ -6,6 +6,7 @@ import { Sidebar } from "@/features/user/dashboard/shared/components/Sidebar";
 import { Topbar } from "@/features/user/dashboard/shared/components/Topbar";
 import { CourseNavigationProvider } from "@/features/user/courses/context/CourseNavigationContext";
 import { useUser } from "@/features/auth/shared/hooks/useUser";
+import { RoleGuard } from "@/shared/components/guards";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const adminMenuItems = [
@@ -41,13 +42,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <CourseNavigationProvider>
-      <DashboardLayout
-        sidebar={<Sidebar menuItems={adminMenuItems} className="border-r-neutral-800" />}
-        topbar={<Topbar user={topbarUser} />}
-      >
-        {children}
-      </DashboardLayout>
-    </CourseNavigationProvider>
+    <RoleGuard allowedRoles={["teacher", "admin"]} fallbackPath="/dashboard">
+      <CourseNavigationProvider>
+        <DashboardLayout
+          sidebar={<Sidebar menuItems={adminMenuItems} className="border-r-neutral-800" />}
+          topbar={<Topbar user={topbarUser} />}
+        >
+          {children}
+        </DashboardLayout>
+      </CourseNavigationProvider>
+    </RoleGuard>
   );
 }

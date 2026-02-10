@@ -26,7 +26,6 @@ export function CameraCheck({
   }, [stream, isCameraActive]);
 
   const handleCreateRequest = () => {
-    console.log("Button clicked: Requesting camera in CameraCheck component");
     onRequestCamera();
   };
 

@@ -111,8 +111,6 @@ export const courseService = {
   async getMyCourses(): Promise<MyCoursesResponse> {
     const url = API_ENDPOINTS.COURSES.MY;
     const response = await api.get<ApiResponse<MyCoursesResponse>>(url);
-    console.log("My courses API response:", response.data);
-    console.log("My courses raw data:", response.data.data);
     return response.data.data;
   },
 
@@ -135,13 +133,9 @@ export const courseService = {
   },
 
   async getContentDetails(contentId: string): Promise<ContentDetails> {
-    console.log("Fetching content details for:", contentId);
     const url = API_ENDPOINTS.COURSES.CONTENTDETAILS(contentId);
     const response = await api.get<ApiResponse<ApiContentDetails>>(url);
-    console.log("Content details API response:", response.data);
-    console.log("Content details raw data:", response.data.data);
     const transformed = transformContentDetails(response.data.data);
-    console.log("Content details transformed:", transformed);
     return transformed;
   },
 

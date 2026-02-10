@@ -2,19 +2,18 @@
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import {
-  MaterialForm,
-  MaterialContent,
-} from "@/features/admin/dashboard/courses/components/material";
+import { MaterialContent } from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
+import { MaterialForm } from "@/features/admin/dashboard/courses/components/material/MaterialForm";
 import { useAddContent } from "@/features/admin/dashboard/courses/hooks/useAddContent";
+import { useToast } from "@/shared/components/ui/Toast";
 import { api } from "@/shared/api/api";
 import { API_ENDPOINTS } from "@/shared/config/constants";
 
 export default function NewMaterialPage() {
   const params = useParams();
   const router = useRouter();
-  const coursesId = params.coursesId as string;
-  const manageCoursesId = params.manageCoursesId as string;
+  const courseId = params.coursesId as string;
+  const manageCourseId = params.manageCoursesId as string;
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -27,18 +26,20 @@ export default function NewMaterialPage() {
 
   const addContentMutation = useAddContent(topicId);
 
+  const { showToast } = useToast();
+
   const handleBack = () => {
-    router.push(`/dashboard-admin/courses/${coursesId}/manage/${manageCoursesId}`);
+    router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCourseId}`);
   };
 
   const handleSave = async (materialName: string, contents: MaterialContent[]) => {
     if (!materialName.trim()) {
-      alert("Nama materi harus diisi");
+      showToast("Nama materi harus diisi", "warning");
       return;
     }
 
     if (!topicId) {
-      alert("Error: Topic ID missing. Cannot save.");
+      showToast("Error: Topic ID missing. Cannot save.", "error");
       return;
     }
 
@@ -85,9 +86,11 @@ export default function NewMaterialPage() {
       }
 
       // Success - navigate back
+      showToast("Materi berhasil disimpan", "success");
       handleBack();
-    } catch {
-      alert("Gagal menyimpan materi. Silakan coba lagi.");
+    } catch (error) {
+      console.error("Failed to save material:", error);
+      showToast("Gagal menyimpan materi. Silakan coba lagi.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -95,7 +98,7 @@ export default function NewMaterialPage() {
 
   return (
     <MaterialForm
-      courseId={coursesId}
+      courseId={courseId}
       courseName="Course"
       materialName=""
       onBack={handleBack}

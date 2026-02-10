@@ -38,11 +38,9 @@ export const dashboardService = {
 
   async startExam(examId: string): Promise<ExamStartResponse> {
     try {
-      console.log("[DashboardService] Requesting start exam:", examId);
       const response = await api.post<ApiResponse<ExamStartResponse>>(
         `/student/exams/${examId}/start`
       );
-      console.log("[DashboardService] Start exam response:", response.data);
       return response.data.data;
     } catch (error) {
       console.error("Failed to start exam", error);
@@ -52,9 +50,7 @@ export const dashboardService = {
 
   async getAttempts(): Promise<ExamAttemptsResponse> {
     try {
-      console.log("[DashboardService] Requesting exam attempts...");
       const response = await api.get<ApiResponse<ExamAttemptsResponse>>("/student/exams-attempts");
-      console.log("[DashboardService] Exam attempts response:", response.data);
       return response.data.data;
     } catch (error) {
       console.error("Failed to fetch exam attempts", error);
@@ -64,11 +60,9 @@ export const dashboardService = {
 
   async resumeExam(examId: string): Promise<ExamResumeResponse> {
     try {
-      console.log("[DashboardService] Requesting resume exam:", examId);
       const response = await api.get<ApiResponse<ExamResumeResponse>>(
         `/student/exams/${examId}/resume`
       );
-      console.log("[DashboardService] Resume exam response:", response.data);
       return response.data.data;
     } catch (error) {
       console.error("Failed to resume exam", error);

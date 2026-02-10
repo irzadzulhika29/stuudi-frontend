@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { ExamQuestion } from "../types/examTypes";
 import { Flag } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
@@ -15,7 +16,7 @@ interface QuestionNavigationProps {
   onFinishAttempt: () => void;
 }
 
-export function QuestionNavigation({
+export const QuestionNavigation = memo(function QuestionNavigation({
   questions,
   currentIndex,
   answers,
@@ -84,4 +85,4 @@ export function QuestionNavigation({
       </div>
     </div>
   );
-}
+});
