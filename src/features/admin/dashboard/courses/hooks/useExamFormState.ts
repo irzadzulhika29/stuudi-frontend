@@ -10,7 +10,7 @@ import { QuizItem } from "../types";
 
 export type { QuizItem };
 
-const DEFAULT_EXAM_STATE = {
+export const DEFAULT_EXAM_STATE = {
   title: "",
   description: "",
   duration: 120,
