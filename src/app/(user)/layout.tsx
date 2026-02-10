@@ -6,6 +6,7 @@ import { Sidebar } from "@/features/user/dashboard/shared/components/Sidebar";
 import { Topbar } from "@/features/user/dashboard/shared/components/Topbar";
 import { CourseNavigationProvider } from "@/features/user/courses/context/CourseNavigationContext";
 import { useUser } from "@/features/auth/shared/hooks/useUser";
+import { RoleGuard } from "@/shared/components/guards";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const userMenuItems = [
@@ -42,13 +43,15 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <CourseNavigationProvider>
-      <DashboardLayout
-        sidebar={<Sidebar menuItems={userMenuItems} />}
-        topbar={<Topbar user={topbarUser} />}
-      >
-        {children}
-      </DashboardLayout>
-    </CourseNavigationProvider>
+    <RoleGuard allowedRoles={["student"]} fallbackPath="/dashboard-admin">
+      <CourseNavigationProvider>
+        <DashboardLayout
+          sidebar={<Sidebar menuItems={userMenuItems} />}
+          topbar={<Topbar user={topbarUser} />}
+        >
+          {children}
+        </DashboardLayout>
+      </CourseNavigationProvider>
+    </RoleGuard>
   );
 }

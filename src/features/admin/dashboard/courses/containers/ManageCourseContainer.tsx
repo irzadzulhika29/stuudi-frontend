@@ -15,6 +15,7 @@ import { CourseDetailSkeleton } from "@/features/user/courses/components/CourseD
 import { AddTopicModal } from "../components/AddTopicModal";
 import { CourseEditForm } from "../components/CourseEditForm";
 import { ManagementHeader } from "../components/ManagementHeader";
+import { useToast } from "@/shared/components/ui/Toast";
 
 interface ManageCourseContainerProps {
   courseId: string;
@@ -27,6 +28,7 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
   const addTopicMutation = useAddTopic(courseId);
   const updateCourseMutation = useUpdateCourse(courseId);
   const deleteCourseMutation = useDeleteCourse();
+  const { showToast } = useToast();
 
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -88,9 +90,6 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
   };
 
   const handleApplyEdit = () => {
-    console.log("Applying edit...");
-    console.log("Data:", { name: courseName, description: description, photo: thumbnailFile });
-
     updateCourseMutation.mutate(
       {
         name: courseName,
@@ -98,8 +97,7 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
         photo: thumbnailFile,
       },
       {
-        onSuccess: (data) => {
-          console.log("Update success:", data);
+        onSuccess: () => {
           setThumbnailFile(null);
           router.push(`/dashboard-admin/courses/${courseId}`);
         },
@@ -119,12 +117,12 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
     ) {
       deleteCourseMutation.mutate(courseId, {
         onSuccess: () => {
-          alert("Course berhasil dihapus.");
+          showToast("Course berhasil dihapus.", "success");
           router.push("/dashboard-admin/courses");
         },
         onError: (error) => {
           console.error("Failed to delete course:", error);
-          alert("Gagal menghapus course. Silakan coba lagi.");
+          showToast("Gagal menghapus course. Silakan coba lagi.", "error");
         },
       });
     }
@@ -158,7 +156,6 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
     participants: course.participants?.map((p) => ({ id: p.user_id, name: p.name })) || [],
     totalParticipants: course.total_participants || 0,
     lastAccessed: course.last_accessed || undefined,
-    enrollCode: course.enrollment_code,
   };
 
   const transformedTopics =

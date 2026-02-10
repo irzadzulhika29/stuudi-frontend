@@ -7,11 +7,7 @@ export const useTeachingCourses = () => {
   return useQuery<TeachingCoursesData>({
     queryKey: ["teachingCourses"],
     queryFn: async () => {
-      console.log("Fetching teaching courses...");
-      console.log("Endpoint:", API_ENDPOINTS.TEACHER.COURSES);
       const response = await api.get<TeachingCoursesResponse>(API_ENDPOINTS.TEACHER.COURSES);
-      console.log("Full API Response:", response);
-      console.log("Response Data:", response.data);
       return response.data.data;
     },
     staleTime: 1000 * 60 * 5,
@@ -19,4 +15,3 @@ export const useTeachingCourses = () => {
     refetchOnWindowFocus: false,
   });
 };
-

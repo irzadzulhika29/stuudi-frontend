@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 
@@ -10,7 +11,12 @@ interface ExamFooterProps {
   onNext: () => void;
 }
 
-export function ExamFooter({ currentIndex, totalQuestions, onPrevious, onNext }: ExamFooterProps) {
+export const ExamFooter = memo(function ExamFooter({
+  currentIndex,
+  totalQuestions,
+  onPrevious,
+  onNext,
+}: ExamFooterProps) {
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === totalQuestions - 1;
 
@@ -38,4 +44,4 @@ export function ExamFooter({ currentIndex, totalQuestions, onPrevious, onNext }:
       </Button>
     </footer>
   );
-}
+});

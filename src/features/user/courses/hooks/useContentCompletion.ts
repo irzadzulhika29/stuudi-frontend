@@ -7,7 +7,6 @@ export const useMarkContentComplete = () => {
   return useMutation({
     mutationFn: (contentId: string) => courseService.markContentComplete(contentId),
     onSuccess: (data) => {
-      console.log("Content marked as complete:", data);
       // Invalidate relevant queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ["contentDetails", data.contentId] });
       queryClient.invalidateQueries({ queryKey: ["courseTopics"] });
@@ -25,7 +24,6 @@ export const useMarkContentIncomplete = () => {
   return useMutation({
     mutationFn: (contentId: string) => courseService.markContentIncomplete(contentId),
     onSuccess: (data) => {
-      console.log("Content marked as incomplete:", data);
       // Invalidate relevant queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ["contentDetails", data.contentId] });
       queryClient.invalidateQueries({ queryKey: ["courseTopics"] });

@@ -7,6 +7,7 @@ import { ReactNode, useState } from "react";
 import Image from "next/image";
 import { useSidebar } from "@/features/user/dashboard/shared/context/SidebarContext";
 import { useCourseNavigation } from "@/features/user/courses/context/CourseNavigationContext";
+import { SUPPORT_CONTACT } from "@/shared/config/constants";
 
 export type SubItem = {
   label: string;
@@ -208,7 +209,7 @@ export function Sidebar({ menuItems, className = "" }: SidebarProps) {
             </div>
 
             <a
-              href="https://wa.me/6285226055932"
+              href={SUPPORT_CONTACT.WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 transition-colors hover:bg-green-100"
@@ -217,8 +218,8 @@ export function Sidebar({ menuItems, className = "" }: SidebarProps) {
                 <Phone size={20} className="text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-neutral-800">Zakwan</p>
-                <p className="text-sm text-neutral-600">+62 852-2605-5932</p>
+                <p className="font-semibold text-neutral-800">{SUPPORT_CONTACT.NAME}</p>
+                <p className="text-sm text-neutral-600">{SUPPORT_CONTACT.PHONE}</p>
               </div>
             </a>
 

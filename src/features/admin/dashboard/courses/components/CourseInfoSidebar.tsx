@@ -1,13 +1,10 @@
 "use client";
 
-// import { useState } from "react";
-// import { CourseInfoSidebarProps, Note } from "../types/cTypes";
 import { CourseInfoSidebarProps } from "../types/cTypes";
 import { CoursePeople } from "./smallcomponents/CoursePeople";
 import { CourseEnrollCode } from "./smallcomponents/CourseEnrollCode";
 
 export function CourseInfoSidebar({
-  progress, // eslint-disable-line @typescript-eslint/no-unused-vars
   teachers = [],
   participants = [],
   totalParticipants = 0,
@@ -15,9 +12,7 @@ export function CourseInfoSidebar({
   showPeople = true,
   showLastAccessed = true,
   enrollCode,
-}: CourseInfoSidebarProps) {
-  // const [notes] = useState<Note[]>(initialNotes); // eslint-disable-line @typescript-eslint/no-unused-vars
-
+}: Omit<CourseInfoSidebarProps, "progress">) {
   return (
     <div className="space-y-3">
       {enrollCode && <CourseEnrollCode enrollCode={enrollCode} />}

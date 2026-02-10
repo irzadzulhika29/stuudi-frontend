@@ -160,9 +160,11 @@ export const useCreateExam = (courseId: string) => {
 
     try {
       // Step 1: Create Exam
+
       const examResponse = await createExamContentMutation.mutateAsync(examData);
 
       const examId = examResponse.data.exam_id;
+
       setProgress({ current: 1, total: totalSteps, stage: "Menambah pertanyaan..." });
 
       // Step 2: Add Questions

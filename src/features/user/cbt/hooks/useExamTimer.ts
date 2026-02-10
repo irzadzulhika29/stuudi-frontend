@@ -16,17 +16,10 @@ export function useExamTimer() {
   useEffect(() => {
     // Don't run timer if exam is finished, time is up, or lives depleted
     if (timeRemaining <= 0 || lives <= 0 || view === "finished") {
-      if (timeRemaining <= 0) console.log("[useExamTimer] Time expired");
-      if (lives <= 0) console.log("[useExamTimer] Lives depleted");
-      if (view === "finished") console.log("[useExamTimer] Exam finished");
       return;
     }
 
     const timer = setInterval(() => {
-      // Optional: Log every 10s or 60s to avoid spam
-      if (timeRemaining % 10 === 0) {
-        console.log(`[useExamTimer] Tick: ${timeRemaining}s remaining`);
-      }
       dispatch(decrementTime());
     }, 1000);
 

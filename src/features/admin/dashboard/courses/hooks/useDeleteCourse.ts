@@ -18,11 +18,9 @@ export const useDeleteCourse = () => {
 
   return useMutation<DeleteCourseResponse, AxiosError<ApiError>, string>({
     mutationFn: async (courseId: string) => {
-      console.log("Deleting course:", courseId);
       const response = await api.delete<DeleteCourseResponse>(
         API_ENDPOINTS.TEACHER.DELETE_COURSE(courseId)
       );
-      console.log("Delete course response:", response.data);
       return response.data;
     },
     onSuccess: () => {

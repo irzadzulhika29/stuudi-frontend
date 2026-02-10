@@ -36,7 +36,6 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
 
   useEffect(() => {
     if (content) {
-      console.log("DEBUG: Content Details:", content);
     }
   }, [content]);
 
