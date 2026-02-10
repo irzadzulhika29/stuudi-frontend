@@ -5,34 +5,21 @@ import { Loader2 } from "lucide-react";
 import { QuizFormContainer } from "@/features/admin/dashboard/courses/containers/QuizFormContainer";
 import { useGetQuizDetails } from "@/features/admin/dashboard/courses/hooks/useGetQuizDetails";
 import { QuizItem } from "@/features/admin/dashboard/courses/containers/QuizFormContainer";
-import { QuizData } from "@/features/admin/dashboard/courses/components/material";
+import { transformApiToQuizItem } from "@/features/admin/dashboard/courses/utils/quizTransformers";
 
 // Transform API data to QuizFormContainer format
 function transformQuizDetailsToFormData(
   questions: {
     question_id: string;
     text: string;
-    type: "single" | "multiple";
+    type: "single" | "multiple" | "matching";
     points: number;
     difficulty: "easy" | "medium" | "hard";
-    options: { option_id: string; text: string; is_correct: boolean }[];
+    options?: { option_id: string; text: string; is_correct: boolean }[];
+    pairs?: { pair_id?: string; left: string; right: string }[];
   }[]
 ): QuizItem[] {
-  return questions.map((q) => ({
-    id: q.question_id,
-    data: {
-      question: q.text,
-      questionType: "multiple_choice" as const,
-      isRequired: true,
-      isMultipleAnswer: q.type === "multiple",
-      difficulty: q.difficulty,
-      options: q.options.map((opt) => ({
-        id: opt.option_id,
-        text: opt.text,
-        isCorrect: opt.is_correct,
-      })),
-    } as QuizData,
-  }));
+  return questions.map((q) => transformApiToQuizItem(q, q.question_id));
 }
 
 export default function QuizEditPage() {

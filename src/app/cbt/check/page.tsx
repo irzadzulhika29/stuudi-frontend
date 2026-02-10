@@ -36,7 +36,7 @@ function CheckContent() {
         const data = await dashboardService.accessExam(examCode);
         setExamData(data);
       } catch (err: unknown) {
-        console.error("Failed to fetch exam data:", err);
+        alert("Failed to fetch exam data:" + err);
         const errorMessage =
           (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
           "Gagal memuat informasi ujian.";

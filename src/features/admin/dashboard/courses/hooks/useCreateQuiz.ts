@@ -29,12 +29,18 @@ interface QuizQuestionOption {
   is_correct: boolean;
 }
 
+interface QuizQuestionPair {
+  left: string;
+  right: string;
+}
+
 interface AddQuizQuestionRequest {
   question_text: string;
-  question_type: "single" | "multiple";
+  question_type: "single" | "multiple" | "matching";
   difficulty: "easy" | "medium" | "hard";
   explanation: string;
-  options: QuizQuestionOption[];
+  options?: QuizQuestionOption[];
+  pairs?: QuizQuestionPair[];
 }
 
 interface AddQuizQuestionResponse {
@@ -78,10 +84,11 @@ export const useAddQuizQuestions = () => {
 
 interface UpdateQuizQuestionRequest {
   question_text: string;
-  question_type: "single" | "multiple";
+  question_type: "single" | "multiple" | "matching";
   difficulty: "easy" | "medium" | "hard";
   explanation: string;
-  options: QuizQuestionOption[];
+  options?: QuizQuestionOption[];
+  pairs?: QuizQuestionPair[];
 }
 
 interface UpdateQuizQuestionResponse {
@@ -146,13 +153,40 @@ function transformQuizItemToApiFormat(item: QuizItem): AddQuizQuestionRequest {
     is_correct: opt.isCorrect,
   }));
 
-  return {
+  const baseData = {
     question_text: data.question,
-    question_type: questionType,
+    question_type: data.questionType,
     difficulty: data.difficulty,
     explanation: "",
     options,
   };
+
+  // For choice questions (single or multiple)
+  if (data.questionType === "single" || data.questionType === "multiple") {
+    return {
+      ...baseData,
+      options:
+        data.options?.map((opt) => ({
+          text: opt.text,
+          is_correct: opt.isCorrect,
+        })) || [],
+    };
+  }
+
+  // For matching questions
+  if (data.questionType === "matching") {
+    return {
+      ...baseData,
+      pairs:
+        data.pairs?.map((pair) => ({
+          left: pair.left,
+          right: pair.right,
+        })) || [],
+    };
+  }
+
+  // Fallback (should not reach here)
+  throw new Error(`Unsupported question type: ${data.questionType}`);
 }
 
 interface CreateQuizResult {

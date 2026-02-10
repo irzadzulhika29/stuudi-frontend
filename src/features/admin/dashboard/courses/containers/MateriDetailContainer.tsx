@@ -107,7 +107,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
         </div>
         <p className="mb-4 font-medium text-white">{question.text}</p>
         <div className="space-y-3">
-          {question.options.map((option, optIndex) => (
+          {question.options?.map((option, optIndex) => (
             <div
               key={option.option_id}
               className={`flex items-center gap-3 rounded-xl border p-4 ${

@@ -21,13 +21,11 @@ import {
 } from "@/features/admin/dashboard/courses/components/material/AddContentButtons";
 import { useToast } from "@/shared/components/ui/Toast";
 
-// Helper to check if ID is a valid UUID (existing from API)
 function isValidUUID(id: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(id);
 }
 
-// Transform API blocks to MaterialContent format
 function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
   const contents: MaterialContent[] = [];
 
@@ -44,30 +42,45 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
         id: block.block_id,
         type: "media",
         file: null,
-        embedUrl: "", // Leave empty for embed URL field
+        embedUrl: "",
         previewUrl: block.media_type === "image" ? block.media_url : undefined,
         mediaType: block.media_type,
       };
       contents.push(mediaContent);
     } else if (block.type === "quiz" && block.questions) {
-      // Each question in the quiz block becomes a separate QuizContent
-      // Store questionId as id, and blockId separately for API calls
       for (const question of block.questions) {
-        const options: QuizOption[] = question.options.map((opt) => ({
-          id: opt.option_id,
-          text: opt.option_text,
-          isCorrect: opt.is_correct,
-        }));
+        // Handle both field name formats
+        const apiQuestion = question as unknown as ApiQuestionResponse;
+        const questionText = question.question_text || apiQuestion.text || "";
+        const questionType = (question.question_type || apiQuestion.type || "single") as
+          | "single"
+          | "multiple"
+          | "matching";
+
+        const options: QuizOption[] =
+          question.options?.map((opt) => ({
+            id: opt.option_id || "",
+            text: opt.option_text || "",
+            isCorrect: opt.is_correct,
+          })) || [];
+
+        // Handle pairs for matching questions
+        const pairs =
+          apiQuestion.pairs?.map((pair, index: number) => ({
+            id: pair.pair_id || pair.id || `pair-${question.question_id}-${index}`,
+            left: pair.left || "",
+            right: pair.right || "",
+          })) || undefined;
 
         const quizContent: QuizContent = {
           id: question.question_id, // Use questionId for UPDATE_QUESTION endpoint
           type: "quiz",
-          question: question.question_text,
-          questionType: "multiple_choice",
+          question: questionText,
+          questionType,
           isRequired: true,
-          isMultipleAnswer: question.question_type === "multiple",
           difficulty: "medium",
-          options,
+          options: questionType === "matching" ? [] : options,
+          pairs,
         };
         contents.push(quizContent);
       }
@@ -85,21 +98,15 @@ export default function MaterialDetailPage() {
   const manageCoursesId = params.manageCoursesId as string;
   const materialId = params.materialId as string;
 
-  // Check if this is edit mode (materialId is not "new" and not a topicId from query)
   const topicIdFromQuery = searchParams.get("topicId");
   const isEditMode = materialId !== "new" && !topicIdFromQuery;
 
-  // For new materials, topicId comes from query param; for edit, we'll get it from content details
   const topicId = topicIdFromQuery || materialId;
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch content details when editing
   const { data: contentData, isLoading } = useGetContentDetails(isEditMode ? materialId : null);
 
-  // Debug logs
-
-  // Transform API data to form format
   const initialContents = useMemo(() => {
     if (!contentData?.data?.blocks) {
       return [];
@@ -177,14 +184,15 @@ export default function MaterialDetailPage() {
             }
           } else if (content.type === "quiz") {
             // Quiz content ID is question_id, use UPDATE_QUESTION endpoint
-            const options = content.options.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            }));
+            const options =
+              content.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [];
 
             await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(content.id), {
               question_text: content.question,
-              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              question_type: content.questionType || "single",
               difficulty: content.difficulty || "medium",
               explanation: "",
               options,
@@ -215,14 +223,15 @@ export default function MaterialDetailPage() {
               headers: { "Content-Type": "multipart/form-data" },
             });
           } else if (content.type === "quiz") {
-            const options = content.options.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            }));
+            const options =
+              content.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [];
 
             await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
               question: content.question,
-              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              question_type: content.questionType || "single",
               difficulty: content.difficulty || "medium",
               options,
             });
@@ -254,14 +263,15 @@ export default function MaterialDetailPage() {
               headers: { "Content-Type": "multipart/form-data" },
             });
           } else if (content.type === "quiz") {
-            const options = content.options.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            }));
+            const options =
+              content.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [];
 
             await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
               question: content.question,
-              question_type: content.isMultipleAnswer ? "multiple" : "single",
+              question_type: content.questionType || "single",
               difficulty: content.difficulty,
               options,
             });

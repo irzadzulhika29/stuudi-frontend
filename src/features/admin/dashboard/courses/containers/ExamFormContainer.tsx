@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { ChevronLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { QuizBox, QuizData } from "@/features/admin/dashboard/courses/components/material";
 import {
   ExamMetadataForm,
   ExamConfigPanel,
@@ -28,51 +25,6 @@ interface ExamFormContainerProps {
   examId?: string;
   isEditMode?: boolean;
 }
-
-// Helper to format ISO date to datetime-local input format
-function formatDateTimeLocal(isoString: string): string {
-  if (!isoString) return "";
-  const date = new Date(isoString);
-  const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - offset * 60 * 1000);
-  return localDate.toISOString().slice(0, 16);
-}
-
-// Helper to transform API questions to QuizItem format
-function transformApiQuestionsToQuizItems(examDetails: ExamDetails): QuizItem[] {
-  return examDetails.questions.map((q) => ({
-    id: q.question_id,
-    data: {
-      question: q.question_text,
-      questionType: "multiple_choice" as const,
-      isRequired: true,
-      isMultipleAnswer: q.question_type === "multiple",
-      difficulty: q.difficulty,
-      options: q.options
-        .sort((a, b) => a.sequence - b.sequence)
-        .map((opt) => ({
-          id: opt.option_id,
-          text: opt.option_text,
-          isCorrect: opt.is_correct,
-        })),
-    },
-  }));
-}
-
-// Default values
-const DEFAULT_EXAM_STATE = {
-  title: "",
-  description: "",
-  duration: 120,
-  passingScore: 70.0,
-  startTime: "",
-  endTime: "",
-  maxAttempts: 2,
-  questionsToShow: 5,
-  isRandomOrder: false,
-  isRandomSelection: false,
-  quizItems: [] as QuizItem[],
-};
 
 export function ExamFormContainer({
   courseId,
@@ -399,10 +351,11 @@ export function ExamFormContainer({
 
   return (
     <div className="min-h-screen">
+      {/* Header */}
       <div className="sticky top-0 z-10">
         <div className="mb-8 flex items-center gap-4">
           <Link
-            href={`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`}
+            href={`/dashboard-admin/courses/${courseId}`}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white transition-colors hover:bg-[#E68E00]"
           >
             <ChevronLeft size={24} />
@@ -449,49 +402,21 @@ export function ExamFormContainer({
         )}
 
         {/* Quiz Questions Section */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white">Soal Exam</h2>
+        <QuizQuestionsSection
+          quizItems={quizItems}
+          onAddQuestion={addQuizQuestion}
+          onUpdateContent={updateQuizContent}
+          onMoveQuiz={moveQuiz}
+          onDeleteQuestion={handleDeleteQuestion}
+          onClearAll={() => setQuizItems([])}
+        />
 
-          <div className="space-y-4">
-            {quizItems.map((item, index) => (
-              <QuizBox
-                key={item.id}
-                id={item.id}
-                data={item.data}
-                onChange={updateQuizContent}
-                onMoveUp={() => moveQuiz(index, "up")}
-                onMoveDown={() => moveQuiz(index, "down")}
-                onDelete={() => deleteQuiz(item.id)}
-                canMoveUp={index > 0}
-                canMoveDown={index < quizItems.length - 1}
-              />
-            ))}
-          </div>
+        {/* Error Message */}
+        {error && <div className="mt-6 rounded-lg bg-red-500/20 p-4 text-red-200">{error}</div>}
 
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg p-2 transition-all"
-              title="Hapus semua"
-              onClick={() => setQuizItems([])}
-            >
-              <Trash2 className="hover:text-gray h-5 w-5 text-white" />
-            </button>
-            <button
-              type="button"
-              onClick={addQuizQuestion}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/50 bg-transparent px-6 py-3 text-white transition-all hover:border-white hover:bg-white/20"
-            >
-              <Plus className="h-5 w-5" />
-              <span className="font-medium">Tambah Pertanyaan</span>
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && <div className="rounded-lg bg-red-500/20 p-4 text-red-200">{error}</div>}
-
-          {/* Progress Indicator */}
-          {isCreating && (
+        {/* Progress Indicator */}
+        {isCreating && (
+          <div className="mt-6">
             <ExamProgressIndicator
               stage={progress.stage}
               current={progress.current}
@@ -499,8 +424,6 @@ export function ExamFormContainer({
             />
           )}
 
-          {/* Submit Button */}
-          {/* Submit Buttons */}
           <ExamActionButtons
             isEditMode={isEditMode}
             isCreating={isCreating}

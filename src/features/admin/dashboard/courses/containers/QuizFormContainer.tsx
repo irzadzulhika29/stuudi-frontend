@@ -1,22 +1,16 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
 import { ChevronLeft, Plus, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { QuizBox, QuizData } from "@/features/admin/dashboard/courses/components/material";
 import {
   QuizSettingsPanel,
   QuizSettings,
 } from "@/features/admin/dashboard/courses/components/quiz";
 import { Button } from "@/shared/components/ui";
-import {
-  useCreateQuiz,
-  useUpdateQuizQuestion,
-  useAddQuizQuestions,
-  useDeleteQuizQuestion,
-} from "../hooks/useCreateQuiz";
-import { useConfigureQuiz, useGetQuizConfig } from "../hooks/useQuizConfig";
+import { useQuizForm } from "../hooks/useQuizForm";
+import { useQuizItems } from "../hooks/useQuizItems";
+import { useQuizSave } from "../hooks/useQuizSave";
 
 export interface QuizItem {
   id: string;
@@ -36,16 +30,6 @@ interface QuizFormContainerProps {
   onSave?: (quizName: string, quizItems: QuizItem[], settings: QuizSettings) => void;
 }
 
-// Default settings
-const DEFAULT_QUIZ_SETTINGS: QuizSettings = {
-  randomizeQuestions: false,
-  randomSelection: false,
-  showAllQuestions: false,
-  displayedQuestionsCount: 10,
-  passingScore: 70.0,
-  timeLimitMinutes: 60,
-};
-
 export function QuizFormContainer({
   courseId,
   manageCoursesId,
@@ -56,110 +40,27 @@ export function QuizFormContainer({
   isEditMode = false,
   onSave,
 }: QuizFormContainerProps) {
-  const router = useRouter();
-  const [quizName, setQuizName] = useState(initialQuizName);
-  const [quizItems, setQuizItems] = useState<QuizItem[]>(initialQuizItems);
-  const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updateProgress, setUpdateProgress] = useState({ current: 0, total: 0 });
+  // Use custom hooks for form management
+  const {
+    quizName,
+    setQuizName,
+    error: formError,
+    setError: setFormError,
+    effectiveSettings,
+    handleSettingsChange,
+    isLoadingConfig,
+  } = useQuizForm({
+    initialQuizName,
+    isEditMode,
+    quizId,
+  });
 
-  // Use the create quiz hook (only for new quizzes)
-  const { createQuiz, isCreating, progress } = useCreateQuiz(topicId || "");
-
-  // Use update question hook for edit mode
-  const updateQuestionMutation = useUpdateQuizQuestion();
-  const addQuestionMutation = useAddQuizQuestions();
-  const deleteQuestionMutation = useDeleteQuizQuestion();
-
-  // Quiz configuration hooks
-  const configureQuizMutation = useConfigureQuiz();
-  const { data: existingConfig, isLoading: isLoadingConfig } = useGetQuizConfig(
-    isEditMode && quizId ? quizId : ""
-  );
-
-  // Derive initial settings from existingConfig or use defaults
-  const initialSettings = useMemo<QuizSettings>(() => {
-    if (isEditMode && existingConfig) {
-      return {
-        randomizeQuestions: existingConfig.is_random_order,
-        randomSelection: existingConfig.is_random_selection,
-        showAllQuestions: false,
-        displayedQuestionsCount: existingConfig.questions_to_show,
-        passingScore: existingConfig.passing_score,
-        timeLimitMinutes: existingConfig.time_limit_minutes,
-      };
-    }
-    return DEFAULT_QUIZ_SETTINGS;
-  }, [isEditMode, existingConfig]);
-
-  const [quizSettings, setQuizSettings] = useState<QuizSettings>(DEFAULT_QUIZ_SETTINGS);
-
-  // Track if we've synced with server data
-  const [hasSyncedWithServer, setHasSyncedWithServer] = useState(false);
-
-  // Sync settings when data loads (only once)
-  const effectiveSettings = useMemo(() => {
-    if (isEditMode && existingConfig && !hasSyncedWithServer) {
-      return initialSettings;
-    }
-    return quizSettings;
-  }, [isEditMode, existingConfig, hasSyncedWithServer, initialSettings, quizSettings]);
-
-  // Update local state when settings change from server
-  const handleSettingsChange = useCallback(
-    (key: keyof QuizSettings, value: boolean | number) => {
-      if (!hasSyncedWithServer && isEditMode && existingConfig) {
-        setHasSyncedWithServer(true);
-        setQuizSettings(initialSettings);
-      }
-      setQuizSettings((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
-    },
-    [hasSyncedWithServer, isEditMode, existingConfig, initialSettings]
-  );
-
-  const generateId = () => `quiz-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-  const addQuizQuestion = useCallback(() => {
-    const newQuiz: QuizItem = {
-      id: generateId(),
-      data: {
-        question: "",
-        questionType: "multiple_choice",
-        isRequired: true,
-        isMultipleAnswer: false,
-        difficulty: "easy",
-        options: [
-          { id: `opt-${Date.now()}-1`, text: "", isCorrect: false },
-          { id: `opt-${Date.now()}-2`, text: "", isCorrect: true },
-          { id: `opt-${Date.now()}-3`, text: "", isCorrect: false },
-          { id: `opt-${Date.now()}-4`, text: "", isCorrect: false },
-        ],
-      },
-    };
-    setQuizItems((prev) => [...prev, newQuiz]);
-  }, []);
-
-  const updateQuizContent = useCallback((id: string, data: QuizData) => {
-    setQuizItems((prev) => prev.map((item) => (item.id === id ? { ...item, data } : item)));
-  }, []);
-
-  const moveQuiz = useCallback((index: number, direction: "up" | "down") => {
-    setQuizItems((prev) => {
-      const newItems = [...prev];
-      const targetIndex = direction === "up" ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= newItems.length) return prev;
-      [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
-      return newItems;
+  // Use custom hooks for quiz items management
+  const { quizItems, addQuizItem, updateQuizItem, moveQuizItem, deleteQuizItem, clearAllItems } =
+    useQuizItems({
+      initialItems: initialQuizItems,
+      isEditMode,
     });
-  }, []);
-
-  const deleteQuiz = useCallback(
-    async (id: string) => {
-      const initialItemIds = new Set(initialQuizItems.map((item) => item.id));
-      const isExistingQuestion = initialItemIds.has(id);
 
       if (isEditMode && isExistingQuestion) {
         try {
@@ -194,22 +95,8 @@ export function QuizFormContainer({
     });
   };
 
-  const handleSave = async () => {
-    if (!quizName.trim()) {
-      setError("Nama quiz harus diisi");
-      return;
-    }
-
-    if (quizItems.length === 0) {
-      setError("Quiz harus memiliki minimal 1 pertanyaan");
-      return;
-    }
-
-    if (!isEditMode && !topicId) {
-      setError("Topic ID tidak ditemukan");
-      return;
-    }
-
+  // Handle save button click
+  const onSaveClick = async () => {
     setError(null);
 
     if (isEditMode) {
@@ -340,6 +227,7 @@ export function QuizFormContainer({
           {isEditMode ? "Edit Quiz" : "Tambah Quiz"}
         </h1>
 
+        {/* Quiz Name Input */}
         <div className="mb-8 space-y-2">
           <label className="block text-sm font-medium text-white">Nama Quiz</label>
           <input
@@ -351,37 +239,43 @@ export function QuizFormContainer({
           />
         </div>
 
+        {/* Quiz Questions Section */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-white">Soal Quiz</h2>
 
+          {/* Quiz Items List */}
           <div className="space-y-4">
             {quizItems.map((item, index) => (
               <QuizBox
                 key={item.id}
                 id={item.id}
                 data={item.data}
-                onChange={updateQuizContent}
-                onMoveUp={() => moveQuiz(index, "up")}
-                onMoveDown={() => moveQuiz(index, "down")}
-                onDelete={() => deleteQuiz(item.id)}
+                onChange={updateQuizItem}
+                onMoveUp={() => moveQuizItem(index, "up")}
+                onMoveDown={() => moveQuizItem(index, "down")}
+                onDelete={() => deleteQuizItem(item.id)}
                 canMoveUp={index > 0}
                 canMoveDown={index < quizItems.length - 1}
               />
             ))}
           </div>
 
+          {/* Action Buttons */}
           <div className="flex items-center gap-4">
+            {/* Delete All Button */}
             <button
               type="button"
               className="text-neutral-gray hover:text-error hover:bg-error/10 rounded-lg p-2 transition-all"
               title="Hapus semua"
-              onClick={() => setQuizItems([])}
+              onClick={clearAllItems}
             >
               <Trash2 className="hover:text-gray h-5 w-5 text-white" />
             </button>
+
+            {/* Add Question Button */}
             <button
               type="button"
-              onClick={addQuizQuestion}
+              onClick={() => addQuizItem("single")}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/50 bg-transparent px-6 py-3 text-white transition-all hover:border-white hover:bg-white/20"
             >
               <Plus className="h-5 w-5" />
@@ -389,42 +283,45 @@ export function QuizFormContainer({
             </button>
           </div>
 
+          {/* Quiz Settings Panel */}
           <QuizSettingsPanel
             settings={effectiveSettings}
             totalQuestions={quizItems.length}
             onSettingsChange={handleSettingsChange}
           />
 
+          {/* Error Display */}
           {error && <div className="rounded-lg bg-red-500/20 p-4 text-red-200">{error}</div>}
 
-          {(isCreating || isUpdating) && (
+          {/* Progress Display */}
+          {isLoading && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-white">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>
-                  {isEditMode ? "Memperbarui" : "Menyimpan"}... (
-                  {isEditMode ? updateProgress.current : progress.current}/
-                  {isEditMode ? updateProgress.total : progress.total})
+                  {isEditMode ? "Memperbarui" : "Menyimpan"}... ({progress.current}/{progress.total}
+                  )
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
                 <div
                   className="bg-primary h-full transition-all duration-300"
                   style={{
-                    width: `${((isEditMode ? updateProgress.current : progress.current) / (isEditMode ? updateProgress.total : progress.total)) * 100}%`,
+                    width: `${(progress.current / progress.total) * 100}%`,
                   }}
                 />
               </div>
             </div>
           )}
 
+          {/* Save Button */}
           <Button
             variant="outline"
-            onClick={handleSave}
-            disabled={isCreating || isUpdating}
+            onClick={onSaveClick}
+            disabled={isLoading}
             className="hover:!bg-primary w-full hover:text-white disabled:opacity-50"
           >
-            {isCreating || isUpdating ? (isEditMode ? "Memperbarui..." : "Menyimpan...") : "Simpan"}
+            {isLoading ? (isEditMode ? "Memperbarui..." : "Menyimpan...") : "Simpan"}
           </Button>
         </div>
       </div>

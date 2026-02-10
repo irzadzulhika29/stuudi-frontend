@@ -47,7 +47,6 @@ export default function NewMaterialPage() {
 
     try {
       // Step 1: Create content/material
-
       const contentResponse = await addContentMutation.mutateAsync({
         title: materialName,
         type: "materi",
