@@ -1,18 +1,27 @@
 "use client";
 
+import { useState, useCallback, useMemo } from "react";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ExamMetadataForm,
   ExamConfigPanel,
   ExamProgressIndicator,
   ExamActionButtons,
   ExamDeleteModal,
+  QuizQuestionsSection,
 } from "@/features/admin/dashboard/courses/components/exam";
 import { useCreateExam, CreateExamRequest } from "../hooks/useCreateExam";
 import { useUpdateExam } from "../hooks/useUpdateExam";
 import { useDeleteExam } from "../hooks/useDeleteExam";
-import { useGetExamDetails, ExamDetails } from "../hooks/useGetExamDetails";
+import { useGetExamDetails } from "../hooks/useGetExamDetails";
+import { QuizData } from "@/features/admin/dashboard/courses/components/material";
+import {
+  formatDateTimeLocal,
+  transformApiQuestionsToQuizItems,
+} from "@/features/admin/dashboard/courses/utils/examHelpers";
+import { DEFAULT_EXAM_STATE } from "../hooks/useExamFormState";
 
 export interface QuizItem {
   id: string;
@@ -197,9 +206,8 @@ export function ExamFormContainer({
       id: generateId(),
       data: {
         question: "",
-        questionType: "multiple_choice",
+        questionType: "single",
         isRequired: true,
-        isMultipleAnswer: false,
         difficulty: "easy",
         options: [
           { id: `opt-${Date.now()}-1`, text: "", isCorrect: false },
@@ -407,7 +415,7 @@ export function ExamFormContainer({
           onAddQuestion={addQuizQuestion}
           onUpdateContent={updateQuizContent}
           onMoveQuiz={moveQuiz}
-          onDeleteQuestion={handleDeleteQuestion}
+          onDeleteQuestion={deleteQuiz}
           onClearAll={() => setQuizItems([])}
         />
 
@@ -422,18 +430,18 @@ export function ExamFormContainer({
               current={progress.current}
               total={progress.total}
             />
-          )}
+          </div>
+        )}
 
-          <ExamActionButtons
-            isEditMode={isEditMode}
-            isCreating={isCreating}
-            isUpdating={updateExamMutation.isPending}
-            isDeleting={deleteExamMutation.isPending}
-            onSave={handleSave}
-            onDeleteRequest={() => setShowDeleteConfirm(true)}
-            examId={examId}
-          />
-        </div>
+        <ExamActionButtons
+          isEditMode={isEditMode}
+          isCreating={isCreating}
+          isUpdating={updateExamMutation.isPending}
+          isDeleting={deleteExamMutation.isPending}
+          onSave={handleSave}
+          onDeleteRequest={() => setShowDeleteConfirm(true)}
+          examId={examId}
+        />
       </div>
 
       {/* Delete Confirmation Modal */}

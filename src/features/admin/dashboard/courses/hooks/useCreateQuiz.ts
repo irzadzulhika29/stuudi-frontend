@@ -143,12 +143,7 @@ export const useDeleteQuizQuestion = () => {
 function transformQuizItemToApiFormat(item: QuizItem): AddQuizQuestionRequest {
   const { data } = item;
 
-  let questionType: "single" | "multiple" = "single";
-  if (data.questionType === "multiple_choice") {
-    questionType = data.isMultipleAnswer ? "multiple" : "single";
-  }
-
-  const options: QuizQuestionOption[] = data.options.map((opt) => ({
+  const options: QuizQuestionOption[] = (data.options || []).map((opt) => ({
     text: opt.text,
     is_correct: opt.isCorrect,
   }));
