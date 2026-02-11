@@ -9,13 +9,19 @@ interface QuizOption {
   is_correct: boolean;
 }
 
+interface MatchingPair {
+  left_text: string;
+  right_text: string;
+}
+
 export type QuizDifficulty = "easy" | "medium" | "hard";
 
 interface AddQuizBlockRequest {
   question: string;
-  question_type: "single" | "multiple";
+  question_type: "single" | "multiple" | "matching";
   difficulty: QuizDifficulty;
-  options: QuizOption[];
+  options?: QuizOption[];
+  matching_pairs?: MatchingPair[];
 }
 
 interface AddQuizBlockResponse {
@@ -47,9 +53,10 @@ export const useAddQuizBlock = (contentId: string) => {
 // Hook for adding additional questions to quiz block
 interface AddQuizQuestionRequest {
   question_text: string;
-  question_type: "single" | "multiple";
+  question_type: "single" | "multiple" | "matching";
   difficulty: QuizDifficulty;
-  options: QuizOption[];
+  options?: QuizOption[];
+  matching_pairs?: MatchingPair[];
 }
 
 interface AddQuizQuestionResponse {

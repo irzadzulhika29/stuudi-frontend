@@ -6,6 +6,7 @@ import { AxiosError } from "axios";
 import { api, ApiError } from "@/shared/api/api";
 import { API_ENDPOINTS } from "@/shared/config/constants";
 import { QuizItem } from "../containers/QuizFormContainer";
+import { transformQuizItemToApiFormat, QuizQuestionApiFormat } from "../utils/quizTransformers";
 
 interface AddQuizContentRequest {
   title: string;
@@ -22,25 +23,6 @@ interface AddQuizContentResponse {
     content_id: string;
     title: string;
   };
-}
-
-interface QuizQuestionOption {
-  text: string;
-  is_correct: boolean;
-}
-
-interface QuizQuestionPair {
-  left: string;
-  right: string;
-}
-
-interface AddQuizQuestionRequest {
-  question_text: string;
-  question_type: "single" | "multiple" | "matching";
-  difficulty: "easy" | "medium" | "hard";
-  explanation: string;
-  options?: QuizQuestionOption[];
-  pairs?: QuizQuestionPair[];
 }
 
 interface AddQuizQuestionResponse {
@@ -70,7 +52,7 @@ export const useAddQuizQuestions = () => {
   return useMutation<
     AddQuizQuestionResponse,
     AxiosError<ApiError>,
-    { contentId: string; question: AddQuizQuestionRequest }
+    { contentId: string; question: QuizQuestionApiFormat }
   >({
     mutationFn: async ({ contentId, question }) => {
       const response = await api.post<AddQuizQuestionResponse>(
@@ -81,15 +63,6 @@ export const useAddQuizQuestions = () => {
     },
   });
 };
-
-interface UpdateQuizQuestionRequest {
-  question_text: string;
-  question_type: "single" | "multiple" | "matching";
-  difficulty: "easy" | "medium" | "hard";
-  explanation: string;
-  options?: QuizQuestionOption[];
-  pairs?: QuizQuestionPair[];
-}
 
 interface UpdateQuizQuestionResponse {
   status: {
@@ -106,7 +79,7 @@ export const useUpdateQuizQuestion = () => {
   return useMutation<
     UpdateQuizQuestionResponse,
     AxiosError<ApiError>,
-    { questionId: string; question: UpdateQuizQuestionRequest }
+    { questionId: string; question: QuizQuestionApiFormat }
   >({
     mutationFn: async ({ questionId, question }) => {
       const response = await api.patch<UpdateQuizQuestionResponse>(
@@ -138,51 +111,6 @@ export const useDeleteQuizQuestion = () => {
     },
   });
 };
-
-// Helper function to transform QuizItem to API format
-function transformQuizItemToApiFormat(item: QuizItem): AddQuizQuestionRequest {
-  const { data } = item;
-
-  const options: QuizQuestionOption[] = (data.options || []).map((opt) => ({
-    text: opt.text,
-    is_correct: opt.isCorrect,
-  }));
-
-  const baseData = {
-    question_text: data.question,
-    question_type: data.questionType,
-    difficulty: data.difficulty,
-    explanation: "",
-    options,
-  };
-
-  // For choice questions (single or multiple)
-  if (data.questionType === "single" || data.questionType === "multiple") {
-    return {
-      ...baseData,
-      options:
-        data.options?.map((opt) => ({
-          text: opt.text,
-          is_correct: opt.isCorrect,
-        })) || [],
-    };
-  }
-
-  // For matching questions
-  if (data.questionType === "matching") {
-    return {
-      ...baseData,
-      pairs:
-        data.pairs?.map((pair) => ({
-          left: pair.left,
-          right: pair.right,
-        })) || [],
-    };
-  }
-
-  // Fallback (should not reach here)
-  throw new Error(`Unsupported question type: ${data.questionType}`);
-}
 
 interface CreateQuizResult {
   success: boolean;

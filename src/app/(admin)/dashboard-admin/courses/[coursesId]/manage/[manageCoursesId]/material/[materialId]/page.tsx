@@ -65,13 +65,19 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
             isCorrect: opt.is_correct,
           })) || [];
 
-        // Handle pairs for matching questions
+        // Handle pairs for matching questions (support both old and new format)
         const pairs =
+          apiQuestion.matching_pairs?.map((pair, index: number) => ({
+            id: pair.pair_id || pair.id || `pair-${question.question_id}-${index}`,
+            left: pair.left_text || "",
+            right: pair.right_text || "",
+          })) ||
           apiQuestion.pairs?.map((pair, index: number) => ({
             id: pair.pair_id || pair.id || `pair-${question.question_id}-${index}`,
             left: pair.left || "",
             right: pair.right || "",
-          })) || undefined;
+          })) ||
+          undefined;
 
         const quizContent: QuizContent = {
           id: question.question_id, // Use questionId for UPDATE_QUESTION endpoint
@@ -185,19 +191,35 @@ export default function MaterialDetailPage() {
             }
           } else if (content.type === "quiz") {
             // Quiz content ID is question_id, use UPDATE_QUESTION endpoint
-            const options =
-              content.options?.map((opt) => ({
-                text: opt.text,
-                is_correct: opt.isCorrect,
-              })) || [];
-
-            await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(content.id), {
+            const requestData: {
+              question_text: string;
+              question_type: string;
+              difficulty: string;
+              explanation: string;
+              options?: { text: string; is_correct: boolean }[];
+              matching_pairs?: { left_text: string; right_text: string }[];
+            } = {
               question_text: content.question,
               question_type: content.questionType || "single",
               difficulty: content.difficulty || "medium",
               explanation: "",
-              options,
-            });
+            };
+
+            if (content.questionType === "matching") {
+              requestData.matching_pairs =
+                content.pairs?.map((pair) => ({
+                  left_text: pair.left,
+                  right_text: pair.right,
+                })) || [];
+            } else {
+              requestData.options =
+                content.options?.map((opt) => ({
+                  text: opt.text,
+                  is_correct: opt.isCorrect,
+                })) || [];
+            }
+
+            await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(content.id), requestData);
           }
         }
 
@@ -224,18 +246,35 @@ export default function MaterialDetailPage() {
               headers: { "Content-Type": "multipart/form-data" },
             });
           } else if (content.type === "quiz") {
-            const options =
-              content.options?.map((opt) => ({
-                text: opt.text,
-                is_correct: opt.isCorrect,
-              })) || [];
-
-            await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
+            const requestData: {
+              question: string;
+              question_type: string;
+              difficulty: string;
+              explanation: string;
+              options?: { text: string; is_correct: boolean }[];
+              matching_pairs?: { left_text: string; right_text: string }[];
+            } = {
               question: content.question,
               question_type: content.questionType || "single",
               difficulty: content.difficulty || "medium",
-              options,
-            });
+              explanation: "",
+            };
+
+            if (content.questionType === "matching") {
+              requestData.matching_pairs =
+                content.pairs?.map((pair) => ({
+                  left_text: pair.left,
+                  right_text: pair.right,
+                })) || [];
+            } else {
+              requestData.options =
+                content.options?.map((opt) => ({
+                  text: opt.text,
+                  is_correct: opt.isCorrect,
+                })) || [];
+            }
+
+            await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), requestData);
           }
         }
       } else {
@@ -264,18 +303,35 @@ export default function MaterialDetailPage() {
               headers: { "Content-Type": "multipart/form-data" },
             });
           } else if (content.type === "quiz") {
-            const options =
-              content.options?.map((opt) => ({
-                text: opt.text,
-                is_correct: opt.isCorrect,
-              })) || [];
-
-            await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
+            const requestData: {
+              question: string;
+              question_type: string;
+              difficulty: string;
+              explanation: string;
+              options?: { text: string; is_correct: boolean }[];
+              matching_pairs?: { left_text: string; right_text: string }[];
+            } = {
               question: content.question,
               question_type: content.questionType || "single",
-              difficulty: content.difficulty,
-              options,
-            });
+              difficulty: content.difficulty || "medium",
+              explanation: "",
+            };
+
+            if (content.questionType === "matching") {
+              requestData.matching_pairs =
+                content.pairs?.map((pair) => ({
+                  left_text: pair.left,
+                  right_text: pair.right,
+                })) || [];
+            } else {
+              requestData.options =
+                content.options?.map((opt) => ({
+                  text: opt.text,
+                  is_correct: opt.isCorrect,
+                })) || [];
+            }
+
+            await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), requestData);
           }
         }
       }

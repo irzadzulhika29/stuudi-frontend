@@ -65,6 +65,7 @@ export function CourseEditForm({
 
       <div className="space-y-2">
         <label className="text-sm font-medium text-white">Thumbnail Course</label>
+        <p className="text-xs text-white/60">Format: JPG, JPEG, PNG, WEBP (Maks. 1MB)</p>
         <div className="relative">
           <input
             ref={fileInputRef}
@@ -87,11 +88,11 @@ export function CourseEditForm({
         {(thumbnailPreview || existingThumbnailUrl) && (
           <div className="relative mt-4 inline-block">
             <div className="relative h-40 w-64 overflow-hidden rounded-xl border-2 border-white/20">
-              <Image 
-                src={thumbnailPreview || existingThumbnailUrl!} 
-                alt="Thumbnail preview" 
-                fill 
-                className="object-cover" 
+              <Image
+                src={thumbnailPreview || existingThumbnailUrl!}
+                alt="Thumbnail preview"
+                fill
+                className="object-cover"
               />
             </div>
             {thumbnailPreview && (

@@ -23,9 +23,9 @@ interface UpdateQuestionData {
     text: string;
     is_correct: boolean;
   }>;
-  pairs?: Array<{
-    left: string;
-    right: string;
+  matching_pairs?: Array<{
+    left_text: string;
+    right_text: string;
   }>;
 }
 
@@ -187,12 +187,25 @@ export function useExamFormHandlers({
               question_type: item.data.questionType,
               difficulty: item.data.difficulty,
               explanation: "",
-              options:
+            };
+
+            // Add options for single/multiple choice questions
+            if (item.data.questionType === "single" || item.data.questionType === "multiple") {
+              requestData.options =
                 item.data.options?.map((opt) => ({
                   text: opt.text,
                   is_correct: opt.isCorrect,
-                })) || [],
-            };
+                })) || [];
+            }
+
+            // Add matching_pairs for matching questions
+            if (item.data.questionType === "matching") {
+              requestData.matching_pairs =
+                item.data.pairs?.map((pair) => ({
+                  left_text: pair.left,
+                  right_text: pair.right,
+                })) || [];
+            }
 
             await updateQuestionMutation.mutateAsync({
               questionId: item.id,
@@ -223,10 +236,10 @@ export function useExamFormHandlers({
 
             // Add pairs for matching questions
             if (item.data.questionType === "matching") {
-              questionData.pairs =
+              questionData.matching_pairs =
                 item.data.pairs?.map((pair) => ({
-                  left: pair.left,
-                  right: pair.right,
+                  left_text: pair.left,
+                  right_text: pair.right,
                 })) || [];
             }
 

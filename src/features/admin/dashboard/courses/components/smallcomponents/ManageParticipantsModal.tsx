@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Modal } from "@/shared/components/ui/Modal";
+import { ConfirmModal } from "@/shared/components/ui/ConfirmModal";
 import { Participant } from "../../types/cTypes";
 import { Search, X, Download, Plus, Loader2 } from "lucide-react";
 import { api } from "@/shared/api/api";
@@ -9,6 +10,7 @@ import { API_ENDPOINTS } from "@/shared/config/constants";
 import { CSVUploadButton, ParticipantCSVRow } from "./CSVUploadPreview";
 import { CSVPreviewModal } from "./CSVPreviewModal";
 import { useAddParticipant } from "@/features/admin/dashboard/home/hooks/useAddParticipant";
+import { useDeleteParticipant } from "@/features/admin/dashboard/home/hooks/useDeleteParticipant";
 
 export interface TeamParticipant {
   id: string;
@@ -67,8 +69,10 @@ export function ManageParticipantsModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [formError, setFormError] = useState<string | null>(null);
+  const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
 
   const addParticipantMutation = useAddParticipant();
+  const deleteParticipantMutation = useDeleteParticipant();
 
   const filteredParticipants = useMemo(() => {
     if (!searchQuery) return participants;
@@ -80,7 +84,28 @@ export function ManageParticipantsModal({
     setActiveTab("current");
     setFormData(initialFormData);
     setFormError(null);
+    setParticipantToDelete(null);
     onClose();
+  };
+
+  const handleDeleteClick = (participant: Participant) => {
+    setParticipantToDelete(participant);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!participantToDelete) return;
+
+    try {
+      await deleteParticipantMutation.mutateAsync(participantToDelete.id);
+      onRemoveParticipant(participantToDelete.id);
+      setParticipantToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete participant:", error);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setParticipantToDelete(null);
   };
 
   const handleDownloadTemplate = async () => {
@@ -265,7 +290,9 @@ export function ManageParticipantsModal({
           </div>
 
           {/* Content */}
-          <div className="max-h-80 space-y-3 overflow-y-auto">
+          <div
+            className={`space-y-3 overflow-y-auto ${activeTab === "current" ? "max-h-[200px]" : "max-h-80"}`}
+          >
             {activeTab === "current" ? (
               filteredParticipants.length > 0 ? (
                 filteredParticipants.map((participant) => (
@@ -282,7 +309,7 @@ export function ManageParticipantsModal({
                       </span>
                     </div>
                     <button
-                      onClick={() => onRemoveParticipant(participant.id)}
+                      onClick={() => handleDeleteClick(participant)}
                       className="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-50"
                       title="Remove participant"
                     >
@@ -412,6 +439,19 @@ export function ManageParticipantsModal({
           isSubmitting={isSubmitting}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!participantToDelete}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Participant"
+        message={`Apakah Anda yakin ingin menghapus "${participantToDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Hapus"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={deleteParticipantMutation.isPending}
+      />
     </>
   );
 }

@@ -52,8 +52,8 @@ export function QuizBox({
         showToast("Mohon pilih file gambar yang valid", "warning");
         return;
       }
-      if (file.size > 2 * 1024 * 1024) {
-        showToast("Ukuran file maksimal 2MB", "warning");
+      if (file.size > 1 * 1024 * 1024) {
+        showToast("Ukuran file maksimal 1MB", "warning");
         return;
       }
       const imageUrl = URL.createObjectURL(file);
@@ -84,30 +84,37 @@ export function QuizBox({
   const handleTypeChange = (type: "single" | "multiple" | "matching") => {
     let updatedData: QuizData = { ...data, questionType: type };
 
-    // Initialize data based on type
-    if (
-      (type === "single" || type === "multiple") &&
-      (!data.options || data.options.length === 0)
-    ) {
-      updatedData = {
-        ...updatedData,
-        options: [
-          { id: `${id}-opt-1`, text: "", isCorrect: type === "single" },
-          { id: `${id}-opt-2`, text: "", isCorrect: false },
-          { id: `${id}-opt-3`, text: "", isCorrect: false },
-          { id: `${id}-opt-4`, text: "", isCorrect: false },
-        ],
-      };
+    // Initialize data based on type and clean up stale data
+    if (type === "single" || type === "multiple") {
+      // Clear pairs when switching to choice type
+      updatedData = { ...updatedData, pairs: undefined };
+
+      if (!data.options || data.options.length === 0) {
+        updatedData = {
+          ...updatedData,
+          options: [
+            { id: `${id}-opt-1`, text: "", isCorrect: type === "single" },
+            { id: `${id}-opt-2`, text: "", isCorrect: false },
+            { id: `${id}-opt-3`, text: "", isCorrect: false },
+            { id: `${id}-opt-4`, text: "", isCorrect: false },
+          ],
+        };
+      }
     }
 
-    if (type === "matching" && (!data.pairs || data.pairs.length === 0)) {
-      updatedData = {
-        ...updatedData,
-        pairs: [
-          { id: `${id}-pair-1`, left: "", right: "" },
-          { id: `${id}-pair-2`, left: "", right: "" },
-        ],
-      };
+    if (type === "matching") {
+      // Clear options when switching to matching type
+      updatedData = { ...updatedData, options: undefined };
+
+      if (!data.pairs || data.pairs.length === 0) {
+        updatedData = {
+          ...updatedData,
+          pairs: [
+            { id: `${id}-pair-1`, left: "", right: "" },
+            { id: `${id}-pair-2`, left: "", right: "" },
+          ],
+        };
+      }
     }
 
     onChange(id, updatedData);
@@ -242,7 +249,7 @@ export function QuizBox({
                 className="border-neutral-gray/40 hover:border-primary hover:bg-primary/5 text-neutral-gray hover:text-primary flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-sm transition-all"
               >
                 <ImageIcon className="h-5 w-5" />
-                <span>Upload gambar (maks. 2MB)</span>
+                <span>Upload gambar (JPG, JPEG, PNG, WEBP - Maks. 1MB)</span>
               </button>
             </div>
           )}

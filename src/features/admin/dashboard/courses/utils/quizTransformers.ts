@@ -8,7 +8,7 @@ export interface QuizQuestionApiFormat {
   difficulty: "easy" | "medium" | "hard";
   explanation: string;
   options?: Array<{ text: string; is_correct: boolean }>;
-  pairs?: Array<{ left: string; right: string }>;
+  matching_pairs?: Array<{ left_text: string; right_text: string }>;
 }
 
 // Type untuk API response (flexible untuk handle berbagai format)
@@ -30,6 +30,12 @@ export interface ApiQuestionResponse {
     id?: string;
     left?: string;
     right?: string;
+  }>;
+  matching_pairs?: Array<{
+    pair_id?: string;
+    id?: string;
+    left_text?: string;
+    right_text?: string;
   }>;
 }
 
@@ -60,10 +66,10 @@ export function transformQuizItemToApiFormat(item: QuizItem): QuizQuestionApiFor
     return {
       ...baseData,
       question_type: "matching",
-      pairs:
+      matching_pairs:
         item.data.pairs?.map((pair) => ({
-          left: pair.left,
-          right: pair.right,
+          left_text: pair.left,
+          right_text: pair.right,
         })) || [],
     };
   }
@@ -135,7 +141,85 @@ export function transformApiToQuizItem(
     difficulty: apiQuestion.difficulty || ("easy" as const),
   };
 
-  // Jika ada options, berarti single atau multiple choice
+  // Prioritas 1: Jika API secara eksplisit menyatakan tipe "matching"
+  if (apiType === "matching") {
+    // Cek matching_pairs (format baru) terlebih dahulu
+    if (
+      apiQuestion.matching_pairs &&
+      Array.isArray(apiQuestion.matching_pairs) &&
+      apiQuestion.matching_pairs.length > 0
+    ) {
+      return {
+        id: questionId,
+        data: {
+          ...baseData,
+          questionType: "matching" as const,
+          pairs: apiQuestion.matching_pairs.map((pair, index: number) => ({
+            id: pair.pair_id || pair.id || `pair-${questionId}-${index}`,
+            left: pair.left_text || "",
+            right: pair.right_text || "",
+          })),
+        },
+      };
+    }
+
+    // Fallback ke pairs (format lama)
+    if (apiQuestion.pairs && Array.isArray(apiQuestion.pairs) && apiQuestion.pairs.length > 0) {
+      return {
+        id: questionId,
+        data: {
+          ...baseData,
+          questionType: "matching" as const,
+          pairs: apiQuestion.pairs.map((pair, index: number) => ({
+            id: pair.pair_id || pair.id || `pair-${questionId}-${index}`,
+            left: pair.left || "",
+            right: pair.right || "",
+          })),
+        },
+      };
+    }
+
+    // Fallback: Backend mengembalikan matching data sebagai options
+    // Rekonstruksi pairs dari options (first half = left, second half = right)
+    if (
+      apiQuestion.options &&
+      Array.isArray(apiQuestion.options) &&
+      apiQuestion.options.length >= 2 &&
+      apiQuestion.options.length % 2 === 0
+    ) {
+      const half = apiQuestion.options.length / 2;
+      const leftOptions = apiQuestion.options.slice(0, half);
+      const rightOptions = apiQuestion.options.slice(half);
+
+      return {
+        id: questionId,
+        data: {
+          ...baseData,
+          questionType: "matching" as const,
+          pairs: leftOptions.map((leftOpt, index: number) => ({
+            id: `pair-${questionId}-${index}`,
+            left: leftOpt.text || leftOpt.option_text || "",
+            right: rightOptions[index]?.text || rightOptions[index]?.option_text || "",
+          })),
+        },
+      };
+    }
+
+    // Jika matching tapi tidak ada pairs maupun options, buat default pairs
+    return {
+      id: questionId,
+      data: {
+        ...baseData,
+        questionType: "matching" as const,
+        pairs: [
+          { id: `pair-${questionId}-0`, left: "", right: "" },
+          { id: `pair-${questionId}-1`, left: "", right: "" },
+        ],
+      },
+    };
+  }
+
+  // Prioritas 2: Jika ada options, berarti single atau multiple choice
   if (apiQuestion.options && Array.isArray(apiQuestion.options) && apiQuestion.options.length > 0) {
     // Determine question type from API or by counting correct answers
     let questionType: "single" | "multiple";
@@ -163,14 +247,33 @@ export function transformApiToQuizItem(
     };
   }
 
-  // Jika ada pairs, berarti matching
+  // Prioritas 3: Jika ada matching_pairs (format baru) tanpa apiType, berarti matching
+  if (
+    apiQuestion.matching_pairs &&
+    Array.isArray(apiQuestion.matching_pairs) &&
+    apiQuestion.matching_pairs.length > 0
+  ) {
+    return {
+      id: questionId,
+      data: {
+        ...baseData,
+        questionType: "matching" as const,
+        pairs: apiQuestion.matching_pairs.map((pair, index: number) => ({
+          id: pair.pair_id || pair.id || `pair-${questionId}-${index}`,
+          left: pair.left_text || "",
+          right: pair.right_text || "",
+        })),
+      },
+    };
+  }
+
+  // Prioritas 4: Jika ada pairs (format lama), berarti matching
   if (apiQuestion.pairs && Array.isArray(apiQuestion.pairs) && apiQuestion.pairs.length > 0) {
     return {
       id: questionId,
       data: {
         ...baseData,
         questionType: "matching" as const,
-        options: [], // Empty options for matching type
         pairs: apiQuestion.pairs.map((pair, index: number) => ({
           id: pair.pair_id || pair.id || `pair-${questionId}-${index}`,
           left: pair.left || "",
