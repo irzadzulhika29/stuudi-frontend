@@ -94,7 +94,6 @@ export const API_ENDPOINTS = {
     PARTICIPANTS_TEMPLATE: "teacher/participants/template",
     ADD_PARTICIPANT_BULK: "teacher/add-participant/bulk",
     ADD_PARTICIPANT: "teacher/add-participant",
-    DELETE_PARTICIPANT: (userId: string) => `teacher/elearning-user/${userId}`,
     DELETE_PARTICIPANT: (participantId: string) => `teacher/elearning-user/${participantId}`,
   },
   TEAM: {

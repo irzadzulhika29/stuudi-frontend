@@ -40,16 +40,17 @@ interface ExamQuestionOption {
 }
 
 interface ExamQuestionPair {
-  left: string;
-  right: string;
+  left_text: string;
+  right_text: string;
 }
 
 export interface ExamQuestionRequest {
   question_text: string;
   question_type: "single" | "multiple" | "matching";
   difficulty: "easy" | "medium" | "hard";
+  explanation?: string;
   options?: ExamQuestionOption[];
-  pairs?: ExamQuestionPair[];
+  matching_pairs?: ExamQuestionPair[];
 }
 
 interface AddExamQuestionResponse {
@@ -120,10 +121,10 @@ function transformQuizItemToExamQuestion(item: QuizItem): ExamQuestionRequest {
   if (data.questionType === "matching") {
     return {
       ...baseData,
-      pairs:
+      matching_pairs:
         data.pairs?.map((pair) => ({
-          left: pair.left,
-          right: pair.right,
+          left_text: pair.left,
+          right_text: pair.right,
         })) || [],
     };
   }
