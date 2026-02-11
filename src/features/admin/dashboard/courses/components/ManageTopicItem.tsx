@@ -4,6 +4,7 @@ import { Button, Input } from "@/shared/components/ui";
 import Link from "next/link";
 import { TopicMaterialItem } from "./smallcomponents/TopicMaterialItem";
 import { useDeleteTopic } from "../hooks/useDeleteTopic";
+import { useDeleteContent } from "../hooks/useDeleteContent";
 import { useUpdateTopic } from "../hooks/useUpdateTopic";
 import { ConfirmDeleteModal } from "@/shared/components/ui/ConfirmDeleteModal";
 import { useToast } from "@/shared/components/ui/Toast";
@@ -38,6 +39,7 @@ export function ManageTopicItem({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [orderedMaterials, setOrderedMaterials] = useState<Material[]>(materials);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [contentToDelete, setContentToDelete] = useState<Material | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
 
@@ -47,6 +49,7 @@ export function ManageTopicItem({
   const [editDescription, setEditDescription] = useState(description);
 
   const deleteTopic = useDeleteTopic();
+  const deleteContent = useDeleteContent();
   const updateTopic = useUpdateTopic(id);
   const { showToast } = useToast();
 
@@ -94,6 +97,24 @@ export function ManageTopicItem({
       },
       onError: () => {
         showToast("Gagal menghapus topik", "error");
+      },
+    });
+  };
+
+  const handleDeleteContent = (material: Material) => {
+    setContentToDelete(material);
+  };
+
+  const handleConfirmDeleteContent = () => {
+    if (!contentToDelete) return;
+
+    deleteContent.mutate(contentToDelete.id, {
+      onSuccess: () => {
+        setContentToDelete(null);
+        showToast("Konten berhasil dihapus", "success");
+      },
+      onError: () => {
+        showToast("Gagal menghapus konten", "error");
       },
     });
   };
@@ -275,6 +296,7 @@ export function ManageTopicItem({
                   courseId={courseId}
                   onMoveUp={() => moveMaterial(index, "up")}
                   onMoveDown={() => moveMaterial(index, "down")}
+                  onDelete={() => handleDeleteContent(material)}
                 />
               ))}
             </div>
@@ -289,6 +311,15 @@ export function ManageTopicItem({
         title="Hapus Topik"
         itemName={title}
         isLoading={deleteTopic.isPending}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={!!contentToDelete}
+        onClose={() => setContentToDelete(null)}
+        onConfirm={handleConfirmDeleteContent}
+        title="Hapus Konten"
+        itemName={contentToDelete?.title ?? ""}
+        isLoading={deleteContent.isPending}
       />
     </>
   );

@@ -14,12 +14,17 @@ interface QuizOption {
 
 interface QuizQuestion {
   question_id: string;
-  text: string;
-  type: "single" | "multiple" | "matching";
+  // Support both field name formats
+  text?: string;
+  question_text?: string;
+  type?: "single" | "multiple" | "matching";
+  question_type?: "single" | "multiple" | "matching";
   points: number;
   difficulty: "easy" | "medium" | "hard";
+  explanation?: string;
   options?: QuizOption[];
   pairs?: { pair_id?: string; left: string; right: string }[];
+  matching_pairs?: { pair_id?: string; left_text: string; right_text: string }[];
 }
 
 interface QuizSettings {
