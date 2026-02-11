@@ -30,8 +30,8 @@ export function CreateCourseContainer() {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("Ukuran file maksimal 5MB", "error");
+      if (file.size > 1 * 1024 * 1024) {
+        showToast("Ukuran file maksimal 1MB", "error");
         return;
       }
 

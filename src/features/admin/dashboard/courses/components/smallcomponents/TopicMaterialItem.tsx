@@ -1,4 +1,4 @@
-import { Edit2, ChevronUp, ChevronDown } from "lucide-react";
+import { Edit2, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export interface TopicMaterialItemProps {
@@ -12,6 +12,7 @@ export interface TopicMaterialItemProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export function TopicMaterialItem({
@@ -24,14 +25,16 @@ export function TopicMaterialItem({
   onMoveUp,
   onMoveDown,
   onEdit,
+  onDelete,
 }: TopicMaterialItemProps) {
   const isFirst = index === 0;
   const isLast = index === totalItems - 1;
 
   // Build edit link based on type
-  const editHref = type === "quiz"
-    ? `/dashboard-admin/courses/${courseId}/manage/${courseId}/quiz/${id}`
-    : `/dashboard-admin/courses/${courseId}/manage/${courseId}/material/${id}`;
+  const editHref =
+    type === "quiz"
+      ? `/dashboard-admin/courses/${courseId}/manage/${courseId}/quiz/${id}`
+      : `/dashboard-admin/courses/${courseId}/manage/${courseId}/material/${id}`;
 
   return (
     <div className="group flex items-center justify-between rounded-lg bg-neutral-100/80 p-4 transition-all duration-200 hover:bg-neutral-100">
@@ -62,9 +65,11 @@ export function TopicMaterialItem({
         </div>
         <span className="ml-2 font-medium text-neutral-700">{title}</span>
         {type && (
-          <span className={`text-xs px-2 py-0.5 rounded ${
-            type === "quiz" ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600"
-          }`}>
+          <span
+            className={`rounded px-2 py-0.5 text-xs ${
+              type === "quiz" ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600"
+            }`}
+          >
             {type === "quiz" ? "Quiz" : "Materi"}
           </span>
         )}
@@ -77,6 +82,13 @@ export function TopicMaterialItem({
         >
           <Edit2 size={16} />
         </Link>
+        <button
+          onClick={onDelete}
+          className="p-2 text-neutral-300 transition-colors hover:text-red-500"
+          title="Hapus"
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
     </div>
   );

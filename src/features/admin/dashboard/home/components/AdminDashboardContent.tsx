@@ -75,12 +75,12 @@ function GlassDropdown({
         </svg>
       </button>
 
-      {/* Dropdown List - Glass UI */}
+      {/* Dropdown List - White Background */}
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
+        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
           <div className="max-h-60 overflow-y-auto">
             {options.length === 0 ? (
-              <div className="px-4 py-3 text-center text-sm text-white/50">
+              <div className="text-primary/50 px-4 py-3 text-center text-sm">
                 No options available
               </div>
             ) : (
@@ -89,10 +89,10 @@ function GlassDropdown({
                   key={option.value}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full px-4 py-3 text-left text-sm transition-all hover:bg-white/20 ${
+                  className={`w-full px-4 py-3 text-left text-sm transition-all hover:bg-gray-100 ${
                     option.value === value
-                      ? "bg-secondary/20 text-secondary font-medium"
-                      : "text-white"
+                      ? "bg-secondary/10 text-secondary font-medium"
+                      : "text-primary"
                   }`}
                 >
                   {option.label}

@@ -60,6 +60,7 @@ export const API_ENDPOINTS = {
     ADD_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     CONTENT_DETAIL: (contentId: string) => `teacher/content/${contentId}`,
     UPDATE_CONTENT: (contentId: string) => `teacher/content/${contentId}`,
+    DELETE_CONTENT: (contentId: string) => `teacher/content/${contentId}`,
     // Quiz
     ADD_QUIZ_CONTENT: (topicId: string) => `teacher/topics/${topicId}/content`,
     ADD_QUIZ_QUESTIONS: (contentId: string) => `teacher/content/${contentId}/quiz`,
@@ -93,6 +94,8 @@ export const API_ENDPOINTS = {
     PARTICIPANTS_TEMPLATE: "teacher/participants/template",
     ADD_PARTICIPANT_BULK: "teacher/add-participant/bulk",
     ADD_PARTICIPANT: "teacher/add-participant",
+    DELETE_PARTICIPANT: (userId: string) => `teacher/elearning-user/${userId}`,
+    DELETE_PARTICIPANT: (participantId: string) => `teacher/elearning-user/${participantId}`,
   },
   TEAM: {
     INFO: "/elearning/team-details",

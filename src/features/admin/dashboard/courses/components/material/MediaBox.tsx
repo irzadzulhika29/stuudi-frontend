@@ -131,7 +131,7 @@ export function MediaBox({
                     ? file.name
                     : previewUrl
                       ? "Pilih file baru untuk mengganti gambar"
-                      : "Pilih file untuk di unggah (.PNG, .JPG, atau .WEBP)"}
+                      : "Pilih file untuk di unggah (JPG, JPEG, PNG, WEBP - Maks. 1MB)"}
                 </span>
               </div>
               {file && (
