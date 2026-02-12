@@ -227,7 +227,11 @@ export function ExamFormContainer({
   // Mutation for deleting individual question
   const deleteQuestionMutation = useMutation({
     mutationFn: async (questionId: string) => {
-      const response = await api.delete(API_ENDPOINTS.TEACHER.DELETE_QUESTION(questionId));
+      const endpoint = API_ENDPOINTS.TEACHER.DELETE_QUESTION(questionId);
+      console.log("[DELETE QUESTION] questionId:", questionId);
+      console.log("[DELETE QUESTION] endpoint:", endpoint);
+      console.log("[DELETE QUESTION] full URL:", `/api/v1/${endpoint}`);
+      const response = await api.delete(endpoint);
       return response.data;
     },
   });
@@ -275,20 +279,32 @@ export function ExamFormContainer({
 
   const deleteQuiz = useCallback(
     async (id: string) => {
+      console.log("[deleteQuiz] called with id:", id);
+      console.log("[deleteQuiz] isEditMode:", isEditMode);
+      console.log("[deleteQuiz] isValidUUID(id):", isValidUUID(id));
+      console.log(
+        "[deleteQuiz] quizItems:",
+        quizItems.map((item) => ({ id: item.id, question: item.data.question }))
+      );
+
       // If in edit mode and it's an existing question (has valid UUID), call API immediately
       if (isEditMode && isValidUUID(id)) {
         try {
+          console.log("[deleteQuiz] Calling API to delete question:", id);
           await deleteQuestionMutation.mutateAsync(id);
+          console.log("[deleteQuiz] Successfully deleted question:", id);
           setQuizItems((prev) => prev.filter((item) => item.id !== id));
-        } catch {
+        } catch (err) {
+          console.error("[deleteQuiz] Failed to delete question:", id, err);
           setError("Gagal menghapus soal.");
         }
       } else {
+        console.log("[deleteQuiz] Removing from local state only (new question):", id);
         // Just remove from local state for new questions
         setQuizItems((prev) => prev.filter((item) => item.id !== id));
       }
     },
-    [isEditMode, setQuizItems, deleteQuestionMutation]
+    [isEditMode, setQuizItems, deleteQuestionMutation, quizItems]
   );
 
   const handleSave = async () => {

@@ -12,6 +12,12 @@ interface QuizOption {
   is_correct: boolean;
 }
 
+interface MatchingOption {
+  option_id: string;
+  text?: string;
+  option_text?: string;
+}
+
 interface QuizQuestion {
   question_id: string;
   // Support both field name formats
@@ -23,6 +29,9 @@ interface QuizQuestion {
   difficulty: "easy" | "medium" | "hard";
   explanation?: string;
   options?: QuizOption[];
+  // Matching question formats
+  left_options?: MatchingOption[];
+  right_options?: MatchingOption[];
   pairs?: { pair_id?: string; left: string; right: string }[];
   matching_pairs?: { pair_id?: string; left_text: string; right_text: string }[];
 }

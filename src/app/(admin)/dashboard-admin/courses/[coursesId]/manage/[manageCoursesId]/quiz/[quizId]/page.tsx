@@ -20,6 +20,9 @@ function transformQuizDetailsToFormData(
     difficulty: "easy" | "medium" | "hard";
     explanation?: string;
     options?: { option_id: string; text: string; is_correct: boolean }[];
+    // Matching question formats
+    left_options?: { option_id: string; option_text: string }[];
+    right_options?: { option_id: string; option_text: string }[];
     pairs?: { pair_id?: string; left: string; right: string }[];
     matching_pairs?: { pair_id?: string; left_text: string; right_text: string }[];
   }[]
