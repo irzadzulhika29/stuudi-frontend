@@ -25,6 +25,15 @@ export interface ApiQuestionResponse {
     option_text?: string;
     is_correct?: boolean;
   }>;
+  // Format baru: left_options & right_options (dari GET quiz details)
+  left_options?: Array<{
+    option_id?: string;
+    option_text?: string;
+  }>;
+  right_options?: Array<{
+    option_id?: string;
+    option_text?: string;
+  }>;
   pairs?: Array<{
     pair_id?: string;
     id?: string;
@@ -143,7 +152,31 @@ export function transformApiToQuizItem(
 
   // Prioritas 1: Jika API secara eksplisit menyatakan tipe "matching"
   if (apiType === "matching") {
-    // Cek matching_pairs (format baru) terlebih dahulu
+    // Format baru: left_options & right_options (dari GET quiz details)
+    if (
+      apiQuestion.left_options &&
+      Array.isArray(apiQuestion.left_options) &&
+      apiQuestion.left_options.length > 0 &&
+      apiQuestion.right_options &&
+      Array.isArray(apiQuestion.right_options) &&
+      apiQuestion.right_options.length > 0
+    ) {
+      const pairCount = Math.min(apiQuestion.left_options.length, apiQuestion.right_options.length);
+      return {
+        id: questionId,
+        data: {
+          ...baseData,
+          questionType: "matching" as const,
+          pairs: Array.from({ length: pairCount }, (_, index) => ({
+            id: `pair-${questionId}-${index}`,
+            left: apiQuestion.left_options![index]?.option_text || "",
+            right: apiQuestion.right_options![index]?.option_text || "",
+          })),
+        },
+      };
+    }
+
+    // Cek matching_pairs (format POST response)
     if (
       apiQuestion.matching_pairs &&
       Array.isArray(apiQuestion.matching_pairs) &&
@@ -179,33 +212,7 @@ export function transformApiToQuizItem(
       };
     }
 
-    // Fallback: Backend mengembalikan matching data sebagai options
-    // Rekonstruksi pairs dari options (first half = left, second half = right)
-    if (
-      apiQuestion.options &&
-      Array.isArray(apiQuestion.options) &&
-      apiQuestion.options.length >= 2 &&
-      apiQuestion.options.length % 2 === 0
-    ) {
-      const half = apiQuestion.options.length / 2;
-      const leftOptions = apiQuestion.options.slice(0, half);
-      const rightOptions = apiQuestion.options.slice(half);
-
-      return {
-        id: questionId,
-        data: {
-          ...baseData,
-          questionType: "matching" as const,
-          pairs: leftOptions.map((leftOpt, index: number) => ({
-            id: `pair-${questionId}-${index}`,
-            left: leftOpt.text || leftOpt.option_text || "",
-            right: rightOptions[index]?.text || rightOptions[index]?.option_text || "",
-          })),
-        },
-      };
-    }
-
-    // Jika matching tapi tidak ada pairs maupun options, buat default pairs
+    // Jika matching tapi tidak ada data pairs, buat default pairs
     return {
       id: questionId,
       data: {
@@ -247,7 +254,31 @@ export function transformApiToQuizItem(
     };
   }
 
-  // Prioritas 3: Jika ada matching_pairs (format baru) tanpa apiType, berarti matching
+  // Prioritas 3: Jika ada left_options & right_options tanpa apiType, berarti matching
+  if (
+    apiQuestion.left_options &&
+    Array.isArray(apiQuestion.left_options) &&
+    apiQuestion.left_options.length > 0 &&
+    apiQuestion.right_options &&
+    Array.isArray(apiQuestion.right_options) &&
+    apiQuestion.right_options.length > 0
+  ) {
+    const pairCount = Math.min(apiQuestion.left_options.length, apiQuestion.right_options.length);
+    return {
+      id: questionId,
+      data: {
+        ...baseData,
+        questionType: "matching" as const,
+        pairs: Array.from({ length: pairCount }, (_, index) => ({
+          id: `pair-${questionId}-${index}`,
+          left: apiQuestion.left_options![index]?.option_text || "",
+          right: apiQuestion.right_options![index]?.option_text || "",
+        })),
+      },
+    };
+  }
+
+  // Prioritas 5: Jika ada matching_pairs tanpa apiType, berarti matching
   if (
     apiQuestion.matching_pairs &&
     Array.isArray(apiQuestion.matching_pairs) &&
@@ -267,7 +298,7 @@ export function transformApiToQuizItem(
     };
   }
 
-  // Prioritas 4: Jika ada pairs (format lama), berarti matching
+  // Prioritas 6: Jika ada pairs (format lama), berarti matching
   if (apiQuestion.pairs && Array.isArray(apiQuestion.pairs) && apiQuestion.pairs.length > 0) {
     return {
       id: questionId,

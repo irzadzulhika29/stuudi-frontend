@@ -93,11 +93,31 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
     const questionText = question.text || question.question_text || "";
     const isMatching = questionType === "matching";
 
-    // Get matching pairs from either format
-    const matchingPairs =
-      question.matching_pairs?.map((p) => ({ left: p.left_text, right: p.right_text })) ||
-      question.pairs?.map((p) => ({ left: p.left, right: p.right })) ||
-      [];
+    // Get matching pairs from multiple formats
+    let matchingPairs: { left: string; right: string }[] = [];
+
+    if (
+      question.left_options &&
+      Array.isArray(question.left_options) &&
+      question.left_options.length > 0 &&
+      question.right_options &&
+      Array.isArray(question.right_options) &&
+      question.right_options.length > 0
+    ) {
+      // Format baru: left_options & right_options
+      const pairCount = Math.min(question.left_options.length, question.right_options.length);
+      matchingPairs = Array.from({ length: pairCount }, (_, i) => ({
+        left: question.left_options![i]?.option_text || question.left_options![i]?.text || "",
+        right: question.right_options![i]?.option_text || question.right_options![i]?.text || "",
+      }));
+    } else if (question.matching_pairs && question.matching_pairs.length > 0) {
+      matchingPairs = question.matching_pairs.map((p) => ({
+        left: p.left_text,
+        right: p.right_text,
+      }));
+    } else if (question.pairs && question.pairs.length > 0) {
+      matchingPairs = question.pairs.map((p) => ({ left: p.left, right: p.right }));
+    }
 
     return (
       <div

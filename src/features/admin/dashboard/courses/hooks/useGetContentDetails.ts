@@ -8,12 +8,21 @@ export interface QuizOption {
   is_correct: boolean;
 }
 
+export interface MatchingOption {
+  option_id: string;
+  option_text: string;
+}
+
 export interface QuizQuestion {
   question_id: string;
   question_text: string;
-  question_type: "single" | "multiple";
+  question_type: "single" | "multiple" | "matching";
   points: number;
   options: QuizOption[];
+  // Matching question formats
+  left_options?: MatchingOption[];
+  right_options?: MatchingOption[];
+  matching_pairs?: { pair_id?: string; left_text: string; right_text: string }[];
 }
 
 export interface ContentBlock {
