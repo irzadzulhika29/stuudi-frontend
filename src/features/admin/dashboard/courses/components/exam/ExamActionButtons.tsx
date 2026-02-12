@@ -23,13 +23,13 @@ export function ExamActionButtons({
   const isDisabled = isCreating || isUpdating || isDeleting;
 
   return (
-    <div className="flex gap-3">
+    <div className="mt-10 flex gap-3">
       {isEditMode && examId && (
         <Button
           variant="outline"
           onClick={onDeleteRequest}
           disabled={isDisabled}
-          className="border-red-500 text-red-500 hover:bg-red-500! hover:text-white disabled:opacity-50"
+          className="!border-none !bg-red-500 text-white hover:scale-105 hover:!text-white disabled:opacity-50"
         >
           <Trash2 className="mr-2 h-4 w-4" />
           Hapus Exam
@@ -39,7 +39,7 @@ export function ExamActionButtons({
         variant="outline"
         onClick={onSave}
         disabled={isDisabled}
-        className="hover:bg-primary! flex-1 hover:text-white disabled:opacity-50"
+        className="!bg-primary flex-1 !text-white hover:scale-102 hover:!text-white disabled:opacity-50"
       >
         {isCreating
           ? "Menyimpan..."

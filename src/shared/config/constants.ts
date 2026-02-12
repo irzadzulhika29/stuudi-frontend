@@ -46,6 +46,13 @@ export const API_ENDPOINTS = {
     TOPIC_NOTES: (topicId: string) => `student/topics/${topicId}/notes`,
     NOTE_UPDATE: (noteId: string) => `student/notes/${noteId}`,
     NOTE_DELETE: (noteId: string) => `student/notes/${noteId}`,
+    NOTIFICATIONS: (page: number, per_page: number) =>
+      `student/notifications?page=${page}&per_page=${per_page}`,
+    NOTIFICATIONS_UNREAD: "student/notifications/unread-count",
+    NOTIFICATIONS_MARK_READ: (id: string) => `student/notifications/${id}/read`,
+    NOTIFICATIONS_MARK_ALL_READ: "student/notifications/read-all",
+    NOTIFICATIONS_DELETE: (id: string) => `student/notifications/${id}`,
+    NOTIFICATIONS_DELETE_ALL: "student/notifications",
   },
   TEACHER: {
     COURSES: "teacher/courses",
@@ -89,6 +96,7 @@ export const API_ENDPOINTS = {
     CHEATING_REPORT: (examId: string) => `teacher/exams/${examId}/cheating`,
     DISQUALIFIED_PARTICIPANTS: (examId: string) => `teacher/exams/${examId}/disqualified`,
     GET_EXAM_PARTICIPANTS: (examId: string) => `teacher/exams/${examId}/participants`,
+    GET_EXAM_RESULTS: (examId: string) => `teacher/exams/${examId}/results`,
     // Participants
     GET_ALL_PARTICIPANTS: "teacher/participants",
     PARTICIPANTS_TEMPLATE: "teacher/participants/template",
@@ -112,8 +120,15 @@ export const STORAGE_KEYS = {
   USER: "user_data",
 } as const;
 
-export const SUPPORT_CONTACT = {
-  NAME: "Zakwan",
-  PHONE: "+62 852-2605-5932",
-  WHATSAPP_URL: "https://wa.me/6285226055932",
-} as const;
+export const SUPPORT_CONTACT = [
+  {
+    NAME: "Dzaki",
+    PHONE: "+62 812-5118-8755",
+    WHATSAPP_URL: "https://wa.me/6281251188755",
+  },
+  {
+    NAME: "Nopal",
+    PHONE: "+62 819-5255-2755",
+    WHATSAPP_URL: "https://wa.me/6281952552755",
+  },
+] as const;

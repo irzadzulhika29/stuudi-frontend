@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Settings, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useSidebar } from "@/features/user/dashboard/shared/context/SidebarContext";
 import { NotificationDropdown } from "./NotificationDropdown";
@@ -52,35 +52,36 @@ export function Topbar({ user }: TopbarProps) {
               <p className="text-xs text-white/70">{user?.role || user?.email || ""}</p>
             </div>
 
-            {/* XP/User Circle with Shining Effect */}
-            <div className="relative flex h-10 w-10 overflow-hidden rounded-full border border-white/30 bg-white/20 text-xs font-bold text-white ring-2 ring-white/10 transition-transform text-shadow-sm group-hover:ring-white/30 active:scale-95">
-              {/* Shine Effect Layer */}
-              <div className="absolute inset-0 z-10 -translate-x-full bg-gradient-to-r from-transparent via-white/90 to-transparent transition-transform duration-1000 group-hover:animate-[shimmer_2s_infinite]" />
+            <div className="group/xp relative">
+              <div className="relative flex h-10 w-10 overflow-hidden rounded-full border border-white/30 bg-white/20 text-xs font-bold text-white ring-2 ring-white/10 transition-transform text-shadow-sm group-hover:ring-white/30 active:scale-95">
+                <div className="absolute inset-0 z-10 -translate-x-full bg-gradient-to-r from-transparent via-white/90 to-transparent transition-transform duration-1000 group-hover:animate-[shimmer_2s_infinite]" />
 
-              <div className="relative z-0 flex h-full w-full items-center justify-center">
-                {user?.xp !== undefined ? (
-                  `${user.xp}`
-                ) : user?.image ? (
-                  <Image
-                    src={user.image}
-                    alt={user.name || "User"}
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <User size={18} />
-                )}
+                <div className="relative z-0 flex h-full w-full items-center justify-center">
+                  {user?.xp !== undefined ? (
+                    `${user.xp}`
+                  ) : user?.image ? (
+                    <Image
+                      src={user.image}
+                      alt={user.name || "User"}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User size={18} />
+                  )}
+                </div>
               </div>
+
+              {user?.xp !== undefined && (
+                <div className="pointer-events-none absolute top-full right-0 mt-1 hidden rounded bg-neutral-800/90 px-2 py-1 text-[10px] whitespace-nowrap text-white opacity-0 backdrop-blur-sm transition-opacity group-hover/xp:block group-hover/xp:opacity-100">
+                  Total XP
+                </div>
+              )}
             </div>
 
             {showDropdown && (
-              <div className="absolute top-full right-0 z-50 mt-2 w-48 animate-[fadeIn_0.2s_ease-out] rounded-xl border border-neutral-100 bg-white py-2 shadow-xl">
-                <button className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-50">
-                  <Settings size={16} className="text-neutral-400" />
-                  Settings
-                </button>
-                <hr className="my-1 border-neutral-100" />
+              <div className="absolute top-full right-0 z-50 w-48 animate-[fadeIn_0.2s_ease-out] rounded-xl border border-neutral-100 bg-white py-2 shadow-xl">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

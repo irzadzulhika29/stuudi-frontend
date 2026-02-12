@@ -51,13 +51,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body
-        className="antialiased min-h-screen flex flex-col"
-        suppressHydrationWarning
-      >
+      <body className="flex min-h-screen flex-col antialiased" suppressHydrationWarning>
         <AppProvider>
           <ToastProvider>{children}</ToastProvider>
         </AppProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: siteConfig.name,
+              url: siteConfig.url,
+              logo: `${siteConfig.url}/images/logo/ARTERI.webp`,
+              description: siteConfig.description,
+              sameAs: [
+                "https://twitter.com/arteriproject",
+                "https://facebook.com/arteriproject",
+                "https://linkedin.com/company/arteriproject",
+              ],
+            }),
+          }}
+        />
       </body>
     </html>
   );

@@ -3,7 +3,6 @@
 import { Plus } from "lucide-react";
 import { QuizOption, ChoiceQuestionProps, QuizDifficulty } from "./types";
 import { QuizOptionItem } from "../material/QuizOptionItem";
-import { ToggleSwitch } from "@/shared/components/ui";
 
 export function ChoiceQuestion({
   id,
@@ -12,7 +11,6 @@ export function ChoiceQuestion({
   choiceType,
   onDifficultyChange,
   onOptionsChange,
-  onChoiceTypeChange,
 }: ChoiceQuestionProps) {
   const handleOptionChange = (optionId: string, text: string) => {
     const updatedOptions = options.map((opt) => (opt.id === optionId ? { ...opt, text } : opt));
@@ -52,11 +50,6 @@ export function ChoiceQuestion({
     onOptionsChange([...options, newOption]);
   };
 
-  const handleChoiceTypeToggle = () => {
-    const newType = choiceType === "single" ? "multiple" : "single";
-    onChoiceTypeChange(newType);
-  };
-
   return (
     <div className="space-y-4">
       {/* Options Header */}
@@ -67,14 +60,6 @@ export function ChoiceQuestion({
           </span>
           <span className="text-neutral-gray">|</span>
         </div>
-
-        {/* Choice Type Toggle */}
-        <ToggleSwitch
-          checked={choiceType === "multiple"}
-          onChange={handleChoiceTypeToggle}
-          label={choiceType === "multiple" ? "Multiple Choice" : "Single Choice"}
-          size="sm"
-        />
 
         {/* Difficulty Select */}
         <div className="flex items-center gap-2">
@@ -119,7 +104,7 @@ export function ChoiceQuestion({
       <button
         type="button"
         onClick={handleAddOption}
-        className="border-neutral-gray/40 hover:border-primary hover:bg-primary/5 text-neutral-gray hover:text-primary flex items-center gap-2 rounded-lg border border-dashed px-4 py-2 text-sm transition-all"
+        className="border-neutral-gray/40 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-4 py-2 text-sm text-white transition-all"
       >
         <Plus className="h-4 w-4" />
         <span>Tambahkan jawaban</span>
