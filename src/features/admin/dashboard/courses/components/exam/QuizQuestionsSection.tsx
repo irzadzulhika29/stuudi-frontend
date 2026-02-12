@@ -9,7 +9,7 @@ interface QuizQuestionsSectionProps {
   onAddQuestion: () => void;
   onUpdateContent: (id: string, data: QuizData) => void;
   onMoveQuiz: (index: number, direction: "up" | "down") => void;
-  onDeleteQuestion: (id: string) => void;
+  onDeleteQuestion: (id: string) => void | Promise<void>;
   onClearAll: () => void;
 }
 

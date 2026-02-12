@@ -65,19 +65,52 @@ function transformBlocksToContents(blocks: ContentBlock[]): MaterialContent[] {
             isCorrect: opt.is_correct,
           })) || [];
 
-        // Handle pairs for matching questions (support both old and new format)
-        const pairs =
-          apiQuestion.matching_pairs?.map((pair, index: number) => ({
+        // Handle pairs for matching questions (support multiple formats)
+        let pairs: { id: string; left: string; right: string }[] | undefined;
+
+        // Format baru: left_options & right_options
+        if (
+          apiQuestion.left_options &&
+          Array.isArray(apiQuestion.left_options) &&
+          apiQuestion.left_options.length > 0 &&
+          apiQuestion.right_options &&
+          Array.isArray(apiQuestion.right_options) &&
+          apiQuestion.right_options.length > 0
+        ) {
+          const pairCount = Math.min(
+            apiQuestion.left_options.length,
+            apiQuestion.right_options.length
+          );
+          pairs = Array.from({ length: pairCount }, (_, index) => ({
+            id: `pair-${question.question_id}-${index}`,
+            left: apiQuestion.left_options![index]?.option_text || "",
+            right: apiQuestion.right_options![index]?.option_text || "",
+          }));
+        }
+        // Format matching_pairs
+        else if (
+          apiQuestion.matching_pairs &&
+          Array.isArray(apiQuestion.matching_pairs) &&
+          apiQuestion.matching_pairs.length > 0
+        ) {
+          pairs = apiQuestion.matching_pairs.map((pair, index: number) => ({
             id: pair.pair_id || pair.id || `pair-${question.question_id}-${index}`,
             left: pair.left_text || "",
             right: pair.right_text || "",
-          })) ||
-          apiQuestion.pairs?.map((pair, index: number) => ({
+          }));
+        }
+        // Format pairs (lama)
+        else if (
+          apiQuestion.pairs &&
+          Array.isArray(apiQuestion.pairs) &&
+          apiQuestion.pairs.length > 0
+        ) {
+          pairs = apiQuestion.pairs.map((pair, index: number) => ({
             id: pair.pair_id || pair.id || `pair-${question.question_id}-${index}`,
             left: pair.left || "",
             right: pair.right || "",
-          })) ||
-          undefined;
+          }));
+        }
 
         const quizContent: QuizContent = {
           id: question.question_id, // Use questionId for UPDATE_QUESTION endpoint
