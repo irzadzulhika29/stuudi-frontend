@@ -153,12 +153,10 @@ export function useExamFormHandlers({
     if (!validateExamData()) return;
 
     if (isEditMode && examId) {
-      // Update exam with questions
       try {
         setIsUpdatingQuestions(true);
         setError(null);
 
-        // Update exam metadata first
         await updateExamMutation.mutateAsync({
           title: examTitle,
           description: examDescription,
