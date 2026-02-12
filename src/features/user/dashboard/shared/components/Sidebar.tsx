@@ -208,20 +208,23 @@ export function Sidebar({ menuItems, className = "" }: SidebarProps) {
               </p>
             </div>
 
-            <a
-              href={SUPPORT_CONTACT.WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 transition-colors hover:bg-green-100"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500">
-                <Phone size={20} className="text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-neutral-800">{SUPPORT_CONTACT.NAME}</p>
-                <p className="text-sm text-neutral-600">{SUPPORT_CONTACT.PHONE}</p>
-              </div>
-            </a>
+            {SUPPORT_CONTACT.map((contact, index) => (
+              <a
+                key={index}
+                href={contact.WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-3 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 transition-colors last:mb-0 hover:bg-green-100"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500">
+                  <Phone size={20} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-neutral-800">{contact.NAME}</p>
+                  <p className="text-sm text-neutral-600">{contact.PHONE}</p>
+                </div>
+              </a>
+            ))}
 
             <p className="mt-4 text-center text-xs text-neutral-400">
               Klik untuk menghubungi via WhatsApp

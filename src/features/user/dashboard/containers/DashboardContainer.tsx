@@ -109,11 +109,11 @@ export function DashboardContainer() {
         <>
           <div className="pointer-events-none absolute bottom-16 -left-16 z-0 hidden h-96 w-96 lg:block">
             <Image
-              src="/images/mascot/chiby.webp"
+              src="/images/mascot/anti.webp"
               alt="Mascot Left"
               width={384}
               height={384}
-              className="object-contain object-bottom"
+              className="rotate-y-180 object-contain object-bottom"
               priority
             />
           </div>
@@ -124,7 +124,7 @@ export function DashboardContainer() {
               alt="Mascot Right"
               width={384}
               height={384}
-              className="scale-x-[-1] object-contain object-bottom"
+              className="scale-x-[-1] rotate-y-180 object-contain object-bottom"
               priority
             />
           </div>
