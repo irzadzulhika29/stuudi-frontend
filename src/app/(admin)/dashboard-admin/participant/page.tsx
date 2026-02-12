@@ -23,6 +23,8 @@ interface ParticipantData {
   team: string;
   team_leader: string;
   school: string;
+  username: string;
+  password: string;
   members: { name: string; role: "Ketua" | "Anggota" }[];
 }
 
@@ -42,6 +44,8 @@ export default function ParticipantPage() {
       team: participant.team_name || "-",
       team_leader: participant.leader_name,
       school: participant.school,
+      username: participant.username,
+      password: participant.password,
       members: [
         { name: participant.leader_name, role: "Ketua" as const },
         ...(participant.team_members?.map((member) => ({
@@ -68,6 +72,8 @@ export default function ParticipantPage() {
     setSelectedGroup({
       team: row.team,
       school: row.school,
+      username: row.username,
+      password: row.password,
       members: row.members,
     });
     setIsModalOpen(true);
@@ -79,6 +85,8 @@ export default function ParticipantPage() {
       team: team.team,
       team_leader: team.team_leader,
       school: team.school,
+      username: "-",
+      password: "-",
       members: [
         { name: team.team_leader, role: "Ketua" },
         ...(team.member1 ? [{ name: team.member1, role: "Anggota" as const }] : []),

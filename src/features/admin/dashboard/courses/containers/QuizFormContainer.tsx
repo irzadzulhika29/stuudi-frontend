@@ -96,16 +96,14 @@ export function QuizFormContainer({
 
   return (
     <div className="min-h-screen">
-      <div className="sticky top-0 z-10">
-        <div className="mb-8 flex items-center gap-4">
-          <Link
-            href={`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF9D00] text-white transition-colors hover:bg-[#E68E00]"
-          >
-            <ChevronLeft size={24} />
-          </Link>
-          <span className="text-lg text-white">Course/Course Details</span>
-        </div>
+      <div className="mb-8 flex items-center gap-4">
+        <Link
+          href={`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF9D00] text-white transition-colors hover:bg-[#E68E00]"
+        >
+          <ChevronLeft size={24} />
+        </Link>
+        <span className="text-lg text-white">Course/Course Details</span>
       </div>
 
       <div className="container mx-auto px-4 py-8">
@@ -201,14 +199,16 @@ export function QuizFormContainer({
           )}
 
           {/* Save Button */}
-          <Button
-            variant="outline"
-            onClick={() => handleSave(quizName, quizItems, effectiveSettings)}
-            disabled={isSaving}
-            className="hover:!bg-primary w-full hover:text-white disabled:opacity-50"
-          >
-            {isSaving ? (isEditMode ? "Memperbarui..." : "Menyimpan...") : "Simpan"}
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => handleSave(quizName, quizItems, effectiveSettings)}
+              disabled={isSaving}
+              className="!bg-primary !w-auto !text-white hover:scale-105 hover:text-white disabled:opacity-50"
+            >
+              {isSaving ? (isEditMode ? "Memperbarui..." : "Menyimpan...") : "Simpan"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

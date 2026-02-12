@@ -69,19 +69,35 @@ export default function NewMaterialPage() {
             headers: { "Content-Type": "multipart/form-data" },
           });
         } else if (content.type === "quiz") {
-          const options =
-            content.options?.map((opt) => ({
-              text: opt.text,
-              is_correct: opt.isCorrect,
-            })) || [];
-
-          await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), {
+          const requestData: {
+            question: string;
+            question_type: string;
+            difficulty: string;
+            explanation: string;
+            options?: { text: string; is_correct: boolean }[];
+            matching_pairs?: { left_text: string; right_text: string }[];
+          } = {
             question: content.question,
             question_type: content.questionType || "single",
-            points: content.difficulty === "hard" ? 20 : content.difficulty === "medium" ? 10 : 5,
-            difficulty: content.difficulty,
-            options,
-          });
+            difficulty: content.difficulty || "medium",
+            explanation: "",
+          };
+
+          if (content.questionType === "matching") {
+            requestData.matching_pairs =
+              content.pairs?.map((pair) => ({
+                left_text: pair.left,
+                right_text: pair.right,
+              })) || [];
+          } else {
+            requestData.options =
+              content.options?.map((opt) => ({
+                text: opt.text,
+                is_correct: opt.isCorrect,
+              })) || [];
+          }
+
+          await api.post(API_ENDPOINTS.TEACHER.ADD_QUIZ_BLOCK(contentId), requestData);
         }
       }
 

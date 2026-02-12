@@ -89,6 +89,16 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
 
   // Render quiz question for quiz content type
   const renderQuizQuestion = (question: QuizQuestion, index: number) => {
+    const questionType = question.type || question.question_type || "single";
+    const questionText = question.text || question.question_text || "";
+    const isMatching = questionType === "matching";
+
+    // Get matching pairs from either format
+    const matchingPairs =
+      question.matching_pairs?.map((p) => ({ left: p.left_text, right: p.right_text })) ||
+      question.pairs?.map((p) => ({ left: p.left, right: p.right })) ||
+      [];
+
     return (
       <div
         key={question.question_id}
@@ -97,6 +107,9 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
         <div className="mb-4 flex items-center justify-between">
           <span className="text-sm font-medium text-white">Pertanyaan {index + 1}</span>
           <div className="flex items-center gap-2">
+            <span className="rounded-full bg-purple-500/20 px-2 py-1 text-xs font-medium text-purple-400">
+              {questionType}
+            </span>
             <span className="rounded-full bg-blue-500/20 px-2 py-1 text-xs font-medium text-blue-400">
               {question.difficulty}
             </span>
@@ -105,24 +118,46 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
             </span>
           </div>
         </div>
-        <p className="mb-4 font-medium text-white">{question.text}</p>
-        <div className="space-y-3">
-          {question.options?.map((option, optIndex) => (
-            <div
-              key={option.option_id}
-              className={`flex items-center gap-3 rounded-xl border p-4 ${
-                option.is_correct ? "border-emerald-500 bg-emerald-500/20" : "border-white/20"
-              }`}
-            >
-              <span className="flex-1 text-sm text-white">
-                {String.fromCharCode(65 + optIndex)}. {option.text}
-              </span>
-              {option.is_correct && (
-                <span className="text-xs text-emerald-400">✓ Jawaban Benar</span>
-              )}
+        <p className="mb-4 font-medium text-white">{questionText}</p>
+
+        {isMatching ? (
+          // Render matching pairs
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center text-sm font-medium text-white/60">Kiri</div>
+              <div className="text-center text-sm font-medium text-white/60">Kanan</div>
             </div>
-          ))}
-        </div>
+            {matchingPairs.map((pair, pairIndex) => (
+              <div key={pairIndex} className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-white/20 bg-white/5 p-4 text-sm text-white">
+                  {pair.left}
+                </div>
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-white">
+                  {pair.right}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Render options for single/multiple choice
+          <div className="space-y-3">
+            {question.options?.map((option, optIndex) => (
+              <div
+                key={option.option_id}
+                className={`flex items-center gap-3 rounded-xl border p-4 ${
+                  option.is_correct ? "border-emerald-500 bg-emerald-500/20" : "border-white/20"
+                }`}
+              >
+                <span className="flex-1 text-sm text-white">
+                  {String.fromCharCode(65 + optIndex)}. {option.text}
+                </span>
+                {option.is_correct && (
+                  <span className="text-xs text-emerald-400">✓ Jawaban Benar</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -176,7 +211,7 @@ export function MateriDetailContainer({ courseId, topicId, materiId }: MateriDet
                 </div>
                 <p className="mb-4 font-medium text-white">{question.question_text}</p>
                 <div className="space-y-3">
-                  {question.options.map((option, optIndex) => (
+                  {question.options?.map((option, optIndex) => (
                     <div
                       key={option.option_id}
                       className={`flex items-center gap-3 rounded-xl border p-4 ${

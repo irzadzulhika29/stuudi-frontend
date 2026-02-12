@@ -7,14 +7,16 @@ import { API_ENDPOINTS } from "@/shared/config/constants";
 export interface ExamQuestionOption {
   option_id: string;
   option_text: string;
-  is_correct: boolean;
+  is_correct?: boolean;
   sequence: number;
+  side?: "left" | "right";
+  matching_pair?: string;
 }
 
 export interface ExamQuestion {
   question_id: string;
   question_text: string;
-  question_type: "single" | "multiple";
+  question_type: "single" | "multiple" | "matching";
   difficulty: "easy" | "medium" | "hard";
   points: number;
   sequence: number;

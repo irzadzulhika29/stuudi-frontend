@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { AdminGlassCard } from "./AdminGlassCard";
 
 type AdminStatsCardProps = {
   title: string;
@@ -14,24 +15,24 @@ export function AdminStatsCard({
   title,
   value,
   footer,
-  footerClassName = "text-neutral-500",
+  footerClassName = "text-white/50",
   href,
   detailText = "Lihat Detail",
 }: AdminStatsCardProps) {
   const cardContent = (
-    <div
-      className={`bg-white rounded-xl p-6 text-center ${href ? "cursor-pointer hover:shadow-lg transition-shadow duration-200" : ""}`}
+    <AdminGlassCard
+      className={`flex h-full flex-col items-center justify-center text-center ${href ? "cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" : ""}`}
     >
-      <p className="text-neutral-600 font-medium mb-2">{title}</p>
-      <p className="text-5xl font-bold text-secondary mb-2">{value}</p>
+      <p className="mb-2 font-medium text-neutral-500">{title}</p>
+      <p className="mb-2 text-5xl font-bold text-neutral-900">{value}</p>
       <p className={`${footerClassName} text-sm`}>{footer}</p>
       {href && (
-        <div className="flex items-center justify-center gap-1 mt-3 text-primary text-sm font-medium hover:underline">
+        <div className="text-secondary mt-4 flex items-center justify-center gap-1 text-sm font-medium hover:underline">
           <span>{detailText}</span>
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="h-4 w-4" />
         </div>
       )}
-    </div>
+    </AdminGlassCard>
   );
 
   if (href) {

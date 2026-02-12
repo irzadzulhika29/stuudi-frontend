@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import {
   ExamMetadataForm,
   ExamConfigPanel,
@@ -12,7 +13,12 @@ import {
   ExamDeleteModal,
   QuizQuestionsSection,
 } from "@/features/admin/dashboard/courses/components/exam";
-import { useCreateExam, CreateExamRequest } from "../hooks/useCreateExam";
+import {
+  useCreateExam,
+  CreateExamRequest,
+  useAddExamQuestions,
+  ExamQuestionRequest,
+} from "../hooks/useCreateExam";
 import { useUpdateExam } from "../hooks/useUpdateExam";
 import { useDeleteExam } from "../hooks/useDeleteExam";
 import { useGetExamDetails } from "../hooks/useGetExamDetails";
@@ -20,7 +26,10 @@ import { QuizData } from "@/features/admin/dashboard/courses/components/material
 import {
   formatDateTimeLocal,
   transformApiQuestionsToQuizItems,
+  isValidUUID,
 } from "@/features/admin/dashboard/courses/utils/examHelpers";
+import { api } from "@/shared/api/api";
+import { API_ENDPOINTS } from "@/shared/config/constants";
 import { DEFAULT_EXAM_STATE } from "../hooks/useExamFormState";
 
 export interface QuizItem {
@@ -193,11 +202,35 @@ export function ExamFormContainer({
 
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isUpdatingQuestions, setIsUpdatingQuestions] = useState(false);
 
   // Hooks
   const { createExam, isCreating, progress } = useCreateExam(courseId);
   const updateExamMutation = useUpdateExam(examId || "");
   const deleteExamMutation = useDeleteExam();
+  const addExamQuestionMutation = useAddExamQuestions();
+
+  // Mutation for updating individual question
+  const updateQuestionMutation = useMutation({
+    mutationFn: async ({
+      questionId,
+      data,
+    }: {
+      questionId: string;
+      data: Record<string, unknown>;
+    }) => {
+      const response = await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(questionId), data);
+      return response.data;
+    },
+  });
+
+  // Mutation for deleting individual question
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      const response = await api.delete(API_ENDPOINTS.TEACHER.DELETE_QUESTION(questionId));
+      return response.data;
+    },
+  });
 
   const generateId = () => `quiz-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -241,10 +274,21 @@ export function ExamFormContainer({
   );
 
   const deleteQuiz = useCallback(
-    (id: string) => {
-      setQuizItems((prev) => prev.filter((item) => item.id !== id));
+    async (id: string) => {
+      // If in edit mode and it's an existing question (has valid UUID), call API immediately
+      if (isEditMode && isValidUUID(id)) {
+        try {
+          await deleteQuestionMutation.mutateAsync(id);
+          setQuizItems((prev) => prev.filter((item) => item.id !== id));
+        } catch {
+          setError("Gagal menghapus soal.");
+        }
+      } else {
+        // Just remove from local state for new questions
+        setQuizItems((prev) => prev.filter((item) => item.id !== id));
+      }
     },
-    [setQuizItems]
+    [isEditMode, setQuizItems, deleteQuestionMutation]
   );
 
   const handleSave = async () => {
@@ -282,8 +326,12 @@ export function ExamFormContainer({
     setError(null);
 
     if (isEditMode && examId) {
-      // Update exam
+      // Update exam with questions
       try {
+        setIsUpdatingQuestions(true);
+        setError(null);
+
+        // Update exam metadata first
         await updateExamMutation.mutateAsync({
           title: examTitle,
           description: examDescription,
@@ -297,10 +345,109 @@ export function ExamFormContainer({
           is_random_selection: isRandomSelection,
         });
 
+        // Separate existing questions (valid UUID) and new questions (no valid UUID)
+        const existingQuestions = quizItems.filter((item) => isValidUUID(item.id));
+        const newQuestions = quizItems.filter((item) => !isValidUUID(item.id));
+
+        const failedUpdates: string[] = [];
+        const failedCreates: string[] = [];
+
+        // Update existing questions
+        for (const item of existingQuestions) {
+          try {
+            const requestData: Record<string, unknown> = {
+              question_text: item.data.question,
+              question_type: item.data.questionType,
+              difficulty: item.data.difficulty,
+              explanation: "",
+            };
+
+            // Add options for single/multiple choice questions
+            if (item.data.questionType === "single" || item.data.questionType === "multiple") {
+              requestData.options =
+                item.data.options?.map((opt) => ({
+                  text: opt.text,
+                  is_correct: opt.isCorrect,
+                })) || [];
+            }
+
+            // Add matching_pairs for matching questions
+            if (item.data.questionType === "matching") {
+              requestData.matching_pairs =
+                item.data.pairs?.map((pair) => ({
+                  left_text: pair.left,
+                  right_text: pair.right,
+                })) || [];
+            }
+
+            await updateQuestionMutation.mutateAsync({
+              questionId: item.id,
+              data: requestData,
+            });
+          } catch {
+            failedUpdates.push(item.id);
+          }
+        }
+
+        // Add new questions to exam
+        for (const item of newQuestions) {
+          try {
+            const questionData: ExamQuestionRequest = {
+              question_text: item.data.question,
+              question_type: item.data.questionType,
+              difficulty: item.data.difficulty,
+            };
+
+            // Add options for single/multiple choice questions
+            if (item.data.questionType === "single" || item.data.questionType === "multiple") {
+              questionData.options =
+                item.data.options?.map((opt) => ({
+                  text: opt.text,
+                  is_correct: opt.isCorrect,
+                })) || [];
+            }
+
+            // Add pairs for matching questions
+            if (item.data.questionType === "matching") {
+              questionData.matching_pairs =
+                item.data.pairs?.map((pair) => ({
+                  left_text: pair.left,
+                  right_text: pair.right,
+                })) || [];
+            }
+
+            await addExamQuestionMutation.mutateAsync({
+              examId,
+              question: questionData,
+            });
+          } catch {
+            failedCreates.push(item.id);
+          }
+        }
+
+        // Show error message if any operations failed
+        const errors: string[] = [];
+        if (failedUpdates.length > 0) {
+          errors.push(`${failedUpdates.length} soal gagal diupdate`);
+        }
+        if (failedCreates.length > 0) {
+          errors.push(`${failedCreates.length} soal baru gagal ditambahkan`);
+        }
+
+        if (errors.length > 0) {
+          setError(errors.join(", ") + ".");
+        }
+
         router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
-      } catch (err) {
-        console.error("Failed to update exam:", err);
-        setError("Gagal mengupdate exam");
+      } catch (err: unknown) {
+        const axiosError = err as { response?: { data?: { message?: string; data?: string } } };
+        const errorMessage =
+          axiosError.response?.data?.message ||
+          axiosError.response?.data?.data ||
+          "Gagal mengupdate exam";
+        setError(`Gagal mengupdate exam: ${errorMessage}`);
+      } finally {
+        setIsUpdatingQuestions(false);
       }
       return;
     }
@@ -436,7 +583,7 @@ export function ExamFormContainer({
         <ExamActionButtons
           isEditMode={isEditMode}
           isCreating={isCreating}
-          isUpdating={updateExamMutation.isPending}
+          isUpdating={updateExamMutation.isPending || isUpdatingQuestions}
           isDeleting={deleteExamMutation.isPending}
           onSave={handleSave}
           onDeleteRequest={() => setShowDeleteConfirm(true)}
