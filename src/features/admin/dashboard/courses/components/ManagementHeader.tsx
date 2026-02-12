@@ -1,9 +1,12 @@
 import { ChevronLeft, Trash2 } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/shared/components/ui";
+import { ConfirmDeleteModal } from "@/shared/components/ui/ConfirmDeleteModal";
 
 interface ManagementHeaderProps {
   courseId: string;
+  courseName: string;
   onDelete: () => void;
   onSave: () => void;
   isSaving: boolean;
@@ -12,11 +15,22 @@ interface ManagementHeaderProps {
 
 export function ManagementHeader({
   courseId,
+  courseName,
   onDelete,
   onSave,
   isSaving,
   isDeleting,
 }: ManagementHeaderProps) {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete();
+  };
+
   return (
     <>
       <div className="mb-8 flex items-center gap-4">
@@ -31,7 +45,7 @@ export function ManagementHeader({
 
       <div className="mb-6 flex justify-end gap-3">
         <button
-          onClick={onDelete}
+          onClick={handleDeleteClick}
           disabled={isDeleting}
           className="p-2 text-white/80 transition-colors hover:text-red-500 disabled:opacity-50"
         >
@@ -46,6 +60,15 @@ export function ManagementHeader({
           {isSaving ? "Updating..." : "Apply edit"}
         </Button>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Course"
+        itemName={courseName}
+        isLoading={isDeleting}
+      />
     </>
   );
 }

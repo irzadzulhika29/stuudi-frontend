@@ -5,11 +5,11 @@ export default async function NewExamPage({
 }: {
   params: Promise<{ coursesId: string; manageCoursesId: string }>;
 }) {
-  const { coursesId, manageCoursesId } = await params;
+  const { coursesId } = await params;
 
   return (
     <div className="min-h-screen w-full">
-      <ExamFormContainer courseId={coursesId} manageCoursesId={manageCoursesId} />
+      <ExamFormContainer courseId={coursesId} />
     </div>
   );
 }

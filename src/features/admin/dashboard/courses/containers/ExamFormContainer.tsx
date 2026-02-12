@@ -39,25 +39,21 @@ export interface QuizItem {
 
 interface ExamFormContainerProps {
   courseId: string;
-  manageCoursesId: string;
   examId?: string;
   isEditMode?: boolean;
 }
 
 export function ExamFormContainer({
   courseId,
-  manageCoursesId,
   examId,
   isEditMode = false,
 }: ExamFormContainerProps) {
   const router = useRouter();
 
-  // Fetch exam details if in edit mode
   const { data: examDetails, isLoading: isLoadingExam } = useGetExamDetails(
     isEditMode && examId ? examId : ""
   );
 
-  // Derive initial values from API data
   const initialValues = useMemo(() => {
     if (isEditMode && examDetails) {
       return {
@@ -77,10 +73,8 @@ export function ExamFormContainer({
     return DEFAULT_EXAM_STATE;
   }, [isEditMode, examDetails]);
 
-  // Track if user has started editing (to stop syncing with server)
   const [hasSyncedWithServer, setHasSyncedWithServer] = useState(false);
 
-  // Exam Metadata - local state for user edits
   const [localExamTitle, setLocalExamTitle] = useState("");
   const [localExamDescription, setLocalExamDescription] = useState("");
   const [localExamDuration, setLocalExamDuration] = useState(120);
@@ -93,7 +87,6 @@ export function ExamFormContainer({
   const [localIsRandomSelection, setLocalIsRandomSelection] = useState(false);
   const [localQuizItems, setLocalQuizItems] = useState<QuizItem[]>([]);
 
-  // Effective values: use server data until user starts editing
   const examTitle = hasSyncedWithServer ? localExamTitle : initialValues.title;
   const examDescription = hasSyncedWithServer ? localExamDescription : initialValues.description;
   const examDuration = hasSyncedWithServer ? localExamDuration : initialValues.duration;
@@ -110,12 +103,10 @@ export function ExamFormContainer({
     : initialValues.isRandomSelection;
   const quizItems = hasSyncedWithServer ? localQuizItems : initialValues.quizItems;
 
-  // Helper to sync with server and then update local state
   const syncAndUpdate = useCallback(
     <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => {
       if (!hasSyncedWithServer) {
         setHasSyncedWithServer(true);
-        // For edit mode, sync all local state with server data first
         if (isEditMode && examDetails) {
           setLocalExamTitle(initialValues.title);
           setLocalExamDescription(initialValues.description);
@@ -452,7 +443,7 @@ export function ExamFormContainer({
           setError(errors.join(", ") + ".");
         }
 
-        router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+        router.push(`/dashboard-admin/courses/${courseId}`);
       } catch (err: unknown) {
         const axiosError = err as { response?: { data?: { message?: string; data?: string } } };
         const errorMessage =
@@ -466,7 +457,6 @@ export function ExamFormContainer({
       return;
     }
 
-    // Prepare exam data
     const examData: CreateExamRequest = {
       title: examTitle,
       description: examDescription,
@@ -483,7 +473,7 @@ export function ExamFormContainer({
     const result = await createExam(examData, quizItems);
 
     if (result.success) {
-      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+      router.push(`/dashboard-admin/courses/${courseId}`);
     } else {
       setError(result.error || "Gagal membuat exam");
       if (result.failedQuestions && result.failedQuestions.length > 0) {
@@ -498,7 +488,7 @@ export function ExamFormContainer({
     try {
       await deleteExamMutation.mutateAsync(examId);
 
-      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+      router.push(`/dashboard-admin/courses/${courseId}`);
     } catch (err) {
       console.error("Failed to delete exam:", err);
       setError("Gagal menghapus exam");

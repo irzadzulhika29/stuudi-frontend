@@ -43,7 +43,6 @@ export function ManageTopicItem({
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
 
-  // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(title);
   const [editDescription, setEditDescription] = useState(description);
@@ -57,7 +56,6 @@ export function ManageTopicItem({
     setOrderedMaterials(materials);
   }, [materials]);
 
-  // Sync state when props change (unless editing)
   useEffect(() => {
     if (!isEditing) {
       setEditTitle(title);
@@ -122,7 +120,6 @@ export function ManageTopicItem({
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(true);
-    // Ensure expanded when editing to show description
     if (!isExpanded) setIsExpanded(true);
   };
 

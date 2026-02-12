@@ -23,7 +23,7 @@ export function useDeleteContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
-      queryClient.invalidateQueries({ queryKey: ["teachingCourseDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["teachingCourse"] });
     },
   });
 }
