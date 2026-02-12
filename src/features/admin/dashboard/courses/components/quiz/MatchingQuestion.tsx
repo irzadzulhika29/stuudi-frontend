@@ -35,7 +35,7 @@ export function MatchingQuestion({
       {/* Header */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-primary text-sm font-medium">
+          <span className="text-sm font-medium text-white">
             Pasangan Menjodohkan<span className="text-error">*</span>
           </span>
           <span className="text-neutral-gray">|</span>
@@ -59,9 +59,9 @@ export function MatchingQuestion({
       {/* Column Headers */}
       <div className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-3">
         <div className="w-6"></div>
-        <span className="text-neutral-dark text-center text-sm font-medium">Pertanyaan</span>
+        <span className="text-center text-sm font-medium text-white">Pertanyaan</span>
         <div className="w-8"></div>
-        <span className="text-neutral-dark text-center text-sm font-medium">Jawaban</span>
+        <span className="text-center text-sm font-medium text-white">Jawaban</span>
         <div className="w-8"></div>
       </div>
 
@@ -128,7 +128,7 @@ export function MatchingQuestion({
       <button
         type="button"
         onClick={handleAddPair}
-        className="border-neutral-gray/40 hover:border-primary hover:bg-primary/5 text-neutral-gray hover:text-primary flex items-center gap-2 rounded-lg border border-dashed px-4 py-2 text-sm transition-all"
+        className="hover:bg-primary/5 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-white px-4 py-2 text-sm text-white transition-all hover:text-white"
       >
         <Plus className="h-4 w-4" />
         <span>Tambahkan pasangan</span>

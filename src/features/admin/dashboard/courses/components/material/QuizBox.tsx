@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { ChevronDownIcon, Image as ImageIcon, X } from "lucide-react";
-import Image from "next/image";
+import { useState } from "react";
+import { ChevronDownIcon } from "lucide-react";
 import { MaterialContentBox } from "./MaterialContentBox";
 import { ToggleSwitch } from "@/shared/components/ui";
 import { ChoiceQuestion, MatchingQuestion, QuizOption, MatchingPair } from "../quiz";
 
 import { QuizDifficulty } from "./AddContentButtons";
-import { useToast } from "@/shared/components/ui/Toast";
 
 export interface QuizData {
   question: string;
@@ -42,34 +40,6 @@ export function QuizBox({
   canMoveDown,
 }: QuizBoxProps) {
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { showToast } = useToast();
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        showToast("Mohon pilih file gambar yang valid", "warning");
-        return;
-      }
-      if (file.size > 1 * 1024 * 1024) {
-        showToast("Ukuran file maksimal 1MB", "warning");
-        return;
-      }
-      const imageUrl = URL.createObjectURL(file);
-      onChange(id, { ...data, imageUrl });
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleRemoveImage = () => {
-    if (data.imageUrl) {
-      URL.revokeObjectURL(data.imageUrl);
-    }
-    onChange(id, { ...data, imageUrl: undefined });
-  };
 
   const questionTypes = [
     { value: "single", label: "Single Choice" },
@@ -216,7 +186,7 @@ export function QuizBox({
         </div>
 
         {/* Image Upload Section */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <label className="text-sm font-medium text-white">Gambar (Opsional)</label>
           {data.imageUrl ? (
             <div className="relative h-48 w-full">
@@ -253,7 +223,7 @@ export function QuizBox({
               </button>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Question Type Selector */}
         <div className="space-y-2">

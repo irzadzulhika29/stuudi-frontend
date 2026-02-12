@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { AdminLeaderboard } from "./AdminLeaderboard";
 import { AdminStatsCards } from "./AdminStatsCards";
+import { AdminExamStats } from "./AdminExamStats";
 import { useGetAllExams } from "../hooks/useGetAllExams";
 import { useGetExamDashboard } from "../hooks/useGetExamDashboard";
+import { useGetExamResults } from "../hooks/useGetExamResults";
 
 interface DropdownOption {
   value: string;
@@ -31,7 +33,6 @@ function GlassDropdown({
 
   const selectedOption = options.find((opt) => opt.value === value);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -75,7 +76,6 @@ function GlassDropdown({
         </svg>
       </button>
 
-      {/* Dropdown List - White Background */}
       {isOpen && (
         <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
           <div className="max-h-60 overflow-y-auto">
@@ -111,6 +111,7 @@ export function AdminDashboardContent() {
   const { data: exams, isLoading: isLoadingExams } = useGetAllExams();
   const { data: examDashboard, isLoading: isLoadingDashboard } =
     useGetExamDashboard(selectedExamId);
+  const { data: examResults, isLoading: isLoadingResults } = useGetExamResults(selectedExamId);
 
   const examOptions =
     exams?.map((exam) => ({
@@ -119,8 +120,8 @@ export function AdminDashboardContent() {
     })) ?? [];
 
   return (
-    <div className="min-h-screen px-3 py-4 md:px-4 md:py-6">
-      <div className="max-w-6xl">
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-6xl">
         {/* Header with Exam Dropdown */}
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -151,9 +152,30 @@ export function AdminDashboardContent() {
           examId={selectedExamId}
         />
 
+        {/* Exam Performance Stats */}
+        {selectedExamId && (
+          <div className="mb-6">
+            {isLoadingResults ? (
+              <div>
+                <h2 className="mb-4 text-xl font-bold text-white">Exam Performance</h2>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-36 animate-pulse rounded-2xl bg-white/10 backdrop-blur-md"
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : examResults ? (
+              <AdminExamStats data={examResults} />
+            ) : null}
+          </div>
+        )}
+
         {/* Leaderboard Section */}
         <div className="">
-          <h2 className="mb-5 text-3xl font-bold text-neutral-800 text-white">
+          <h2 className="mb-5 text-3xl font-bold text-white">
             {examDashboard?.exam_title
               ? `Leaderboard - ${examDashboard.exam_title}`
               : "Leaderboard Top 10 Teams"}

@@ -89,6 +89,7 @@ export const API_ENDPOINTS = {
     CHEATING_REPORT: (examId: string) => `teacher/exams/${examId}/cheating`,
     DISQUALIFIED_PARTICIPANTS: (examId: string) => `teacher/exams/${examId}/disqualified`,
     GET_EXAM_PARTICIPANTS: (examId: string) => `teacher/exams/${examId}/participants`,
+    GET_EXAM_RESULTS: (examId: string) => `teacher/exams/${examId}/results`,
     // Participants
     GET_ALL_PARTICIPANTS: "teacher/participants",
     PARTICIPANTS_TEMPLATE: "teacher/participants/template",
