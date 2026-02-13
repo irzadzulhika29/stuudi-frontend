@@ -8,7 +8,10 @@ import { CourseNavigationProvider } from "@/features/user/courses/context/Course
 import { useUser } from "@/features/auth/shared/hooks/useUser";
 import { RoleGuard } from "@/shared/components/guards";
 
+import { usePathname } from "next/navigation";
+
 export default function UserLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const userMenuItems = [
     {
       label: "Dashboard",
@@ -28,6 +31,16 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     },
   ];
 
+  const getPageTitle = () => {
+    const active = userMenuItems.find(
+      (item) =>
+        pathname === item.href ||
+        (pathname.startsWith(item.href) && item.href !== "/" && item.href !== "/dashboard")
+    );
+    if (!active && pathname === "/dashboard") return "Dashboard";
+    return active?.label || "Dashboard";
+  };
+
   const { data: user } = useUser();
 
   const getDisplayName = () => {
@@ -37,7 +50,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
   const topbarUser = {
     name: user?.username || getDisplayName(),
-    email: user?.email,
+    roleName: user?.roleName,
     avatar: user?.avatar,
     xp: user?.total_exp,
   };
@@ -47,7 +60,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <CourseNavigationProvider>
         <DashboardLayout
           sidebar={<Sidebar menuItems={userMenuItems} />}
-          topbar={<Topbar user={topbarUser} />}
+          topbar={<Topbar user={topbarUser} title={getPageTitle()} />}
         >
           {children}
         </DashboardLayout>

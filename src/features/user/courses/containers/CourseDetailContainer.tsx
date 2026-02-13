@@ -113,6 +113,9 @@ export function CourseDetailContainer({ courseId }: CourseDetailContainerProps) 
                   setShowMenu(!showMenu);
                 }}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                aria-label="Course options menu"
+                aria-expanded={showMenu}
+                aria-haspopup="true"
               >
                 <MoreHorizontal size={18} />
               </button>
