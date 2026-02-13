@@ -66,7 +66,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/proxy/:path*",
-        destination: "https://backend.arterilearning.com/api/v1/:path*",
+        destination: `${process.env.NEXT_PUBLIC_BASE_API}/:path*`,
       },
     ];
   },

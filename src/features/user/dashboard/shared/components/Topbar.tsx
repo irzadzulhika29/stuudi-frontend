@@ -11,14 +11,14 @@ import { ConfirmModal } from "@/shared/components/ui/ConfirmModal";
 interface TopbarProps {
   user?: {
     name?: string;
-    email?: string;
-    role?: string;
+    roleName?: string;
     image?: string;
     xp?: number;
   };
+  title?: string;
 }
 
-export function Topbar({ user }: TopbarProps) {
+export function Topbar({ user, title }: TopbarProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const { isCollapsed } = useSidebar();
@@ -36,26 +36,40 @@ export function Topbar({ user }: TopbarProps) {
   return (
     <>
       <header
-        className={`fixed top-0 right-0 z-30 flex h-16 items-center justify-end border-b border-white/5 bg-white/5 px-6 backdrop-blur transition-all duration-300 ${isCollapsed ? "left-20" : "left-56"} `}
+        className={`fixed top-0 right-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-white/5 px-6 backdrop-blur transition-all duration-300 ${isCollapsed ? "left-20" : "left-56"} `}
       >
+        <div className="flex items-center">
+          <h1 className="text-lg font-semibold text-neutral-800 dark:text-white/90">{title}</h1>
+        </div>
+
         <div className="flex items-center gap-4">
           <NotificationDropdown />
 
           <div
             className="group relative flex cursor-pointer items-center gap-3"
             onClick={() => setShowDropdown(!showDropdown)}
+            role="button"
+            aria-label="User profile menu"
+            aria-expanded={showDropdown}
+            aria-haspopup="true"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowDropdown(!showDropdown);
+              }
+            }}
           >
             <div className="hidden text-right md:block">
               <p className="text-sm leading-tight font-semibold text-white transition-opacity group-hover:opacity-90">
                 {user?.name || "User Name"}
               </p>
-              <p className="text-xs text-white/70">{user?.role || user?.email || ""}</p>
+              <p className="text-xs text-white/70">{user?.roleName || "Student"}</p>
             </div>
 
             <div className="group/xp relative">
               <div className="relative flex h-10 w-10 overflow-hidden rounded-full border border-white/30 bg-white/20 text-xs font-bold text-white ring-2 ring-white/10 transition-transform text-shadow-sm group-hover:ring-white/30 active:scale-95">
-                <div className="absolute inset-0 z-10 -translate-x-full bg-gradient-to-r from-transparent via-white/90 to-transparent transition-transform duration-1000 group-hover:animate-[shimmer_2s_infinite]" />
-
+                <div className="absolute inset-0 z-10 -translate-x-full bg-linear-to-r from-transparent via-white/90 to-transparent transition-transform duration-1000 group-hover:animate-[shimmer_2s_infinite]" />
                 <div className="relative z-0 flex h-full w-full items-center justify-center">
                   {user?.xp !== undefined ? (
                     `${user.xp}`
@@ -81,17 +95,49 @@ export function Topbar({ user }: TopbarProps) {
             </div>
 
             {showDropdown && (
-              <div className="absolute top-full right-0 z-50 w-48 animate-[fadeIn_0.2s_ease-out] rounded-xl border border-neutral-100 bg-white py-2 shadow-xl">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleLogoutClick();
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 transition-colors hover:bg-red-50"
-                >
-                  <LogOut size={16} />
-                  Keluar
-                </button>
+              <div className="absolute top-full right-0 z-50 mt-2 w-64 origin-top-right animate-[fadeIn_0.2s_ease-out] overflow-hidden rounded-2xl border border-neutral-200 bg-white p-1 font-medium shadow-xl">
+                <div className="border-b border-neutral-200 p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-neutral-200">
+                      {user?.image ? (
+                        <Image
+                          src={user.image}
+                          alt={user.name || "User"}
+                          width={40}
+                          height={40}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-neutral-100 text-neutral-500">
+                          <User size={20} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="truncate text-sm font-bold text-neutral-900">
+                        {user?.name || "User Name"}
+                      </p>
+                      <p className="truncate text-xs text-neutral-500">
+                        {user?.roleName || "Student"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLogoutClick();
+                    }}
+                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-50"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 transition-colors group-hover:bg-red-100 group-hover:text-red-600">
+                      <LogOut size={16} />
+                    </div>
+                    <span>Keluar</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -109,28 +155,6 @@ export function Topbar({ user }: TopbarProps) {
         variant="danger"
         isLoading={isPending}
       />
-
-      {/* Defined shimmer animation in style tag for this component specifically if not in global css */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(200%);
-          }
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
     </>
   );
 }

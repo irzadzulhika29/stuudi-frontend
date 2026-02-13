@@ -3,7 +3,6 @@ import Image from "next/image";
 export function DashboardSkeleton() {
   return (
     <div className="flex w-full flex-col items-center">
-      {/* Header Skeleton */}
       <div className="mb-6 grid w-full grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-3">
         <div className="space-y-2">
           <div className="h-8 w-48 animate-pulse rounded-lg bg-white/10" />
@@ -13,7 +12,6 @@ export function DashboardSkeleton() {
         <div className="hidden md:block" />
       </div>
 
-      {/* Countdown Skeleton */}
       <div className="mb-12 flex flex-col items-center gap-4">
         <div className="h-6 w-40 animate-pulse rounded-full bg-white/10" />
         <div className="flex gap-4">
@@ -26,7 +24,6 @@ export function DashboardSkeleton() {
         </div>
       </div>
 
-      {/* Active Attempt Skeleton */}
       <div className="mb-6 w-full max-w-lg px-4">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-center gap-4">
@@ -40,32 +37,27 @@ export function DashboardSkeleton() {
         </div>
       </div>
 
-      {/* Exam Code Input Skeleton */}
       <div className="mb-8 w-full max-w-md px-4">
         <div className="h-14 w-full animate-pulse rounded-2xl bg-white/5" />
       </div>
-
-      {/* Table Skeleton */}
       <div className="w-full max-w-2xl px-4">
         <div className="h-64 w-full animate-pulse rounded-xl bg-white/5" />
       </div>
 
-      {/* Mascot Skeleton Left */}
       <div className="pointer-events-none absolute bottom-16 -left-16 -z-10 hidden h-96 w-96 animate-pulse opacity-2 lg:block">
         <Image
           src="/images/mascot/chiby.webp"
-          alt=""
+          alt="Loading animation placeholder - Left mascot"
           width={384}
           height={384}
           className="object-contain object-bottom opacity-25 brightness-0 grayscale invert"
         />
       </div>
 
-      {/* Mascot Skeleton Right */}
       <div className="pointer-events-none absolute -right-16 bottom-16 -z-10 hidden h-96 w-96 animate-pulse opacity-5 grayscale lg:block">
         <Image
           src="/images/mascot/chiby.webp"
-          alt=""
+          alt="Loading animation placeholder - Right mascot"
           width={384}
           height={384}
           className="scale-x-[-1] object-contain object-bottom opacity-25 brightness-0 grayscale invert"

@@ -107,25 +107,25 @@ export function DashboardContainer() {
 
       {!isLoading && (
         <>
-          <div className="pointer-events-none absolute bottom-16 -left-16 z-0 hidden h-96 w-96 lg:block">
+          <div className="pointer-events-none absolute bottom-16 -left-30 z-0 hidden h-96 w-96 scale-120 lg:block">
             <Image
               src="/images/mascot/anti.webp"
-              alt="Mascot Left"
+              alt="Anti mascot decoration"
               width={384}
               height={384}
               className="rotate-y-180 object-contain object-bottom"
-              priority
+              loading="lazy"
             />
           </div>
 
-          <div className="pointer-events-none absolute -right-16 bottom-16 z-0 hidden h-96 w-96 lg:block">
+          <div className="pointer-events-none absolute -right-30 bottom-16 z-0 hidden h-96 w-96 scale-120 lg:block">
             <Image
               src="/images/mascot/chiby.webp"
-              alt="Mascot Right"
+              alt="Chiby mascot decoration"
               width={384}
               height={384}
               className="scale-x-[-1] rotate-y-180 object-contain object-bottom"
-              priority
+              loading="lazy"
             />
           </div>
         </>
