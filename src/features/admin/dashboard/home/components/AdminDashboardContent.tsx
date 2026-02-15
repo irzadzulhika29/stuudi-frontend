@@ -126,7 +126,7 @@ export function AdminDashboardContent() {
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="mb-2 text-2xl font-bold text-white md:text-4xl">
-              Welcome back, <span className="text-secondary">Kang Mas Atmin!</span>
+              Welcome back, <span className="text-secondary">Admin</span>
             </h1>
             <p className="text-white/60">Lihat performa kegiatan platform pada hari ini.</p>
           </div>
