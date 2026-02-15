@@ -7,10 +7,9 @@ export const dummyExamData: ExamData = {
   duration: 60, // in minutes
   questions: [
     {
-      id: "q1",
       question_id: "q1",
       question_text: "Berapakah hasil dari 2 + 3?",
-      question_type: "single" as const,
+      question_type: "single",
       points: 10,
       options: [
         { option_id: "q1_a", option_text: "3", sequence: 1 },
@@ -20,10 +19,9 @@ export const dummyExamData: ExamData = {
       ],
     },
     {
-      id: "q2",
       question_id: "q2",
       question_text: "Manakah yang merupakan bilangan prima?",
-      question_type: "single" as const,
+      question_type: "single",
       points: 10,
       options: [
         { option_id: "q2_a", option_text: "4", sequence: 1 },
@@ -33,10 +31,9 @@ export const dummyExamData: ExamData = {
       ],
     },
     {
-      id: "q3",
       question_id: "q3",
       question_text: "Hasil dari 10 x 5 adalah...",
-      question_type: "single" as const,
+      question_type: "single",
       points: 10,
       options: [
         { option_id: "q3_a", option_text: "45", sequence: 1 },
@@ -46,10 +43,9 @@ export const dummyExamData: ExamData = {
       ],
     },
     {
-      id: "q4",
       question_id: "q4",
       question_text: "Berapakah akar kuadrat dari 144?",
-      question_type: "single" as const,
+      question_type: "single",
       points: 10,
       options: [
         { option_id: "q4_a", option_text: "10", sequence: 1 },
@@ -59,10 +55,9 @@ export const dummyExamData: ExamData = {
       ],
     },
     {
-      id: "q5",
       question_id: "q5",
       question_text: "Jika x = 3, berapakah nilai dari 2x + 4?",
-      question_type: "single" as const,
+      question_type: "single",
       points: 10,
       options: [
         { option_id: "q5_a", option_text: "8", sequence: 1 },
