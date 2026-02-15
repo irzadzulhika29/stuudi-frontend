@@ -1,4 +1,4 @@
-name: Build and Push to GHCR
+name: Build and Deploy to GHCR & VPS
 
 on:
   push:
@@ -43,3 +43,52 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # --- TAMBAHKAN BUILD ARGS DI SINI ---
+          build-args: |
+            NEXT_PUBLIC_BASE_API=${{ secrets.NEXT_PUBLIC_BASE_API }}
+
+  deploy-to-vps:
+    needs: build-and-push # Memastikan deploy berjalan setelah build selesai
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            # 1. Pastikan nama image dalam format lowercase (aturan wajib GHCR)
+            export IMAGE_NAME_LOWER=$(echo "ghcr.io/${{ env.IMAGE_NAME }}:latest" | tr '[:upper:]' '[:lower:]')
+            
+            # 2. Login ke GHCR di VPS
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # 3. Masuk ke direktori project Anda di VPS (Sesuaikan path ini dengan server Anda!)
+            # Contoh: cd /home/user/project/stuudi-frontend
+            # Anda perlu memastikan file docker-compose.yml sudah ada di direktori ini
+            mkdir -p ~/stuudi-frontend
+            cd ~/stuudi-frontend
+            
+            # Opsional: Jika Anda belum punya docker-compose.yml di VPS, script ini akan membuatnya
+            cat <<EOF > docker-compose.yml
+            version: '3.8'
+            services:
+              next-app:
+                image: \$IMAGE_NAME_LOWER
+                container_name: stuudi-frontend-app
+                ports:
+                  - "3000:3000"
+                restart: unless-stopped
+            EOF
+            
+            # 4. Pull image terbaru dari GHCR
+            docker compose pull
+            
+            # 5. Recreate container secara otomatis (Tanpa perlu hapus manual)
+            # Docker akan mematikan container lama dan membuat yang baru hanya jika image berubah
+            docker compose up -d
+            
+            # 6. Bersihkan image lama agar disk VPS tidak penuh
+            docker image prune -f
