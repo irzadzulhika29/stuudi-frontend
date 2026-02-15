@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 
 interface ExamHeaderProps {
   title: string;
-  subject: string;
+  subject?: string;
   stream: MediaStream | null;
 }
 

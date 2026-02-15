@@ -12,6 +12,7 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
+import { QuestionAnswer } from "@/shared/types/questionTypes";
 import {
   initializeExam,
   setView,
@@ -32,7 +33,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
 
   const {
     view,
-    currentIndex,
+    currentQuestionIndex: currentIndex,
     answers,
     flaggedQuestions,
     lives,
@@ -42,12 +43,12 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   } = useAppSelector((state) => state.exam);
 
   const currentQuestion = dummyExamData.questions[currentIndex];
-  const currentQuestionId = currentQuestion?.id;
+  const currentQuestionId = currentQuestion?.question_id;
   const flaggedSet = new Set(flaggedQuestions);
 
   useEffect(() => {
     if (!isInitialized) {
-      dispatch(initializeExam({ duration: dummyExamData.duration, maxLives: 3 }));
+      dispatch(initializeExam({ examData: dummyExamData, maxLives: 3 }));
     }
   }, [dispatch, isInitialized]);
 
@@ -91,8 +92,12 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     return () => clearInterval(timer);
   }, [timeRemaining, lives, view, dispatch]);
 
-  const handleSelectAnswer = (answer: string) => {
+  const handleSelectAnswer = (answer: QuestionAnswer) => {
     dispatch(setAnswer({ questionId: currentQuestionId, answer }));
+  };
+
+  const handleClearAnswer = () => {
+    dispatch(setAnswer({ questionId: currentQuestionId, answer: null }));
   };
 
   const handleNavigate = (index: number) => {
@@ -194,21 +199,21 @@ export function ExamContainer({ stream }: ExamContainerProps) {
         currentQuestion={currentIndex + 1}
         timeRemaining={timeRemaining}
         lives={lives}
-        maxLives={maxLives}
       />
 
       <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="lg:col-span-3">
           <QuestionCard
             question={currentQuestion}
-            selectedAnswer={answers[currentQuestionId] || null}
+            selectedAnswer={answers[currentQuestionId] ?? null}
             onSelectAnswer={handleSelectAnswer}
+            onClearAnswer={handleClearAnswer}
           />
         </div>
 
         <div>
           <QuestionNavigation
-            totalQuestions={dummyExamData.questions.length}
+            questions={dummyExamData.questions}
             currentIndex={currentIndex}
             answers={answers}
             flaggedQuestions={flaggedSet}
