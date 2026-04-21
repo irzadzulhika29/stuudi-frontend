@@ -57,6 +57,7 @@ export function transformApiQuestionsToQuizItems(examDetails: ExamDetails): Quiz
           questionType: "matching" as const,
           isRequired: true,
           difficulty: q.difficulty,
+          imageUrl: q.image_url || undefined,
           pairs: pairEntries.map(([pairId, pair]) => ({
             id: pairId,
             left: pair.left,
@@ -74,6 +75,7 @@ export function transformApiQuestionsToQuizItems(examDetails: ExamDetails): Quiz
         questionType: q.question_type,
         isRequired: true,
         difficulty: q.difficulty,
+        imageUrl: q.image_url || undefined,
         options: q.options
           .sort((a, b) => a.sequence - b.sequence)
           .map((opt) => ({

@@ -1,6 +1,7 @@
 "use client";
 
 import { QuestionRendererProps } from "@/shared/types/questionTypes";
+import { MathText } from "@/shared/components/math";
 
 export function MultipleChoiceQuestion({
   question,
@@ -100,7 +101,9 @@ export function MultipleChoiceQuestion({
                 )}
               </div>
             </div>
-            <span className={`text-base font-medium ${styles.text}`}>{option.text}</span>
+            <span className={`text-base font-medium ${styles.text}`}>
+              <MathText content={option.text} />
+            </span>
           </label>
         );
       })}

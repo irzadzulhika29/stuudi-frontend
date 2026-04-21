@@ -7,9 +7,15 @@ interface ConfirmSubmitModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  isSubmitting?: boolean;
 }
 
-export function ConfirmSubmitModal({ isOpen, onClose, onConfirm }: ConfirmSubmitModalProps) {
+export function ConfirmSubmitModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isSubmitting = false,
+}: ConfirmSubmitModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -29,11 +35,23 @@ export function ConfirmSubmitModal({ isOpen, onClose, onConfirm }: ConfirmSubmit
         </p>
 
         <div className="flex gap-4">
-          <Button variant="outline" size="md" onClick={onClose} className="flex-1">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={onClose}
+            className="flex-1"
+            disabled={isSubmitting}
+          >
             Batal
           </Button>
-          <Button variant="danger" size="md" onClick={onConfirm} className="flex-1">
-            Ya, Akhiri Ujian
+          <Button
+            variant="danger"
+            size="md"
+            onClick={onConfirm}
+            className="flex-1"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Mengirim..." : "Ya, Akhiri Ujian"}
           </Button>
         </div>
       </div>

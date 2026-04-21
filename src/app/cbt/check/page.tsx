@@ -55,11 +55,18 @@ function CheckContent() {
     setIsStarting(true);
     try {
       const response = await dashboardService.startExam(examData.exam_id);
+      const normalizedExamData = {
+        ...response,
+        questions: response.questions.map((question) => ({
+          ...question,
+          question_image: question.question_image || question.image_url || null,
+        })),
+      };
 
       // Initialize Redux state with exam data
       dispatch(
         initializeExam({
-          examData: response,
+          examData: normalizedExamData,
           maxLives: 3, // Default or from API if available
         })
       );

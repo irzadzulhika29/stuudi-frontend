@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExamHeader } from "../components/ExamHeader";
 import { ExamTimerBar } from "../components/ExamTimerBar";
 import { QuestionCard } from "../components/QuestionCard";
 import { QuestionNavigation } from "../components/QuestionNavigation";
 import { ExamFooter } from "../components/ExamFooter";
 import { ExamSummary } from "../components/ExamSummary";
-import { dummyExamData } from "../data/dummyExamData";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 import Link from "next/link";
@@ -23,13 +22,21 @@ import {
   decrementTime,
   finishExam,
 } from "@/shared/store/slices/examSlice";
+import { dashboardService } from "@/features/user/dashboard/services/dashboardService";
+import { examService } from "../services/examService";
+import { ExamSkeleton } from "../components/ExamSkeleton";
 
 interface ExamContainerProps {
   stream: MediaStream | null;
+  examCode: string;
 }
 
-export function ExamContainer({ stream }: ExamContainerProps) {
+export function ExamContainer({ stream, examCode }: ExamContainerProps) {
   const dispatch = useAppDispatch();
+  const [isLoadingExam, setIsLoadingExam] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSubmittingExam, setIsSubmittingExam] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     view,
@@ -40,17 +47,39 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     maxLives,
     timeRemaining,
     isInitialized,
+    examData,
   } = useAppSelector((state) => state.exam);
 
-  const currentQuestion = dummyExamData.questions[currentIndex];
+  const questionCount = examData?.questions.length ?? 0;
+  const currentQuestion = examData?.questions[currentIndex];
   const currentQuestionId = currentQuestion?.question_id;
-  const flaggedSet = new Set(flaggedQuestions);
+  const flaggedSet = useMemo(() => new Set(flaggedQuestions), [flaggedQuestions]);
 
   useEffect(() => {
-    if (!isInitialized) {
-      dispatch(initializeExam({ examData: dummyExamData, maxLives: 3 }));
-    }
-  }, [dispatch, isInitialized]);
+    const loadExamFromApi = async () => {
+      if (!examCode || (isInitialized && examData?.questions.length)) return;
+
+      setIsLoadingExam(true);
+      setLoadError(null);
+
+      try {
+        const accessData = await dashboardService.accessExam(examCode);
+        const response = await dashboardService.resumeExam(accessData.exam_id);
+        const payload = examService.transformExamToReduxPayload(response);
+        dispatch(initializeExam(payload));
+      } catch (err: unknown) {
+        console.error("Failed to load exam from API:", err);
+        const errorMessage =
+          (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          "Gagal memuat soal ujian.";
+        setLoadError(errorMessage);
+      } finally {
+        setIsLoadingExam(false);
+      }
+    };
+
+    loadExamFromApi();
+  }, [dispatch, examCode, examData?.questions.length, isInitialized]);
 
   const handleViolation = useCallback(() => {
     if (lives > 0 && view !== "finished") {
@@ -93,10 +122,12 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   }, [timeRemaining, lives, view, dispatch]);
 
   const handleSelectAnswer = (answer: QuestionAnswer) => {
+    if (!currentQuestionId) return;
     dispatch(setAnswer({ questionId: currentQuestionId, answer }));
   };
 
   const handleClearAnswer = () => {
+    if (!currentQuestionId) return;
     dispatch(setAnswer({ questionId: currentQuestionId, answer: null }));
   };
 
@@ -114,16 +145,18 @@ export function ExamContainer({ stream }: ExamContainerProps) {
   };
 
   const handleNext = () => {
-    if (currentIndex < dummyExamData.questions.length - 1) {
+    if (currentIndex < questionCount - 1) {
       dispatch(setCurrentIndex(currentIndex + 1));
     }
   };
 
   const handleToggleFlag = () => {
+    if (!currentQuestionId) return;
     dispatch(toggleFlag(currentQuestionId));
   };
 
   const handleFinishAttempt = () => {
+    setSubmitError(null);
     dispatch(setView("summary"));
   };
 
@@ -131,10 +164,29 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     dispatch(setView("exam"));
   };
 
-  const handleConfirmSubmit = () => {
-    dispatch(finishExam());
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
+  const handleConfirmSubmit = async () => {
+    if (!examData?.attempt_id || isSubmittingExam) {
+      setSubmitError("Attempt ujian tidak ditemukan. Silakan muat ulang halaman.");
+      return;
+    }
+
+    setIsSubmittingExam(true);
+    setSubmitError(null);
+
+    try {
+      await examService.submitExam(examData.attempt_id);
+      dispatch(finishExam());
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (err: unknown) {
+      console.error("Failed to submit exam:", err);
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        "Gagal mengirim ujian. Silakan coba lagi.";
+      setSubmitError(errorMessage);
+    } finally {
+      setIsSubmittingExam(false);
     }
   };
 
@@ -166,7 +218,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
           <h2 className="mb-4 text-3xl font-bold text-white">Ujian Selesai!</h2>
           <p className="mb-2 text-lg text-white/70">Jawaban Anda telah berhasil dikumpulkan.</p>
           <p className="mb-8 text-white/50">
-            {answeredCount} dari {dummyExamData.questions.length} soal terjawab
+            {answeredCount} dari {questionCount} soal terjawab
           </p>
           <Link href="/dashboard">
             <Button variant="glow" size="lg">
@@ -178,22 +230,49 @@ export function ExamContainer({ stream }: ExamContainerProps) {
     );
   }
 
+  if (isLoadingExam || !examData) {
+    return <ExamSkeleton />;
+  }
+
+  if (loadError || !currentQuestion) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-8">
+        <div className="max-w-lg rounded-3xl border border-red-500/30 bg-red-500/10 p-10 text-center">
+          <AlertTriangle size={64} className="mx-auto mb-6 text-red-500" />
+          <h2 className="mb-4 text-3xl font-bold text-white">Soal Tidak Tersedia</h2>
+          <p className="mb-8 text-lg text-white/70">
+            {loadError || "Data ujian belum berhasil dimuat."}
+          </p>
+          <Link href="/dashboard">
+            <Button variant="outline" size="lg">
+              Kembali ke Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const activeQuestionId = currentQuestion.question_id;
+
   if (view === "summary") {
     return (
       <ExamSummary
-        questions={dummyExamData.questions}
+        questions={examData.questions}
         answers={answers}
         flaggedQuestions={flaggedQuestions}
         onNavigateToQuestion={handleNavigate}
         onBackToExam={handleBackToExam}
         onConfirmSubmit={handleConfirmSubmit}
+        isSubmitting={isSubmittingExam}
+        submitError={submitError}
       />
     );
   }
 
   return (
     <div className="flex min-h-screen flex-col gap-6 p-6">
-      <ExamHeader title={dummyExamData.title} subject={dummyExamData.subject} stream={stream} />
+      <ExamHeader title={examData.title} subject={examData.subject} stream={stream} />
 
       <ExamTimerBar
         currentQuestion={currentIndex + 1}
@@ -205,7 +284,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
         <div className="lg:col-span-3">
           <QuestionCard
             question={currentQuestion}
-            selectedAnswer={answers[currentQuestionId] ?? null}
+            selectedAnswer={answers[activeQuestionId] ?? null}
             onSelectAnswer={handleSelectAnswer}
             onClearAnswer={handleClearAnswer}
           />
@@ -213,11 +292,11 @@ export function ExamContainer({ stream }: ExamContainerProps) {
 
         <div>
           <QuestionNavigation
-            questions={dummyExamData.questions}
+            questions={examData.questions}
             currentIndex={currentIndex}
             answers={answers}
             flaggedQuestions={flaggedSet}
-            isFlagged={flaggedSet.has(currentQuestionId)}
+            isFlagged={flaggedSet.has(activeQuestionId)}
             onNavigate={handleNavigate}
             onToggleFlag={handleToggleFlag}
             onFinishAttempt={handleFinishAttempt}
@@ -227,7 +306,7 @@ export function ExamContainer({ stream }: ExamContainerProps) {
 
       <ExamFooter
         currentIndex={currentIndex}
-        totalQuestions={dummyExamData.questions.length}
+        totalQuestions={questionCount}
         onPrevious={handlePrevious}
         onNext={handleNext}
       />

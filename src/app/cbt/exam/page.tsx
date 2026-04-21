@@ -54,7 +54,7 @@ function ExamContent() {
     );
   }
 
-  return <ExamContainer stream={stream} />;
+  return <ExamContainer stream={stream} examCode={examCode} />;
 }
 
 export default function CBTExamPage() {

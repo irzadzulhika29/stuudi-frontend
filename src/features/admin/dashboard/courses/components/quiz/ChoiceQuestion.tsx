@@ -82,6 +82,9 @@ export function ChoiceQuestion({
           ? "Hanya satu jawaban yang benar"
           : "Lebih dari satu jawaban bisa benar"}
       </p>
+      <p className="text-neutral-gray text-xs">
+        Opsi jawaban juga mendukung LaTeX dengan format `$...$` dan `$$...$$`.
+      </p>
 
       {/* Options List */}
       <div className="space-y-2">

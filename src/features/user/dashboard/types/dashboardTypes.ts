@@ -35,6 +35,8 @@ export interface Question {
   question_type: "matching" | "multiple" | "single" | "short_answer" | "true_false";
   points: number;
   sequence: number;
+  image_url?: string | null;
+  question_image?: string | null;
   options: QuestionOption[];
   saved_answer?: string | number | string[] | Record<string, string> | null;
 }

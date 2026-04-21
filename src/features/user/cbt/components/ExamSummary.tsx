@@ -14,6 +14,8 @@ interface ExamSummaryProps {
   onNavigateToQuestion: (index: number) => void;
   onBackToExam: () => void;
   onConfirmSubmit: () => void;
+  isSubmitting?: boolean;
+  submitError?: string | null;
 }
 
 export function ExamSummary({
@@ -23,6 +25,8 @@ export function ExamSummary({
   onNavigateToQuestion,
   onBackToExam,
   onConfirmSubmit,
+  isSubmitting = false,
+  submitError = null,
 }: ExamSummaryProps) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -73,6 +77,12 @@ export function ExamSummary({
             Pastikan semua jawaban sudah sesuai sebelum menyelesaikan ujian.
           </p>
         </div>
+
+        {submitError && (
+          <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-center text-sm text-red-200">
+            {submitError}
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -171,8 +181,9 @@ export function ExamSummary({
             size="lg"
             onClick={handleFinishClick}
             className="flex-1 py-6 text-lg font-bold tracking-wide"
+            disabled={isSubmitting}
           >
-            Selesaikan Ujian
+            {isSubmitting ? "Mengirim Jawaban..." : "Selesaikan Ujian"}
           </Button>
         </div>
       </div>
@@ -181,6 +192,7 @@ export function ExamSummary({
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirmSubmit}
+        isSubmitting={isSubmitting}
       />
     </>
   );

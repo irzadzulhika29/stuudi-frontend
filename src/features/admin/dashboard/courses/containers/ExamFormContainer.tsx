@@ -73,6 +73,53 @@ export function ExamFormContainer({
     return DEFAULT_EXAM_STATE;
   }, [isEditMode, examDetails]);
 
+  const hasQuestionChanged = useCallback((current: QuizItem, initial: QuizItem | undefined) => {
+    if (!initial) return true;
+
+    if (
+      current.data.question !== initial.data.question ||
+      current.data.questionType !== initial.data.questionType ||
+      current.data.difficulty !== initial.data.difficulty ||
+      !!current.data.imageFile ||
+      (current.data.imageUrl || "") !== (initial.data.imageUrl || "")
+    ) {
+      return true;
+    }
+
+    if (current.data.questionType === "matching" && initial.data.questionType === "matching") {
+      const currentPairs = current.data.pairs || [];
+      const initialPairs = initial.data.pairs || [];
+
+      if (currentPairs.length !== initialPairs.length) return true;
+
+      return currentPairs.some((pair, index) => {
+        const initialPair = initialPairs[index];
+        return !initialPair || pair.left !== initialPair.left || pair.right !== initialPair.right;
+      });
+    }
+
+    if (
+      (current.data.questionType === "single" || current.data.questionType === "multiple") &&
+      (initial.data.questionType === "single" || initial.data.questionType === "multiple")
+    ) {
+      const currentOptions = current.data.options || [];
+      const initialOptions = initial.data.options || [];
+
+      if (currentOptions.length !== initialOptions.length) return true;
+
+      return currentOptions.some((option, index) => {
+        const initialOption = initialOptions[index];
+        return (
+          !initialOption ||
+          option.text !== initialOption.text ||
+          option.isCorrect !== initialOption.isCorrect
+        );
+      });
+    }
+
+    return false;
+  }, []);
+
   const [hasSyncedWithServer, setHasSyncedWithServer] = useState(false);
 
   const [localExamTitle, setLocalExamTitle] = useState("");
@@ -208,9 +255,17 @@ export function ExamFormContainer({
       data,
     }: {
       questionId: string;
-      data: Record<string, unknown>;
+      data: Record<string, unknown> | FormData;
     }) => {
-      const response = await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(questionId), data);
+      const config =
+        data instanceof FormData
+          ? { headers: { "Content-Type": "multipart/form-data" } }
+          : undefined;
+      const response = await api.patch(
+        API_ENDPOINTS.TEACHER.UPDATE_QUESTION(questionId),
+        data,
+        config
+      );
       return response.data;
     },
   });
@@ -351,14 +406,18 @@ export function ExamFormContainer({
         });
 
         // Separate existing questions (valid UUID) and new questions (no valid UUID)
+        const initialQuestionMap = new Map(initialValues.quizItems.map((item) => [item.id, item]));
         const existingQuestions = quizItems.filter((item) => isValidUUID(item.id));
+        const changedExistingQuestions = existingQuestions.filter((item) =>
+          hasQuestionChanged(item, initialQuestionMap.get(item.id))
+        );
         const newQuestions = quizItems.filter((item) => !isValidUUID(item.id));
 
         const failedUpdates: string[] = [];
         const failedCreates: string[] = [];
 
         // Update existing questions
-        for (const item of existingQuestions) {
+        for (const item of changedExistingQuestions) {
           try {
             const requestData: Record<string, unknown> = {
               question_text: item.data.question,
@@ -385,9 +444,29 @@ export function ExamFormContainer({
                 })) || [];
             }
 
+            let payload: Record<string, unknown> | FormData = requestData;
+            if (item.data.imageFile) {
+              const formData = new FormData();
+              formData.append("question_text", item.data.question);
+              formData.append("question_type", item.data.questionType);
+              formData.append("difficulty", item.data.difficulty);
+              formData.append("explanation", "");
+              formData.append("image", item.data.imageFile);
+
+              if (requestData.options) {
+                formData.append("options_json", JSON.stringify(requestData.options));
+              }
+
+              if (requestData.matching_pairs) {
+                formData.append("matching_pairs_json", JSON.stringify(requestData.matching_pairs));
+              }
+
+              payload = formData;
+            }
+
             await updateQuestionMutation.mutateAsync({
               questionId: item.id,
-              data: requestData,
+              data: payload,
             });
           } catch {
             failedUpdates.push(item.id);
@@ -401,6 +480,7 @@ export function ExamFormContainer({
               question_text: item.data.question,
               question_type: item.data.questionType,
               difficulty: item.data.difficulty,
+              image: item.data.imageFile || null,
             };
 
             // Add options for single/multiple choice questions

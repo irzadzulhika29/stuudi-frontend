@@ -51,6 +51,7 @@ export interface ExamQuestionRequest {
   explanation?: string;
   options?: ExamQuestionOption[];
   matching_pairs?: ExamQuestionPair[];
+  image?: File | null;
 }
 
 interface AddExamQuestionResponse {
@@ -65,6 +66,29 @@ interface AddExamQuestionResponse {
 }
 
 // ========== Mutations ==========
+
+function buildExamQuestionFormData(question: ExamQuestionRequest): FormData {
+  const formData = new FormData();
+
+  formData.append("question_text", question.question_text);
+  formData.append("question_type", question.question_type);
+  formData.append("difficulty", question.difficulty);
+  formData.append("explanation", question.explanation || "");
+
+  if (question.options && question.options.length > 0) {
+    formData.append("options_json", JSON.stringify(question.options));
+  }
+
+  if (question.matching_pairs && question.matching_pairs.length > 0) {
+    formData.append("matching_pairs_json", JSON.stringify(question.matching_pairs));
+  }
+
+  if (question.image) {
+    formData.append("image", question.image);
+  }
+
+  return formData;
+}
 
 export const useCreateExamContent = (courseId: string) => {
   return useMutation<CreateExamResponse, AxiosError<ApiError>, CreateExamRequest>({
@@ -85,9 +109,15 @@ export const useAddExamQuestions = () => {
     { examId: string; question: ExamQuestionRequest }
   >({
     mutationFn: async ({ examId, question }) => {
+      const formData = buildExamQuestionFormData(question);
       const response = await api.post<AddExamQuestionResponse>(
         API_ENDPOINTS.TEACHER.ADD_EXAM_QUESTIONS(examId),
-        question
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       return response.data;
     },
@@ -103,6 +133,7 @@ function transformQuizItemToExamQuestion(item: QuizItem): ExamQuestionRequest {
     question_text: data.question,
     question_type: data.questionType,
     difficulty: data.difficulty,
+    image: data.imageFile || null,
   };
 
   // For choice questions (single or multiple)
@@ -194,8 +225,13 @@ export const useCreateExam = (courseId: string) => {
 
       setProgress({ current: totalSteps, total: totalSteps, stage: "Selesai!" });
 
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["teachingCourse"] });
+      // Invalidate and refetch course detail + exam list cache used by CourseDetailContainer.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["teachingCourse", courseId] }),
+        queryClient.invalidateQueries({ queryKey: ["courseExams", courseId] }),
+        queryClient.refetchQueries({ queryKey: ["teachingCourse", courseId], type: "active" }),
+        queryClient.refetchQueries({ queryKey: ["courseExams", courseId], type: "active" }),
+      ]);
 
       setIsCreating(false);
 

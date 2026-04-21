@@ -31,6 +31,9 @@ const securityHeaders = [
   },
 ];
 
+const baseApi = process.env.NEXT_PUBLIC_BASE_API?.trim();
+const hasValidBaseApi = !!baseApi && /^(\/|https?:\/\/)/.test(baseApi);
+
 const nextConfig: NextConfig = {
   output: "standalone",
 
@@ -63,10 +66,14 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
+    if (!hasValidBaseApi) {
+      return [];
+    }
+
     return [
       {
         source: "/api/proxy/:path*",
-        destination: `${process.env.NEXT_PUBLIC_BASE_API}/:path*`,
+        destination: `${baseApi.replace(/\/$/, "")}/:path*`,
       },
     ];
   },

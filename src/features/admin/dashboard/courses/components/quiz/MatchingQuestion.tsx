@@ -2,6 +2,7 @@
 
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import { MatchingPair, MatchingQuestionProps, QuizDifficulty } from "./types";
+import { MathText, hasMathSyntax } from "@/shared/components/math";
 
 export function MatchingQuestion({
   difficulty,
@@ -78,13 +79,20 @@ export function MatchingQuestion({
             </div>
 
             {/* Left Input (Question) */}
-            <input
-              type="text"
-              value={pair.left}
-              onChange={(e) => handlePairChange(pair.id, "left", e.target.value)}
-              placeholder={`Pertanyaan ${index + 1}`}
-              className="bg-neutral-light border-neutral-gray/20 focus:border-primary focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 rounded-lg border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={pair.left}
+                onChange={(e) => handlePairChange(pair.id, "left", e.target.value)}
+                placeholder={`Pertanyaan ${index + 1}`}
+                className="bg-neutral-light border-neutral-gray/20 focus:border-primary focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 w-full rounded-lg border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
+              />
+              {hasMathSyntax(pair.left) ? (
+                <div className="rounded-md bg-white px-3 py-2 text-sm text-neutral-700">
+                  <MathText content={pair.left} />
+                </div>
+              ) : null}
+            </div>
 
             {/* Arrow/Connection */}
             <div className="flex items-center justify-center">
@@ -104,13 +112,20 @@ export function MatchingQuestion({
             </div>
 
             {/* Right Input (Answer) */}
-            <input
-              type="text"
-              value={pair.right}
-              onChange={(e) => handlePairChange(pair.id, "right", e.target.value)}
-              placeholder={`Jawaban ${index + 1}`}
-              className="bg-neutral-light border-neutral-gray/20 focus:border-primary focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 rounded-lg border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={pair.right}
+                onChange={(e) => handlePairChange(pair.id, "right", e.target.value)}
+                placeholder={`Jawaban ${index + 1}`}
+                className="bg-neutral-light border-neutral-gray/20 focus:border-primary focus:ring-primary/20 text-neutral-dark placeholder:text-neutral-gray/60 w-full rounded-lg border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none"
+              />
+              {hasMathSyntax(pair.right) ? (
+                <div className="rounded-md bg-white px-3 py-2 text-sm text-neutral-700">
+                  <MathText content={pair.right} />
+                </div>
+              ) : null}
+            </div>
 
             {/* Delete Button */}
             <button
@@ -123,6 +138,9 @@ export function MatchingQuestion({
           </div>
         ))}
       </div>
+      <p className="text-neutral-gray text-xs">
+        Gunakan `$...$` untuk inline dan `$$...$$` untuk block math pada pasangan menjodohkan.
+      </p>
 
       {/* Add Pair Button */}
       <button

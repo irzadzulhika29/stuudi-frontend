@@ -56,6 +56,7 @@ export const examService = {
         question_text: q.question_text,
         question_type: q.question_type as ExamQuestion["question_type"],
         points: q.points,
+        question_image: q.image_url || q.question_image || undefined,
         options: q.options as QuestionOption[],
       })),
       attempt_id: response.attempt_id,
