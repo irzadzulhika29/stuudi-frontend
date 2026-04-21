@@ -7,6 +7,7 @@ import { MaterialContentBox } from "./MaterialContentBox";
 import { Modal, ToggleSwitch } from "@/shared/components/ui";
 import { ChoiceQuestion, MatchingQuestion, QuizOption, MatchingPair } from "../quiz";
 import { MathText, hasMathSyntax } from "@/shared/components/math";
+import { ImageCropModal } from "./ImageCropModal";
 
 import { QuizDifficulty } from "./AddContentButtons";
 
@@ -133,6 +134,9 @@ export function QuizBox({
 }: QuizBoxProps) {
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showEquationBuilder, setShowEquationBuilder] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null);
+  const [pendingImageType, setPendingImageType] = useState<string>("image/jpeg");
   const [equationBuilder, setEquationBuilder] =
     useState<EquationBuilderState>(defaultEquationBuilder);
   const questionInputRef = useRef<HTMLTextAreaElement>(null);
@@ -272,10 +276,20 @@ export function QuizBox({
     }
 
     const localPreviewUrl = URL.createObjectURL(file);
-    onChange(id, { ...data, imageUrl: localPreviewUrl, imageFile: file });
+    setPendingImageSrc(localPreviewUrl);
+    setPendingImageType(file.type || "image/jpeg");
+    setShowCropModal(true);
 
     // Allow selecting the same file again later.
     event.target.value = "";
+  };
+
+  const handleCloseCropModal = () => {
+    setShowCropModal(false);
+    if (pendingImageSrc) {
+      URL.revokeObjectURL(pendingImageSrc);
+    }
+    setPendingImageSrc(null);
   };
 
   const handleRemoveImage = () => {
@@ -367,13 +381,8 @@ export function QuizBox({
         <div className="space-y-2">
           <label className="text-sm font-medium text-white">Gambar (Opsional)</label>
           {data.imageUrl ? (
-            <div className="relative h-48 w-full">
-              <Image
-                src={data.imageUrl}
-                alt="Quiz question"
-                fill
-                className="border-neutral-gray/30 rounded-lg border object-cover"
-              />
+            <div className="relative mx-auto h-56 w-full max-w-md overflow-hidden rounded-lg border border-white/15 bg-black/20">
+              <Image src={data.imageUrl} alt="Quiz question" fill className="object-contain" />
               <button
                 type="button"
                 onClick={handleRemoveImage}
@@ -631,6 +640,17 @@ export function QuizBox({
           </div>
         </div>
       </Modal>
+
+      <ImageCropModal
+        isOpen={showCropModal}
+        imageSrc={pendingImageSrc}
+        imageType={pendingImageType}
+        onClose={handleCloseCropModal}
+        onApply={({ file, previewUrl }) => {
+          onChange(id, { ...data, imageUrl: previewUrl, imageFile: file });
+          handleCloseCropModal();
+        }}
+      />
     </MaterialContentBox>
   );
 }
