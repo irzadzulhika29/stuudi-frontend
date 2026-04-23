@@ -8,7 +8,7 @@ import { QuestionNavigation } from "../components/QuestionNavigation";
 import { ExamFooter } from "../components/ExamFooter";
 import { ExamSummary } from "../components/ExamSummary";
 import { ExamSidebar } from "../components/ExamSidebar";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, WifiOff, Wifi } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
@@ -25,6 +25,7 @@ import { dashboardService } from "@/features/user/dashboard/services/dashboardSe
 import { examService } from "../services/examService";
 import { ExamSkeleton } from "../components/ExamSkeleton";
 import { useAutoSave, useExamPersistence, useFullscreenGuard } from "../hooks";
+import { useNetworkStatus } from "@/shared/hooks";
 import { countAnsweredQuestions } from "../utils/answerState";
 import { canReuseLoadedExam, resolveExamLookup } from "../utils/examRoute";
 
@@ -40,7 +41,9 @@ export function ExamContainer({ stream, examCode, examId }: ExamContainerProps) 
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmittingExam, setIsSubmittingExam] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showReconnected, setShowReconnected] = useState(false);
   const hasAutoSubmittedRef = useRef(false);
+  const wasOfflineRef = useRef(false);
 
   const {
     view,
@@ -66,6 +69,21 @@ export function ExamContainer({ stream, examCode, examId }: ExamContainerProps) 
   const { showOverlay, enterFullscreen } = useFullscreenGuard({
     enabled: !!examData?.attempt_id && view !== "finished",
   });
+  const isOnline = useNetworkStatus();
+
+  useEffect(() => {
+    if (!isOnline) {
+      wasOfflineRef.current = true;
+      setShowReconnected(false);
+    } else if (isOnline && wasOfflineRef.current) {
+      setShowReconnected(true);
+      wasOfflineRef.current = false;
+      const timer = setTimeout(() => {
+        setShowReconnected(false);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline]);
 
   useEffect(() => {
     const loadExamFromApi = async () => {
@@ -359,6 +377,34 @@ export function ExamContainer({ stream, examCode, examId }: ExamContainerProps) 
             <Button variant="danger" size="lg" onClick={enterFullscreen} className="w-full">
               Kembali ke Fullscreen
             </Button>
+          </div>
+        </div>
+      )}
+
+      {!isOnline && view !== "finished" && (
+        <div className="animate-fade-in fixed right-6 bottom-6 z-50 flex max-w-sm items-center gap-4 rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-white shadow-2xl">
+          <div className="flex shrink-0 items-center justify-center rounded-full bg-neutral-800 p-2.5">
+            <WifiOff size={20} className="text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Koneksi Terputus</h3>
+            <p className="mt-0.5 text-xs text-neutral-400">
+              Jawaban tidak dapat disimpan hingga internet pulih.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {showReconnected && view !== "finished" && (
+        <div className="animate-fade-in fixed right-6 bottom-6 z-50 flex max-w-sm items-center gap-4 rounded-xl border border-emerald-800 bg-emerald-950 p-4 text-white shadow-2xl transition-all duration-500 ease-in-out">
+          <div className="flex shrink-0 items-center justify-center rounded-full bg-emerald-900 p-2.5">
+            <Wifi size={20} className="text-emerald-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-emerald-100">Jaringan Terhubung</h3>
+            <p className="mt-0.5 text-xs text-emerald-300">
+              Koneksi pulih. Jawaban Anda bisa disimpan.
+            </p>
           </div>
         </div>
       )}
