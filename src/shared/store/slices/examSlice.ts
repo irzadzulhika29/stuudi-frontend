@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ExamState, ExamData } from "@/features/user/cbt/types/examTypes";
 import { QuestionAnswer } from "@/shared/types/questionTypes";
+import { hasMeaningfulAnswer } from "@/features/user/cbt/utils/answerState";
 
 const initialState: ExamState = {
   view: "intro",
@@ -52,7 +53,12 @@ const examSlice = createSlice({
     },
 
     setAnswer: (state, action: PayloadAction<{ questionId: string; answer: QuestionAnswer }>) => {
-      state.answers[action.payload.questionId] = action.payload.answer;
+      if (hasMeaningfulAnswer(action.payload.answer)) {
+        state.answers[action.payload.questionId] = action.payload.answer;
+        return;
+      }
+
+      delete state.answers[action.payload.questionId];
     },
 
     toggleFlag: (state, action: PayloadAction<string>) => {

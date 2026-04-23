@@ -1,6 +1,5 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
 import Button from "@/shared/components/ui/Button";
 
 interface ConfirmSubmitModalProps {
@@ -20,16 +19,15 @@ export function ConfirmSubmitModal({
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-neutral-900 p-8 shadow-2xl">
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/20">
-            <AlertTriangle size={32} className="text-amber-500" />
-          </div>
-        </div>
+      <div className="w-full max-w-md rounded-[28px] bg-white p-8 shadow-2xl">
+        <p className="text-center text-[11px] font-medium tracking-[0.18em] text-neutral-400 uppercase">
+          Konfirmasi Submit
+        </p>
+        <h2 className="mt-3 mb-3 text-center text-2xl font-semibold text-neutral-950">
+          Akhiri ujian?
+        </h2>
 
-        <h2 className="mb-3 text-center text-2xl font-bold text-white">Akhiri Ujian?</h2>
-
-        <p className="mb-8 text-center text-white/60">
+        <p className="mb-8 text-center text-neutral-600">
           Setelah mengakhiri ujian, Anda tidak dapat mengubah jawaban lagi. Pastikan semua jawaban
           sudah benar.
         </p>
@@ -39,7 +37,7 @@ export function ConfirmSubmitModal({
             variant="outline"
             size="md"
             onClick={onClose}
-            className="flex-1"
+            className="flex-1 border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50"
             disabled={isSubmitting}
           >
             Batal

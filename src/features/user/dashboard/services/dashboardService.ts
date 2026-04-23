@@ -4,6 +4,7 @@ import { API_ENDPOINTS } from "@/shared/config";
 import { ApiResponse } from "@/features/auth/shared/types/authTypes";
 import {
   UpcomingExam,
+  UpcomingExamCollection,
   ExamAccessData,
   ExamStartResponse,
   ExamAttemptsResponse,
@@ -13,14 +14,30 @@ import {
 export const dashboardService = {
   async getUpcomingExam(): Promise<UpcomingExam | null> {
     try {
-      const response = await api.get<ApiResponse<UpcomingExam>>(API_ENDPOINTS.EXAM.UPCOMING);
-      return response.data.data;
+      const response = await api.get<ApiResponse<UpcomingExamCollection>>(
+        API_ENDPOINTS.EXAM.UPCOMING
+      );
+      const payload = response.data.data;
+      const sortByStartDate = (items: UpcomingExam[]) =>
+        [...items].sort(
+          (left, right) => new Date(left.start_at).getTime() - new Date(right.start_at).getTime()
+        );
+      const normalizedOngoingExams = Array.isArray(payload?.ongoing_exams)
+        ? sortByStartDate(payload.ongoing_exams)
+        : payload?.ongoing_exams
+          ? [payload.ongoing_exams]
+          : [];
+      const normalizedUpcomingExams = sortByStartDate(payload?.upcoming_exams ?? []);
+      const selectedExam = normalizedUpcomingExams[0] ?? normalizedOngoingExams[0] ?? null;
+
+      return selectedExam;
     } catch (error: unknown) {
       if ((error as AxiosError).response?.status === 404) {
         return null;
       }
+
       console.error("Failed to fetch upcoming exam", error);
-      return null;
+      throw error;
     }
   },
 
@@ -29,6 +46,7 @@ export const dashboardService = {
       const response = await api.post<ApiResponse<ExamAccessData>>(API_ENDPOINTS.EXAM.ACCESS, {
         exam_code: code,
       });
+
       return response.data.data;
     } catch (error) {
       console.error("Failed to access exam", error);
@@ -38,9 +56,10 @@ export const dashboardService = {
 
   async startExam(examId: string): Promise<ExamStartResponse> {
     try {
-      const response = await api.post<ApiResponse<ExamStartResponse>>(
-        `/student/exams/${examId}/start`
-      );
+      const endpoint = `/student/exams/${examId}/start`;
+
+      const response = await api.post<ApiResponse<ExamStartResponse>>(endpoint);
+
       return response.data.data;
     } catch (error) {
       console.error("Failed to start exam", error);

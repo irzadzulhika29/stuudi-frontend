@@ -35,10 +35,14 @@ export const useUpdateExam = (examId: string) => {
 
   return useMutation<UpdateExamResponse, AxiosError<ApiError>, UpdateExamRequest>({
     mutationFn: async (data: UpdateExamRequest) => {
-      const response = await api.patch<UpdateExamResponse>(
-        API_ENDPOINTS.TEACHER.UPDATE_EXAM(examId),
-        data
-      );
+      const endpoint = API_ENDPOINTS.TEACHER.UPDATE_EXAM(examId);
+      console.log("[EXAM AUDIT] updateExam:request", {
+        examId,
+        endpoint,
+        payload: data,
+      });
+      const response = await api.patch<UpdateExamResponse>(endpoint, data);
+      console.log("[EXAM AUDIT] updateExam:response", response.data);
       return response.data;
     },
     onSuccess: () => {

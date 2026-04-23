@@ -21,7 +21,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center cursor-pointer justify-center gap-2 font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center cursor-pointer justify-center gap-2 font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
 
   const variants = {
     primary:
@@ -55,6 +55,14 @@ export default function Button({
   );
 
   if (href) {
+    if (props.disabled) {
+      return (
+        <span className={combinedStyles} aria-disabled="true">
+          {content}
+        </span>
+      );
+    }
+
     return (
       <Link href={href} className={combinedStyles}>
         {content}

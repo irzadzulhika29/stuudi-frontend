@@ -2,15 +2,18 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { SystemCheckContainer } from "@/features/user/cbt/containers/SystemCheckContainer";
+import { ExamSkeleton } from "@/features/user/cbt/components/ExamSkeleton";
 import { ArrowLeft } from "lucide-react";
-import Loading from "@/app/loading";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { dashboardService } from "@/features/user/dashboard/services/dashboardService";
 import { ExamAccessData } from "@/features/user/dashboard/types/dashboardTypes";
+import { useToast } from "@/shared/components/ui/Toast";
+import { buildExamRoute } from "@/features/user/cbt/utils/examRoute";
+import { getExamAccessStatus } from "@/features/user/cbt/utils/accessExamStatus";
 import { useAppDispatch } from "@/shared/store/hooks";
 import { initializeExam } from "@/shared/store/slices/examSlice";
-import { useToast } from "@/shared/components/ui/Toast";
+import { examService } from "@/features/user/cbt/services/examService";
 
 function CheckContent() {
   const searchParams = useSearchParams();
@@ -36,7 +39,6 @@ function CheckContent() {
         const data = await dashboardService.accessExam(examCode);
         setExamData(data);
       } catch (err: unknown) {
-        alert("Failed to fetch exam data:" + err);
         const errorMessage =
           (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
           "Gagal memuat informasi ujian.";
@@ -50,40 +52,38 @@ function CheckContent() {
   }, [examCode]);
 
   const handleChecksComplete = async () => {
-    if (!examData) return;
+    if (!examData || !examCode) return;
 
     setIsStarting(true);
     try {
-      const response = await dashboardService.startExam(examData.exam_id);
-      const normalizedExamData = {
-        ...response,
-        questions: response.questions.map((question) => ({
-          ...question,
-          question_image: question.question_image || question.image_url || null,
-        })),
-      };
+      const latestExamData = await dashboardService.accessExam(examCode);
+      setExamData(latestExamData);
 
-      // Initialize Redux state with exam data
-      dispatch(
-        initializeExam({
-          examData: normalizedExamData,
-          maxLives: 3, // Default or from API if available
-        })
-      );
+      const accessStatus = getExamAccessStatus(latestExamData);
+      if (!accessStatus.isEligible) {
+        showToast(accessStatus.message, "warning");
+        return;
+      }
 
-      router.push(`/cbt/exam?code=${examCode}`);
-    } catch (err) {
+      const response = await dashboardService.startExam(latestExamData.exam_id);
+      examService.cacheAttemptQuestionSnapshot(response);
+      dispatch(initializeExam(examService.transformStartExamToReduxPayload(response)));
+      router.push(buildExamRoute({ examId: response.exam_id }));
+    } catch (err: unknown) {
       console.error("Failed to start exam:", err);
-      // Show error toast or alert
-      showToast("Gagal memulai ujian. Silakan coba lagi.", "error");
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        "Gagal memulai ujian. Silakan coba lagi.";
+      showToast(errorMessage, "error");
+    } finally {
       setIsStarting(false);
     }
   };
 
   if (!examCode) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-white">
-        <div className="text-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef] text-neutral-900">
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-8 text-center shadow-sm">
           <h1 className="mb-4 text-2xl font-bold">Kode Ujian Tidak Valid</h1>
           <Link
             href="/dashboard"
@@ -97,15 +97,20 @@ function CheckContent() {
   }
 
   if (isLoading) {
-    return <Loading />;
+    return (
+      <ExamSkeleton
+        title="Memuat system check"
+        description="Menyiapkan informasi ujian dan perangkat."
+      />
+    );
   }
 
   if (error || !examData) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-white">
-        <div className="text-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef] text-neutral-900">
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-8 text-center shadow-sm">
           <h1 className="mb-2 text-2xl font-bold">Terjadi Kesalahan</h1>
-          <p className="mb-6 text-white/60">{error}</p>
+          <p className="mb-6 text-neutral-500">{error}</p>
           <Link
             href="/dashboard"
             className="text-secondary flex items-center justify-center gap-2 hover:underline"
@@ -118,29 +123,33 @@ function CheckContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
-      <div className="fixed top-0 left-0 z-10 flex w-full items-center justify-between border-b border-white/10 bg-white/5 p-6 backdrop-blur-md">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/dashboard"
-            className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <ArrowLeft size={20} />
-          </Link>
-          <div className="h-6 w-px bg-white/20"></div>
-          <div>
-            <span className="block text-xs text-neutral-400">Nama Ujian</span>
-            <span className="font-semibold text-white">{examData.title}</span>
+    <div className="min-h-screen bg-[#f5f4ef] px-4 py-6 md:px-6 md:py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
+        <div className="flex items-center justify-between rounded-[24px] border border-neutral-200 bg-white px-4 py-3 shadow-sm md:px-5">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="rounded-full p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+            >
+              <ArrowLeft size={18} />
+            </Link>
+            <div className="h-5 w-px bg-neutral-200" />
+            <div className="min-w-0">
+              <span className="block text-[11px] tracking-[0.18em] text-neutral-400 uppercase">
+                CBT Check
+              </span>
+              <span className="block truncate font-medium text-neutral-900">{examData.title}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="animate-fade-in-up relative z-0 mt-16 w-full">
-        <SystemCheckContainer
-          examData={examData}
-          onChecksComplete={handleChecksComplete}
-          isLoading={isStarting}
-        />
+        <div className="animate-fade-in-up">
+          <SystemCheckContainer
+            examData={examData}
+            onChecksComplete={handleChecksComplete}
+            isLoading={isStarting}
+          />
+        </div>
       </div>
     </div>
   );
@@ -148,7 +157,14 @@ function CheckContent() {
 
 export default function CBTCheckPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-neutral-900" />}>
+    <Suspense
+      fallback={
+        <ExamSkeleton
+          title="Memuat system check"
+          description="Menyiapkan informasi ujian dan perangkat."
+        />
+      }
+    >
       <CheckContent />
     </Suspense>
   );

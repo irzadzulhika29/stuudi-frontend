@@ -9,6 +9,7 @@ interface ExamFooterProps {
   totalQuestions: number;
   onPrevious: () => void;
   onNext: () => void;
+  onFinishAttempt: () => void;
 }
 
 export const ExamFooter = memo(function ExamFooter({
@@ -16,6 +17,7 @@ export const ExamFooter = memo(function ExamFooter({
   totalQuestions,
   onPrevious,
   onNext,
+  onFinishAttempt,
 }: ExamFooterProps) {
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === totalQuestions - 1;
@@ -34,13 +36,12 @@ export const ExamFooter = memo(function ExamFooter({
       </Button>
 
       <Button
-        variant="secondary"
+        variant={isLast ? "primary" : "secondary"}
         size="md"
-        onClick={onNext}
-        disabled={isLast}
-        icon={<ChevronRight size={20} />}
+        onClick={isLast ? onFinishAttempt : onNext}
+        icon={isLast ? undefined : <ChevronRight size={20} />}
       >
-        Soal selanjutnya
+        {isLast ? "Selesai ujian" : "Soal selanjutnya"}
       </Button>
     </footer>
   );

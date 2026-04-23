@@ -14,17 +14,17 @@ export function ExamTimerBar({ currentQuestion, timeRemaining, lives }: ExamTime
   const displayTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-700 shadow-sm">
         Soal no: {currentQuestion}
       </div>
 
-      <div className="rounded-full border border-white/20 bg-white/10 px-6 py-2 font-mono text-lg text-white">
+      <div className="rounded-full border border-neutral-200 bg-white px-6 py-2 font-mono text-lg text-neutral-950 shadow-sm">
         {displayTime}
       </div>
 
       <div className="flex items-center gap-1">
-        <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white">
+        <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-800 shadow-sm">
           <Heart size={16} className="fill-amber-500 text-amber-500" />
           <span className="font-semibold">Nyawa: {lives}</span>
         </div>

@@ -1,6 +1,13 @@
 export interface UpcomingExam {
   title: string;
   start_at: string;
+  status?: string;
+}
+
+export interface UpcomingExamCollection {
+  ongoing_exams?: UpcomingExam | UpcomingExam[] | null;
+  upcoming_exams?: UpcomingExam[] | null;
+  past_exams?: UpcomingExam[] | null;
 }
 
 export interface ExamAccessData {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAppDispatch } from "@/shared/store/hooks";
 import { setAnswer } from "@/shared/store/slices/examSlice";
 import { examService } from "../services/examService";
@@ -9,6 +9,8 @@ interface UseAutoSaveProps {
   attemptId: string | undefined;
 }
 
+const AUTO_SAVE_DEBOUNCE_MS = 200;
+
 export function useAutoSave({ attemptId }: UseAutoSaveProps) {
   const dispatch = useAppDispatch();
   const [pendingSaves, setPendingSaves] = useState<Record<string, QuestionAnswer>>({});
@@ -17,11 +19,16 @@ export function useAutoSave({ attemptId }: UseAutoSaveProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Debounce the pending saves object
-  const debouncedPendingSaves = useDebounce(pendingSaves, 1000);
+  const debouncedPendingSaves = useDebounce(pendingSaves, AUTO_SAVE_DEBOUNCE_MS);
 
   // Keep track of the last processed batch string to avoid effect loops if needed
   // though clearing pendingSaves should handle it naturally.
   const lastProcessedBatch = useRef<string>("");
+  const pendingSavesRef = useRef<Record<string, QuestionAnswer>>({});
+
+  useEffect(() => {
+    pendingSavesRef.current = pendingSaves;
+  }, [pendingSaves]);
 
   const saveAnswerLocally = (questionId: string, answer: QuestionAnswer) => {
     // 1. Update Redux immediately (Optimistic UI)
@@ -34,63 +41,43 @@ export function useAutoSave({ attemptId }: UseAutoSaveProps) {
     }));
   };
 
-  useEffect(() => {
-    const savePendingAnswers = async () => {
-      if (!attemptId) return;
+  const persistAnswers = useCallback(
+    async (answersToPersist: Record<string, QuestionAnswer>) => {
+      if (!attemptId || Object.keys(answersToPersist).length === 0) return;
 
-      // If nothing pending, do nothing
-      if (Object.keys(debouncedPendingSaves).length === 0) return;
-
-      // Avoid re-processing the exact same batch if something persists (safety check)
-      const currentBatchString = JSON.stringify(debouncedPendingSaves);
+      const currentBatchString = JSON.stringify(answersToPersist);
       if (currentBatchString === lastProcessedBatch.current) return;
 
       setIsSaving(true);
       setSaveError(null);
 
       try {
-        const entries = Object.entries(debouncedPendingSaves);
+        const entries = Object.entries(answersToPersist);
         const keysToClear: string[] = [];
 
-        // Save sequentially or parallel? Parallel is fine for small batches.
         await Promise.all(
           entries.map(async ([qId, ans]) => {
-            try {
-              if (ans === null) {
-                await examService.clearAnswer(attemptId, qId);
-              } else {
-                await examService.saveAnswer(attemptId, qId, ans);
-              }
-              keysToClear.push(qId);
-            } catch (innerErr) {
-              console.error(`Failed to save question ${qId}`, innerErr);
-              // We don't add it to keysToClear, so it remains pending/retries?
-              // Or we might want to flag it as error.
+            const isSaved =
+              ans === null
+                ? await examService.clearAnswer(attemptId, qId)
+                : await examService.saveAnswer(attemptId, qId, ans);
+
+            if (!isSaved) {
+              throw new Error(`Failed to persist answer for ${qId}`);
             }
+
+            keysToClear.push(qId);
           })
         );
 
-        // If at least one success
         if (keysToClear.length > 0) {
           setLastSavedTime(new Date());
-
-          // Remove successfully saved items from pendingSaves
           setPendingSaves((prev) => {
             const nextState = { ...prev };
             keysToClear.forEach((key) => {
-              // Only remove if the value hasn't changed since we started saving
-              // (Simple check: direct equality might not work for deep objects/arrays,
-              // but debouncedPendingSaves[key] is our snapshot reference)
-
-              // Safer approach: Delete blindly? No, user might have edited again.
-              // If user edited again, 'prev[key]' would be different from 'debouncedPendingSaves[key]'.
-              // But 'useDebounce' gives us the value X seconds ago.
-              // If prev[key] !== debouncedPendingSaves[key], keep it.
-
               const pendingVal = prev[key];
-              const savedVal = debouncedPendingSaves[key];
+              const savedVal = answersToPersist[key];
 
-              // JSON stringify comparison for safety
               if (JSON.stringify(pendingVal) === JSON.stringify(savedVal)) {
                 delete nextState[key];
               }
@@ -103,16 +90,34 @@ export function useAutoSave({ attemptId }: UseAutoSaveProps) {
       } catch (err) {
         console.error("Auto-save batch failed:", err);
         setSaveError("Gagal menyimpan beberapa jawaban. Cek koneksi.");
+        throw err;
       } finally {
         setIsSaving(false);
       }
+    },
+    [attemptId]
+  );
+
+  useEffect(() => {
+    const savePendingAnswers = async () => {
+      if (Object.keys(debouncedPendingSaves).length === 0) return;
+      await persistAnswers(debouncedPendingSaves);
     };
 
-    savePendingAnswers();
-  }, [debouncedPendingSaves, attemptId]);
+    void savePendingAnswers();
+  }, [debouncedPendingSaves, persistAnswers]);
+
+  const flushPendingSaves = useCallback(async () => {
+    const snapshot = pendingSavesRef.current;
+
+    if (Object.keys(snapshot).length === 0) return;
+
+    await persistAnswers(snapshot);
+  }, [persistAnswers]);
 
   return {
     saveAnswer: saveAnswerLocally,
+    flushPendingSaves,
     isSaving,
     lastSavedTime,
     saveError,

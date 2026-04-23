@@ -1,46 +1,19 @@
 "use client";
 
-import { Camera } from "lucide-react";
-import { useEffect, useRef } from "react";
-
 interface ExamHeaderProps {
   title: string;
   subject?: string;
-  stream: MediaStream | null;
 }
 
-export function ExamHeader({ title, subject, stream }: ExamHeaderProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
-
+export function ExamHeader({ title, subject }: ExamHeaderProps) {
   return (
-    <header className="flex items-start justify-between">
-      <div className="flex items-start gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">{title}</h1>
-          <p className="text-sm text-white/70">{subject}</p>
-        </div>
-      </div>
-
-      <div className="relative h-20 w-28 overflow-hidden rounded-lg border-2 border-white/20 bg-neutral-800">
-        {stream ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="h-full w-full scale-x-[-1] object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-white/40">
-            <Camera size={28} />
-          </div>
-        )}
+    <header className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-[11px] font-medium tracking-[0.18em] text-neutral-400 uppercase">
+          CBT Session
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold text-neutral-950 md:text-[2rem]">{title}</h1>
+        {subject ? <p className="mt-1 text-sm text-neutral-500">{subject}</p> : null}
       </div>
     </header>
   );

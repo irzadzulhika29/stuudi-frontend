@@ -3,17 +3,17 @@
 import React, { memo } from "react";
 import { ExamQuestion } from "../types/examTypes";
 import { Flag } from "lucide-react";
-import Button from "@/shared/components/ui/Button";
+import { countAnsweredQuestions, hasMeaningfulAnswer } from "../utils/answerState";
+import { QuestionAnswer } from "@/shared/types/questionTypes";
 
 interface QuestionNavigationProps {
   questions: ExamQuestion[];
   currentIndex: number;
-  answers: Record<string, unknown>;
+  answers: Record<string, QuestionAnswer>;
   flaggedQuestions: Set<string>;
   isFlagged: boolean;
   onNavigate: (index: number) => void;
   onToggleFlag: () => void;
-  onFinishAttempt: () => void;
 }
 
 export const QuestionNavigation = memo(function QuestionNavigation({
@@ -24,64 +24,72 @@ export const QuestionNavigation = memo(function QuestionNavigation({
   isFlagged,
   onNavigate,
   onToggleFlag,
-  onFinishAttempt,
 }: QuestionNavigationProps) {
-  const answeredCount = Object.keys(answers).length;
-  const isLastQuestion = currentIndex === questions.length - 1;
+  const answeredCount = countAnsweredQuestions(answers);
 
   const getStatusStyles = (questionId: string, index: number): string => {
-    const isAnswered = answers[questionId] !== undefined;
+    const isAnswered = hasMeaningfulAnswer(answers[questionId]);
     const isCurrent = index === currentIndex;
 
-    if (isCurrent) return "bg-transparent text-white ring-2 ring-orange-500 font-bold";
-    if (isAnswered) return "bg-primary text-white";
-    return "bg-white/5 text-white/70 hover:bg-white/10";
+    if (isCurrent && isAnswered) {
+      return "bg-primary text-white ring-2 ring-orange-300 shadow-sm";
+    }
+
+    if (isCurrent) {
+      return "bg-white text-neutral-900 ring-2 ring-orange-400 shadow-sm";
+    }
+
+    if (isAnswered) {
+      return "bg-primary text-white hover:bg-primary/90";
+    }
+
+    return "bg-neutral-100 text-neutral-600 hover:bg-neutral-200";
   };
 
   return (
-    <div className="max-w-full rounded-2xl bg-white/10 p-4 backdrop-blur-md">
-      <h3 className="mb-4 text-sm font-semibold text-white">Navigasi soal</h3>
+    <div className="w-full rounded-[24px] border border-neutral-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold text-neutral-950">Navigasi soal</h3>
+          <p className="mt-1 text-sm text-neutral-500">
+            {answeredCount}/{questions.length} soal terjawab
+          </p>
+        </div>
 
-      <div className="grid grid-cols-5 gap-2">
+        <button
+          type="button"
+          onClick={onToggleFlag}
+          title={isFlagged ? "Batalkan tanda soal" : "Tandai soal"}
+          aria-label={isFlagged ? "Batalkan tanda soal" : "Tandai soal"}
+          className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
+            isFlagged
+              ? "border-amber-400/40 bg-amber-500/20 text-amber-200"
+              : "border-neutral-200 bg-neutral-50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+          }`}
+        >
+          <Flag size={15} className={isFlagged ? "fill-current" : ""} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-5 gap-2.5">
         {questions.map((question, index) => {
           const questionId = question.question_id;
           const isQuestionFlagged = flaggedQuestions.has(questionId);
 
           return (
             <button
+              type="button"
               key={questionId}
               onClick={() => onNavigate(index)}
-              className={`relative flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-110 ${getStatusStyles(questionId, index)}`}
+              className={`relative flex h-11 w-full items-center justify-center rounded-xl border border-neutral-200 text-sm font-semibold transition-colors ${getStatusStyles(questionId, index)}`}
             >
               {index + 1}
               {isQuestionFlagged && (
-                <Flag size={10} className="fill-error text-error absolute right-0.5 bottom-0.5" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-amber-400" />
               )}
             </button>
           );
         })}
-      </div>
-
-      <div className="mt-4 flex flex-col gap-2">
-        <Button
-          variant={isFlagged ? "primary" : "outline"}
-          size="sm"
-          onClick={onToggleFlag}
-          icon={<Flag size={16} />}
-          iconPosition="left"
-          className={`w-full ${isFlagged ? "bg-amber-500! hover:bg-amber-600!" : "border-white/30! text-white! hover:bg-white/10!"}`}
-        >
-          {isFlagged ? "Hapus Tandai" : "Tandai Soal"}
-        </Button>
-
-        {isLastQuestion && (
-          <button
-            onClick={onFinishAttempt}
-            className="w-full rounded-xl bg-white/10 py-2.5 text-sm font-medium text-white transition-all hover:bg-white/20"
-          >
-            Selesai ({answeredCount}/{questions.length})
-          </button>
-        )}
       </div>
     </div>
   );
