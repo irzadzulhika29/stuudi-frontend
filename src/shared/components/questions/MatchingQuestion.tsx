@@ -9,17 +9,19 @@ export function MatchingQuestion({
   selectedAnswer,
   onSelectAnswer,
 }: QuestionRendererProps) {
+  const options = question.options ?? [];
+
   // selectedAnswer is Record<string, string> (LeftID -> RightID)
   const currentAnswers: Record<string, string> =
     selectedAnswer && typeof selectedAnswer === "object" && !Array.isArray(selectedAnswer)
       ? (selectedAnswer as Record<string, string>)
       : {};
 
-  const leftOptions = question.options
+  const leftOptions = options
     .filter((o) => o.side === "left")
     .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
 
-  const rightOptions = question.options.filter((o) => o.side === "right");
+  const rightOptions = options.filter((o) => o.side === "right");
 
   const [activeLeftId, setActiveLeftId] = useState<string | null>(null);
   const [draggedRightId, setDraggedRightId] = useState<string | null>(null);
@@ -242,7 +244,7 @@ export function MatchingQuestion({
             );
           })}
         </div>
-        <p className="mt-2 text-center text-xs text-neutral-400">
+        <p className="mt-2 text-center text-xs text-neutral-700">
           Geser jawaban ke pertanyaan yang sesuai atau klik untuk memilih.
         </p>
       </div>

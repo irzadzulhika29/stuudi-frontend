@@ -56,7 +56,6 @@ export function TeamTable({ className }: TeamTableProps) {
       </div>
 
       <div className="bg-secondary-default/80 p-3 text-center text-sm font-semibold text-white backdrop-blur-sm">
-        <span className="mr-2 inline-block h-3 w-3 rounded-full bg-green-400"></span>
         {teams.length} Tim Terdaftar
       </div>
     </div>

@@ -48,6 +48,24 @@ export function ExamFormContainer({
   examId,
   isEditMode = false,
 }: ExamFormContainerProps) {
+  const summarizeRequestPayload = (data: Record<string, unknown> | FormData) => {
+    if (data instanceof FormData) {
+      return Array.from(data.entries()).map(([key, value]) => ({
+        key,
+        value:
+          value instanceof File
+            ? {
+                name: value.name,
+                type: value.type,
+                size: value.size,
+              }
+            : value,
+      }));
+    }
+
+    return data;
+  };
+
   const router = useRouter();
 
   const { data: examDetails, isLoading: isLoadingExam } = useGetExamDetails(
@@ -354,6 +372,21 @@ export function ExamFormContainer({
   );
 
   const handleSave = async () => {
+    console.log("[EXAM AUDIT] handleSave:entered", {
+      courseId,
+      examId,
+      isEditMode,
+      examTitle,
+      questionCount: quizItems.length,
+      questionTypes: quizItems.map((item, index) => ({
+        index,
+        id: item.id,
+        questionType: item.data.questionType,
+        optionCount: item.data.options?.length || 0,
+        pairCount: item.data.pairs?.length || 0,
+      })),
+    });
+
     // Validation
     if (!examTitle.trim()) {
       setError("Judul exam harus diisi");
@@ -392,6 +425,20 @@ export function ExamFormContainer({
         setIsUpdatingQuestions(true);
         setError(null);
 
+        console.log("[EXAM AUDIT] handleSave:updateMode:metadata", {
+          examId,
+          title: examTitle,
+          description: examDescription,
+          duration: examDuration,
+          passingScore: examPassingScore,
+          startTime: examStartTime,
+          endTime: examEndTime,
+          maxAttempts: examMaxAttempts,
+          questionsToShow,
+          isRandomOrder,
+          isRandomSelection,
+        });
+
         await updateExamMutation.mutateAsync({
           title: examTitle,
           description: examDescription,
@@ -412,6 +459,13 @@ export function ExamFormContainer({
           hasQuestionChanged(item, initialQuestionMap.get(item.id))
         );
         const newQuestions = quizItems.filter((item) => !isValidUUID(item.id));
+
+        console.log("[EXAM AUDIT] handleSave:updateMode:questionBuckets", {
+          examId,
+          existingQuestionIds: existingQuestions.map((item) => item.id),
+          changedExistingQuestionIds: changedExistingQuestions.map((item) => item.id),
+          newQuestionIds: newQuestions.map((item) => item.id),
+        });
 
         const failedUpdates: string[] = [];
         const failedCreates: string[] = [];
@@ -464,11 +518,28 @@ export function ExamFormContainer({
               payload = formData;
             }
 
+            console.log("[EXAM AUDIT] updateQuestion:request", {
+              examId,
+              questionId: item.id,
+              questionType: item.data.questionType,
+              payload: summarizeRequestPayload(payload),
+            });
+
             await updateQuestionMutation.mutateAsync({
               questionId: item.id,
               data: payload,
             });
-          } catch {
+            console.log("[EXAM AUDIT] updateQuestion:success", {
+              examId,
+              questionId: item.id,
+            });
+          } catch (error) {
+            console.error("[EXAM AUDIT] updateQuestion:error", {
+              examId,
+              questionId: item.id,
+              questionType: item.data.questionType,
+              error,
+            });
             failedUpdates.push(item.id);
           }
         }
@@ -501,11 +572,28 @@ export function ExamFormContainer({
                 })) || [];
             }
 
+            console.log("[EXAM AUDIT] addNewQuestionFromEdit:request", {
+              examId,
+              itemId: item.id,
+              questionType: item.data.questionType,
+              payload: questionData,
+            });
+
             await addExamQuestionMutation.mutateAsync({
               examId,
               question: questionData,
             });
-          } catch {
+            console.log("[EXAM AUDIT] addNewQuestionFromEdit:success", {
+              examId,
+              itemId: item.id,
+            });
+          } catch (error) {
+            console.error("[EXAM AUDIT] addNewQuestionFromEdit:error", {
+              examId,
+              itemId: item.id,
+              questionType: item.data.questionType,
+              error,
+            });
             failedCreates.push(item.id);
           }
         }
@@ -523,8 +611,18 @@ export function ExamFormContainer({
           setError(errors.join(", ") + ".");
         }
 
+        console.log("[EXAM AUDIT] handleSave:updateMode:done", {
+          examId,
+          failedUpdates,
+          failedCreates,
+        });
+
         router.push(`/dashboard-admin/courses/${courseId}`);
       } catch (err: unknown) {
+        console.error("[EXAM AUDIT] handleSave:updateMode:fatalError", {
+          examId,
+          error: err,
+        });
         const axiosError = err as { response?: { data?: { message?: string; data?: string } } };
         const errorMessage =
           axiosError.response?.data?.message ||
@@ -549,6 +647,20 @@ export function ExamFormContainer({
       is_random_order: isRandomOrder,
       is_random_selection: isRandomSelection,
     };
+
+    console.log("[EXAM AUDIT] handleSave:createMode:examData", {
+      courseId,
+      examData,
+      quizItems: quizItems.map((item, index) => ({
+        index,
+        id: item.id,
+        question: item.data.question,
+        questionType: item.data.questionType,
+        difficulty: item.data.difficulty,
+        optionCount: item.data.options?.length || 0,
+        pairCount: item.data.pairs?.length || 0,
+      })),
+    });
 
     const result = await createExam(examData, quizItems);
 

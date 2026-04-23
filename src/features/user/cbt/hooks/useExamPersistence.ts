@@ -18,23 +18,31 @@ export function useExamPersistence() {
 
   // Save answers to localStorage whenever they change
   useEffect(() => {
-    if (examId && Object.keys(answers).length > 0) {
-      try {
+    if (!examId) return;
+
+    try {
+      if (Object.keys(answers).length > 0) {
         localStorage.setItem(`${STORAGE_KEY_PREFIX}${examId}`, JSON.stringify(answers));
-      } catch (e) {
-        console.error("Failed to persist answers to localStorage:", e);
+      } else {
+        localStorage.removeItem(`${STORAGE_KEY_PREFIX}${examId}`);
       }
+    } catch (e) {
+      console.error("Failed to persist answers to localStorage:", e);
     }
   }, [answers, examId]);
 
   // Save flagged questions to localStorage whenever they change
   useEffect(() => {
-    if (examId && flaggedQuestions) {
-      try {
+    if (!examId) return;
+
+    try {
+      if (flaggedQuestions.length > 0) {
         localStorage.setItem(`${FLAGS_KEY_PREFIX}${examId}`, JSON.stringify(flaggedQuestions));
-      } catch (e) {
-        console.error("Failed to persist flags to localStorage:", e);
+      } else {
+        localStorage.removeItem(`${FLAGS_KEY_PREFIX}${examId}`);
       }
+    } catch (e) {
+      console.error("Failed to persist flags to localStorage:", e);
     }
   }, [flaggedQuestions, examId]);
 
