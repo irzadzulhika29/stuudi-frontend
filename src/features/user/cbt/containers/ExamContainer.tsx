@@ -381,7 +381,7 @@ export function ExamContainer({ stream, examCode, examId }: ExamContainerProps) 
         </div>
       )}
 
-      {!isOnline && view !== "finished" && (
+      {!isOnline && (
         <div className="animate-fade-in fixed right-6 bottom-6 z-50 flex max-w-sm items-center gap-4 rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-white shadow-2xl">
           <div className="flex shrink-0 items-center justify-center rounded-full bg-neutral-800 p-2.5">
             <WifiOff size={20} className="text-red-400" />
@@ -395,7 +395,7 @@ export function ExamContainer({ stream, examCode, examId }: ExamContainerProps) 
         </div>
       )}
 
-      {showReconnected && view !== "finished" && (
+      {showReconnected && (
         <div className="animate-fade-in fixed right-6 bottom-6 z-50 flex max-w-sm items-center gap-4 rounded-xl border border-emerald-800 bg-emerald-950 p-4 text-white shadow-2xl transition-all duration-500 ease-in-out">
           <div className="flex shrink-0 items-center justify-center rounded-full bg-emerald-900 p-2.5">
             <Wifi size={20} className="text-emerald-400" />
