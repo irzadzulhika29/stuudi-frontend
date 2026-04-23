@@ -27,9 +27,11 @@ describe("useAutoSave", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     (reduxHooks.useAppDispatch as Mock).mockReturnValue(mockDispatch);
+    (examService.saveAnswer as Mock).mockResolvedValue(true);
+    (examService.clearAnswer as Mock).mockResolvedValue(true);
   });
 
-  it("should dispatch setAnswer immediately (Optimistic UI)", () => {
+  it("should dispatch setAnswer immediately (Optimistic UI)", async () => {
     const { result } = renderHook(() => useAutoSave({ attemptId: "123" }));
 
     act(() => {
@@ -41,6 +43,10 @@ describe("useAutoSave", () => {
         payload: { questionId: "q1", answer: "A" },
       })
     );
+
+    await waitFor(() => {
+      expect(examService.saveAnswer).toHaveBeenCalledWith("123", "q1", "A");
+    });
   });
 
   it("should call saveAnswer API after update", async () => {

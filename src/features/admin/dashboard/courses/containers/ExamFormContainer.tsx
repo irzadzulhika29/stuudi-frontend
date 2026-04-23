@@ -39,25 +39,39 @@ export interface QuizItem {
 
 interface ExamFormContainerProps {
   courseId: string;
-  manageCoursesId: string;
   examId?: string;
   isEditMode?: boolean;
 }
 
 export function ExamFormContainer({
   courseId,
-  manageCoursesId,
   examId,
   isEditMode = false,
 }: ExamFormContainerProps) {
+  const summarizeRequestPayload = (data: Record<string, unknown> | FormData) => {
+    if (data instanceof FormData) {
+      return Array.from(data.entries()).map(([key, value]) => ({
+        key,
+        value:
+          value instanceof File
+            ? {
+                name: value.name,
+                type: value.type,
+                size: value.size,
+              }
+            : value,
+      }));
+    }
+
+    return data;
+  };
+
   const router = useRouter();
 
-  // Fetch exam details if in edit mode
   const { data: examDetails, isLoading: isLoadingExam } = useGetExamDetails(
     isEditMode && examId ? examId : ""
   );
 
-  // Derive initial values from API data
   const initialValues = useMemo(() => {
     if (isEditMode && examDetails) {
       return {
@@ -77,10 +91,55 @@ export function ExamFormContainer({
     return DEFAULT_EXAM_STATE;
   }, [isEditMode, examDetails]);
 
-  // Track if user has started editing (to stop syncing with server)
+  const hasQuestionChanged = useCallback((current: QuizItem, initial: QuizItem | undefined) => {
+    if (!initial) return true;
+
+    if (
+      current.data.question !== initial.data.question ||
+      current.data.questionType !== initial.data.questionType ||
+      current.data.difficulty !== initial.data.difficulty ||
+      !!current.data.imageFile ||
+      (current.data.imageUrl || "") !== (initial.data.imageUrl || "")
+    ) {
+      return true;
+    }
+
+    if (current.data.questionType === "matching" && initial.data.questionType === "matching") {
+      const currentPairs = current.data.pairs || [];
+      const initialPairs = initial.data.pairs || [];
+
+      if (currentPairs.length !== initialPairs.length) return true;
+
+      return currentPairs.some((pair, index) => {
+        const initialPair = initialPairs[index];
+        return !initialPair || pair.left !== initialPair.left || pair.right !== initialPair.right;
+      });
+    }
+
+    if (
+      (current.data.questionType === "single" || current.data.questionType === "multiple") &&
+      (initial.data.questionType === "single" || initial.data.questionType === "multiple")
+    ) {
+      const currentOptions = current.data.options || [];
+      const initialOptions = initial.data.options || [];
+
+      if (currentOptions.length !== initialOptions.length) return true;
+
+      return currentOptions.some((option, index) => {
+        const initialOption = initialOptions[index];
+        return (
+          !initialOption ||
+          option.text !== initialOption.text ||
+          option.isCorrect !== initialOption.isCorrect
+        );
+      });
+    }
+
+    return false;
+  }, []);
+
   const [hasSyncedWithServer, setHasSyncedWithServer] = useState(false);
 
-  // Exam Metadata - local state for user edits
   const [localExamTitle, setLocalExamTitle] = useState("");
   const [localExamDescription, setLocalExamDescription] = useState("");
   const [localExamDuration, setLocalExamDuration] = useState(120);
@@ -93,7 +152,6 @@ export function ExamFormContainer({
   const [localIsRandomSelection, setLocalIsRandomSelection] = useState(false);
   const [localQuizItems, setLocalQuizItems] = useState<QuizItem[]>([]);
 
-  // Effective values: use server data until user starts editing
   const examTitle = hasSyncedWithServer ? localExamTitle : initialValues.title;
   const examDescription = hasSyncedWithServer ? localExamDescription : initialValues.description;
   const examDuration = hasSyncedWithServer ? localExamDuration : initialValues.duration;
@@ -110,12 +168,10 @@ export function ExamFormContainer({
     : initialValues.isRandomSelection;
   const quizItems = hasSyncedWithServer ? localQuizItems : initialValues.quizItems;
 
-  // Helper to sync with server and then update local state
   const syncAndUpdate = useCallback(
     <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => {
       if (!hasSyncedWithServer) {
         setHasSyncedWithServer(true);
-        // For edit mode, sync all local state with server data first
         if (isEditMode && examDetails) {
           setLocalExamTitle(initialValues.title);
           setLocalExamDescription(initialValues.description);
@@ -217,9 +273,17 @@ export function ExamFormContainer({
       data,
     }: {
       questionId: string;
-      data: Record<string, unknown>;
+      data: Record<string, unknown> | FormData;
     }) => {
-      const response = await api.patch(API_ENDPOINTS.TEACHER.UPDATE_QUESTION(questionId), data);
+      const config =
+        data instanceof FormData
+          ? { headers: { "Content-Type": "multipart/form-data" } }
+          : undefined;
+      const response = await api.patch(
+        API_ENDPOINTS.TEACHER.UPDATE_QUESTION(questionId),
+        data,
+        config
+      );
       return response.data;
     },
   });
@@ -308,6 +372,21 @@ export function ExamFormContainer({
   );
 
   const handleSave = async () => {
+    console.log("[EXAM AUDIT] handleSave:entered", {
+      courseId,
+      examId,
+      isEditMode,
+      examTitle,
+      questionCount: quizItems.length,
+      questionTypes: quizItems.map((item, index) => ({
+        index,
+        id: item.id,
+        questionType: item.data.questionType,
+        optionCount: item.data.options?.length || 0,
+        pairCount: item.data.pairs?.length || 0,
+      })),
+    });
+
     // Validation
     if (!examTitle.trim()) {
       setError("Judul exam harus diisi");
@@ -342,12 +421,24 @@ export function ExamFormContainer({
     setError(null);
 
     if (isEditMode && examId) {
-      // Update exam with questions
       try {
         setIsUpdatingQuestions(true);
         setError(null);
 
-        // Update exam metadata first
+        console.log("[EXAM AUDIT] handleSave:updateMode:metadata", {
+          examId,
+          title: examTitle,
+          description: examDescription,
+          duration: examDuration,
+          passingScore: examPassingScore,
+          startTime: examStartTime,
+          endTime: examEndTime,
+          maxAttempts: examMaxAttempts,
+          questionsToShow,
+          isRandomOrder,
+          isRandomSelection,
+        });
+
         await updateExamMutation.mutateAsync({
           title: examTitle,
           description: examDescription,
@@ -362,14 +453,25 @@ export function ExamFormContainer({
         });
 
         // Separate existing questions (valid UUID) and new questions (no valid UUID)
+        const initialQuestionMap = new Map(initialValues.quizItems.map((item) => [item.id, item]));
         const existingQuestions = quizItems.filter((item) => isValidUUID(item.id));
+        const changedExistingQuestions = existingQuestions.filter((item) =>
+          hasQuestionChanged(item, initialQuestionMap.get(item.id))
+        );
         const newQuestions = quizItems.filter((item) => !isValidUUID(item.id));
+
+        console.log("[EXAM AUDIT] handleSave:updateMode:questionBuckets", {
+          examId,
+          existingQuestionIds: existingQuestions.map((item) => item.id),
+          changedExistingQuestionIds: changedExistingQuestions.map((item) => item.id),
+          newQuestionIds: newQuestions.map((item) => item.id),
+        });
 
         const failedUpdates: string[] = [];
         const failedCreates: string[] = [];
 
         // Update existing questions
-        for (const item of existingQuestions) {
+        for (const item of changedExistingQuestions) {
           try {
             const requestData: Record<string, unknown> = {
               question_text: item.data.question,
@@ -396,11 +498,48 @@ export function ExamFormContainer({
                 })) || [];
             }
 
+            let payload: Record<string, unknown> | FormData = requestData;
+            if (item.data.imageFile) {
+              const formData = new FormData();
+              formData.append("question_text", item.data.question);
+              formData.append("question_type", item.data.questionType);
+              formData.append("difficulty", item.data.difficulty);
+              formData.append("explanation", "");
+              formData.append("image", item.data.imageFile);
+
+              if (requestData.options) {
+                formData.append("options_json", JSON.stringify(requestData.options));
+              }
+
+              if (requestData.matching_pairs) {
+                formData.append("matching_pairs_json", JSON.stringify(requestData.matching_pairs));
+              }
+
+              payload = formData;
+            }
+
+            console.log("[EXAM AUDIT] updateQuestion:request", {
+              examId,
+              questionId: item.id,
+              questionType: item.data.questionType,
+              payload: summarizeRequestPayload(payload),
+            });
+
             await updateQuestionMutation.mutateAsync({
               questionId: item.id,
-              data: requestData,
+              data: payload,
             });
-          } catch {
+            console.log("[EXAM AUDIT] updateQuestion:success", {
+              examId,
+              questionId: item.id,
+            });
+          } catch (error) {
+            console.error("[EXAM AUDIT] updateQuestion:error", {
+              examId,
+              questionId: item.id,
+              questionType: item.data.questionType,
+              error,
+            });
             failedUpdates.push(item.id);
           }
         }
@@ -412,6 +551,7 @@ export function ExamFormContainer({
               question_text: item.data.question,
               question_type: item.data.questionType,
               difficulty: item.data.difficulty,
+              image: item.data.imageFile || null,
             };
 
             // Add options for single/multiple choice questions
@@ -432,11 +572,28 @@ export function ExamFormContainer({
                 })) || [];
             }
 
+            console.log("[EXAM AUDIT] addNewQuestionFromEdit:request", {
+              examId,
+              itemId: item.id,
+              questionType: item.data.questionType,
+              payload: questionData,
+            });
+
             await addExamQuestionMutation.mutateAsync({
               examId,
               question: questionData,
             });
-          } catch {
+            console.log("[EXAM AUDIT] addNewQuestionFromEdit:success", {
+              examId,
+              itemId: item.id,
+            });
+          } catch (error) {
+            console.error("[EXAM AUDIT] addNewQuestionFromEdit:error", {
+              examId,
+              itemId: item.id,
+              questionType: item.data.questionType,
+              error,
+            });
             failedCreates.push(item.id);
           }
         }
@@ -454,8 +611,18 @@ export function ExamFormContainer({
           setError(errors.join(", ") + ".");
         }
 
-        router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+        console.log("[EXAM AUDIT] handleSave:updateMode:done", {
+          examId,
+          failedUpdates,
+          failedCreates,
+        });
+
+        router.push(`/dashboard-admin/courses/${courseId}`);
       } catch (err: unknown) {
+        console.error("[EXAM AUDIT] handleSave:updateMode:fatalError", {
+          examId,
+          error: err,
+        });
         const axiosError = err as { response?: { data?: { message?: string; data?: string } } };
         const errorMessage =
           axiosError.response?.data?.message ||
@@ -468,7 +635,6 @@ export function ExamFormContainer({
       return;
     }
 
-    // Prepare exam data
     const examData: CreateExamRequest = {
       title: examTitle,
       description: examDescription,
@@ -482,10 +648,24 @@ export function ExamFormContainer({
       is_random_selection: isRandomSelection,
     };
 
+    console.log("[EXAM AUDIT] handleSave:createMode:examData", {
+      courseId,
+      examData,
+      quizItems: quizItems.map((item, index) => ({
+        index,
+        id: item.id,
+        question: item.data.question,
+        questionType: item.data.questionType,
+        difficulty: item.data.difficulty,
+        optionCount: item.data.options?.length || 0,
+        pairCount: item.data.pairs?.length || 0,
+      })),
+    });
+
     const result = await createExam(examData, quizItems);
 
     if (result.success) {
-      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+      router.push(`/dashboard-admin/courses/${courseId}`);
     } else {
       setError(result.error || "Gagal membuat exam");
       if (result.failedQuestions && result.failedQuestions.length > 0) {
@@ -500,7 +680,7 @@ export function ExamFormContainer({
     try {
       await deleteExamMutation.mutateAsync(examId);
 
-      router.push(`/dashboard-admin/courses/${courseId}/manage/${manageCoursesId}`);
+      router.push(`/dashboard-admin/courses/${courseId}`);
     } catch (err) {
       console.error("Failed to delete exam:", err);
       setError("Gagal menghapus exam");

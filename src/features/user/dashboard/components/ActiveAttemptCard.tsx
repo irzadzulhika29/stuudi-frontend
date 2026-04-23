@@ -8,6 +8,7 @@ import { Loader2, Play } from "lucide-react";
 import { useAppDispatch } from "@/shared/store/hooks";
 import { initializeExam } from "@/shared/store/slices/examSlice";
 import { useState, useEffect } from "react";
+import { buildExamRoute } from "@/features/user/cbt/utils/examRoute";
 
 interface ActiveAttemptCardProps {
   attempt: ExamAttempt;
@@ -62,7 +63,7 @@ export function ActiveAttemptCard({ attempt }: ActiveAttemptCardProps) {
       const payload = examService.transformExamToReduxPayload(response);
       dispatch(initializeExam(payload));
 
-      router.push(`/cbt/exam?code=${response.exam_id}`);
+      router.push(buildExamRoute({ examId: response.exam_id }));
     } catch (error) {
       console.error("Failed to resume exam", error);
       // We could add a toast notification here

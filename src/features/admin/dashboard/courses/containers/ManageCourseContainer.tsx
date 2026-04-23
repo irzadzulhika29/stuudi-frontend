@@ -110,22 +110,16 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
   };
 
   const handleDeleteCourse = () => {
-    if (
-      window.confirm(
-        "Apakah Anda yakin ingin menghapus course ini? Tindakan ini tidak dapat dibatalkan."
-      )
-    ) {
-      deleteCourseMutation.mutate(courseId, {
-        onSuccess: () => {
-          showToast("Course berhasil dihapus.", "success");
-          router.push("/dashboard-admin/courses");
-        },
-        onError: (error) => {
-          console.error("Failed to delete course:", error);
-          showToast("Gagal menghapus course. Silakan coba lagi.", "error");
-        },
-      });
-    }
+    deleteCourseMutation.mutate(courseId, {
+      onSuccess: () => {
+        showToast("Course berhasil dihapus.", "success");
+        router.push("/dashboard-admin/courses");
+      },
+      onError: (error) => {
+        console.error("Failed to delete course:", error);
+        showToast("Gagal menghapus course. Silakan coba lagi.", "error");
+      },
+    });
   };
 
   if (isLoading) {
@@ -180,6 +174,7 @@ export function ManageCourseContainer({ courseId }: ManageCourseContainerProps) 
         <div className="min-w-0 flex-1">
           <ManagementHeader
             courseId={courseId}
+            courseName={course.name}
             onDelete={handleDeleteCourse}
             onSave={handleApplyEdit}
             isDeleting={deleteCourseMutation.isPending}

@@ -9,14 +9,7 @@ interface ExamDetailPageProps {
 }
 
 export default async function ExamDetailPage({ params }: ExamDetailPageProps) {
-  const { coursesId, manageCoursesId, examId } = await params;
+  const { coursesId, examId } = await params;
 
-  return (
-    <ExamFormContainer
-      courseId={coursesId}
-      manageCoursesId={manageCoursesId}
-      examId={examId}
-      isEditMode={true}
-    />
-  );
+  return <ExamFormContainer courseId={coursesId} examId={examId} isEditMode={true} />;
 }

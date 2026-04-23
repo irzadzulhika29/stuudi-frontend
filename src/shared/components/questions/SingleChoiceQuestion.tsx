@@ -1,6 +1,7 @@
 "use client";
 
 import { QuestionRendererProps } from "@/shared/types/questionTypes";
+import { MathText } from "@/shared/components/math";
 
 export function SingleChoiceQuestion({
   question,
@@ -104,7 +105,9 @@ export function SingleChoiceQuestion({
               {option.sequence ? String.fromCharCode(65 + option.sequence - 1) : ""}
             </div>
           </div>
-          <span className={`text-base font-medium ${getTextStyles(option.id)}`}>{option.text}</span>
+          <span className={`text-base font-medium ${getTextStyles(option.id)}`}>
+            <MathText content={option.text} />
+          </span>
         </label>
       ))}
     </div>

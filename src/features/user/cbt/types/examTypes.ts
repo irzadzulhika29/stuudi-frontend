@@ -14,7 +14,7 @@ export interface ExamQuestion {
   question_type: "matching" | "multiple" | "single" | "short_answer" | "true_false";
   points: number;
   options: QuestionOption[];
-  question_image?: string; // mapped from API image if exists, or optional
+  question_image?: string | null; // mapped from API image if exists, or optional
 }
 
 export interface ExamData {

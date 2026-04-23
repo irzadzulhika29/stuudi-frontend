@@ -23,7 +23,7 @@ export function useDeleteTopic() {
     onSuccess: () => {
       // Invalidate teaching courses to refetch updated data
       queryClient.invalidateQueries({ queryKey: ["teachingCourses"] });
-      queryClient.invalidateQueries({ queryKey: ["teachingCourseDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["teachingCourse"] });
     },
   });
 }

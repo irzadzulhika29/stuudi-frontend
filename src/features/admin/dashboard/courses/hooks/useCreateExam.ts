@@ -51,6 +51,7 @@ export interface ExamQuestionRequest {
   explanation?: string;
   options?: ExamQuestionOption[];
   matching_pairs?: ExamQuestionPair[];
+  image?: File | null;
 }
 
 interface AddExamQuestionResponse {
@@ -66,13 +67,83 @@ interface AddExamQuestionResponse {
 
 // ========== Mutations ==========
 
+function summarizeQuestionForAudit(question: ExamQuestionRequest) {
+  return {
+    question_text: question.question_text,
+    question_type: question.question_type,
+    difficulty: question.difficulty,
+    has_image: Boolean(question.image),
+    options:
+      question.options?.map((option, index) => ({
+        index,
+        text: option.text,
+        is_correct: option.is_correct,
+      })) || [],
+    matching_pairs:
+      question.matching_pairs?.map((pair, index) => ({
+        index,
+        left_text: pair.left_text,
+        right_text: pair.right_text,
+      })) || [],
+  };
+}
+
+function summarizeFormData(formData: FormData) {
+  return Array.from(formData.entries()).map(([key, value]) => ({
+    key,
+    value:
+      value instanceof File
+        ? {
+            name: value.name,
+            type: value.type,
+            size: value.size,
+          }
+        : value,
+  }));
+}
+
+function buildExamQuestionFormData(question: ExamQuestionRequest): FormData {
+  const formData = new FormData();
+
+  formData.append("question_text", question.question_text);
+  formData.append("question_type", question.question_type);
+  formData.append("difficulty", question.difficulty);
+  formData.append("explanation", question.explanation || "");
+
+  if (question.options && question.options.length > 0) {
+    formData.append("options_json", JSON.stringify(question.options));
+  }
+
+  if (question.matching_pairs && question.matching_pairs.length > 0) {
+    formData.append("matching_pairs_json", JSON.stringify(question.matching_pairs));
+  }
+
+  if (question.image) {
+    formData.append("image", question.image);
+  }
+
+  console.log(
+    "[EXAM AUDIT] buildExamQuestionFormData:summary",
+    summarizeQuestionForAudit(question)
+  );
+  console.log("[EXAM AUDIT] buildExamQuestionFormData:formData", summarizeFormData(formData));
+
+  return formData;
+}
+
 export const useCreateExamContent = (courseId: string) => {
   return useMutation<CreateExamResponse, AxiosError<ApiError>, CreateExamRequest>({
     mutationFn: async (data: CreateExamRequest) => {
+      console.log("[EXAM AUDIT] createExamContent:request", {
+        courseId,
+        endpoint: API_ENDPOINTS.TEACHER.CREATE_EXAM(courseId),
+        payload: data,
+      });
       const response = await api.post<CreateExamResponse>(
         API_ENDPOINTS.TEACHER.CREATE_EXAM(courseId),
         data
       );
+      console.log("[EXAM AUDIT] createExamContent:response", response.data);
       return response.data;
     },
   });
@@ -85,10 +156,19 @@ export const useAddExamQuestions = () => {
     { examId: string; question: ExamQuestionRequest }
   >({
     mutationFn: async ({ examId, question }) => {
-      const response = await api.post<AddExamQuestionResponse>(
-        API_ENDPOINTS.TEACHER.ADD_EXAM_QUESTIONS(examId),
-        question
-      );
+      const formData = buildExamQuestionFormData(question);
+      const endpoint = API_ENDPOINTS.TEACHER.ADD_EXAM_QUESTIONS(examId);
+      console.log("[EXAM AUDIT] addExamQuestion:request", {
+        examId,
+        endpoint,
+        question: summarizeQuestionForAudit(question),
+      });
+      const response = await api.post<AddExamQuestionResponse>(endpoint, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("[EXAM AUDIT] addExamQuestion:response", response.data);
       return response.data;
     },
   });
@@ -98,16 +178,41 @@ export const useAddExamQuestions = () => {
 
 function transformQuizItemToExamQuestion(item: QuizItem): ExamQuestionRequest {
   const { data } = item;
+  console.log("[EXAM AUDIT] transformQuizItemToExamQuestion:input", {
+    itemId: item.id,
+    question: data.question,
+    questionType: data.questionType,
+    difficulty: data.difficulty,
+    optionCount: data.options?.length || 0,
+    pairCount: data.pairs?.length || 0,
+    hasImageFile: Boolean(data.imageFile),
+    hasImageUrl: Boolean(data.imageUrl),
+    options:
+      data.options?.map((option, index) => ({
+        index,
+        id: option.id,
+        text: option.text,
+        isCorrect: option.isCorrect,
+      })) || [],
+    pairs:
+      data.pairs?.map((pair, index) => ({
+        index,
+        id: pair.id,
+        left: pair.left,
+        right: pair.right,
+      })) || [],
+  });
 
   const baseData = {
     question_text: data.question,
     question_type: data.questionType,
     difficulty: data.difficulty,
+    image: data.imageFile || null,
   };
 
   // For choice questions (single or multiple)
   if (data.questionType === "single" || data.questionType === "multiple") {
-    return {
+    const result = {
       ...baseData,
       options:
         data.options?.map((opt) => ({
@@ -115,11 +220,16 @@ function transformQuizItemToExamQuestion(item: QuizItem): ExamQuestionRequest {
           is_correct: opt.isCorrect,
         })) || [],
     };
+    console.log(
+      "[EXAM AUDIT] transformQuizItemToExamQuestion:output",
+      summarizeQuestionForAudit(result)
+    );
+    return result;
   }
 
   // For matching questions
   if (data.questionType === "matching") {
-    return {
+    const result = {
       ...baseData,
       matching_pairs:
         data.pairs?.map((pair) => ({
@@ -127,6 +237,11 @@ function transformQuizItemToExamQuestion(item: QuizItem): ExamQuestionRequest {
           right_text: pair.right,
         })) || [],
     };
+    console.log(
+      "[EXAM AUDIT] transformQuizItemToExamQuestion:output",
+      summarizeQuestionForAudit(result)
+    );
+    return result;
   }
 
   // Fallback (should not reach here)
@@ -154,6 +269,16 @@ export const useCreateExam = (courseId: string) => {
     examData: CreateExamRequest,
     quizItems: QuizItem[]
   ): Promise<CreateExamResult> => {
+    console.log("[EXAM AUDIT] createExam:start", {
+      courseId,
+      examData,
+      questionCount: quizItems.length,
+      questionTypes: quizItems.map((item, index) => ({
+        index,
+        id: item.id,
+        type: item.data.questionType,
+      })),
+    });
     setIsCreating(true);
     // Total steps: 1 (create exam) + N questions
     const totalSteps = 1 + quizItems.length;
@@ -165,6 +290,10 @@ export const useCreateExam = (courseId: string) => {
       const examResponse = await createExamContentMutation.mutateAsync(examData);
 
       const examId = examResponse.data.exam_id;
+      console.log("[EXAM AUDIT] createExam:examCreated", {
+        examId,
+        response: examResponse,
+      });
 
       setProgress({ current: 1, total: totalSteps, stage: "Menambah pertanyaan..." });
 
@@ -174,13 +303,31 @@ export const useCreateExam = (courseId: string) => {
       for (let i = 0; i < quizItems.length; i++) {
         const item = quizItems[i];
         const questionData = transformQuizItemToExamQuestion(item);
+        console.log("[EXAM AUDIT] createExam:addQuestion:prepared", {
+          index: i,
+          itemId: item.id,
+          examId,
+          question: summarizeQuestionForAudit(questionData),
+        });
 
         try {
           await addExamQuestionMutation.mutateAsync({
             examId,
             question: questionData,
           });
+          console.log("[EXAM AUDIT] createExam:addQuestion:success", {
+            index: i,
+            itemId: item.id,
+            examId,
+          });
         } catch (error) {
+          console.error("[EXAM AUDIT] createExam:addQuestion:error", {
+            index: i,
+            itemId: item.id,
+            examId,
+            question: summarizeQuestionForAudit(questionData),
+            error,
+          });
           alert(`Failed to add question ${i + 1}:` + error);
           failedQuestions.push(i);
         }
@@ -194,8 +341,13 @@ export const useCreateExam = (courseId: string) => {
 
       setProgress({ current: totalSteps, total: totalSteps, stage: "Selesai!" });
 
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["teachingCourse"] });
+      // Invalidate and refetch course detail + exam list cache used by CourseDetailContainer.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["teachingCourse", courseId] }),
+        queryClient.invalidateQueries({ queryKey: ["courseExams", courseId] }),
+        queryClient.refetchQueries({ queryKey: ["teachingCourse", courseId], type: "active" }),
+        queryClient.refetchQueries({ queryKey: ["courseExams", courseId], type: "active" }),
+      ]);
 
       setIsCreating(false);
 
@@ -210,7 +362,11 @@ export const useCreateExam = (courseId: string) => {
 
       return { success: true, examId };
     } catch (error) {
-      console.error("Failed to create exam:", error);
+      console.error("[EXAM AUDIT] createExam:error", {
+        courseId,
+        examData,
+        error,
+      });
       setIsCreating(false);
 
       const axiosError = error as AxiosError<ApiError>;

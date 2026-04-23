@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "../services/dashboardService";
 import { AnimatePresence, motion } from "framer-motion";
+import { useToast } from "@/shared/components/ui/Toast";
 
 interface CountdownTime {
   months: number;
@@ -41,7 +42,16 @@ const TimeUnit = ({ value, label }: { value: number; label: string }) => (
 );
 
 export function DashboardCountdown() {
-  const { data: exam, isLoading } = useQuery({
+  const { showToast } = useToast();
+  const hasShownEmptyToastRef = useRef(false);
+  const hasShownErrorToastRef = useRef(false);
+
+  const {
+    data: exam,
+    isLoading,
+    error,
+    isError,
+  } = useQuery({
     queryKey: ["upcomingExam"],
     queryFn: () => dashboardService.getUpcomingExam(),
   });
@@ -54,6 +64,35 @@ export function DashboardCountdown() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (isError && !hasShownErrorToastRef.current) {
+      const errorMessage =
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (error as { message?: string })?.message ||
+        "Gagal memuat jadwal ujian terdekat.";
+
+      showToast(errorMessage, "error");
+      hasShownErrorToastRef.current = true;
+      return;
+    }
+
+    if (!isLoading && !isError && !exam && !hasShownEmptyToastRef.current) {
+      showToast("Belum ada jadwal ujian yang akan berlangsung.", "warning");
+      hasShownEmptyToastRef.current = true;
+      return;
+    }
+
+    if (exam) {
+      hasShownEmptyToastRef.current = false;
+      hasShownErrorToastRef.current = false;
+    }
+  }, [error, exam, isError, isLoading, showToast]);
 
   const calculateTimeLeft = (targetTime: string | undefined): CountdownTime => {
     if (!targetTime) {

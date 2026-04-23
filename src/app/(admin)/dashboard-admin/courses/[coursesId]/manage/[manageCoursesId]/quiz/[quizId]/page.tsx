@@ -3,30 +3,15 @@
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { QuizFormContainer } from "@/features/admin/dashboard/courses/containers/QuizFormContainer";
-import { useGetQuizDetails } from "@/features/admin/dashboard/courses/hooks/useGetQuizDetails";
+import {
+  useGetQuizDetails,
+  QuizQuestion,
+} from "@/features/admin/dashboard/courses/hooks/useGetQuizDetails";
 import { QuizItem } from "@/features/admin/dashboard/courses/containers/QuizFormContainer";
 import { transformApiToQuizItem } from "@/features/admin/dashboard/courses/utils/quizTransformers";
 
 // Transform API data to QuizFormContainer format
-function transformQuizDetailsToFormData(
-  questions: {
-    question_id: string;
-    // Support both field name formats
-    text?: string;
-    question_text?: string;
-    type?: "single" | "multiple" | "matching";
-    question_type?: "single" | "multiple" | "matching";
-    points: number;
-    difficulty: "easy" | "medium" | "hard";
-    explanation?: string;
-    options?: { option_id: string; text: string; is_correct: boolean }[];
-    // Matching question formats
-    left_options?: { option_id: string; option_text: string }[];
-    right_options?: { option_id: string; option_text: string }[];
-    pairs?: { pair_id?: string; left: string; right: string }[];
-    matching_pairs?: { pair_id?: string; left_text: string; right_text: string }[];
-  }[]
-): QuizItem[] {
+function transformQuizDetailsToFormData(questions: QuizQuestion[]): QuizItem[] {
   return questions.map((q) => transformApiToQuizItem(q, q.question_id));
 }
 

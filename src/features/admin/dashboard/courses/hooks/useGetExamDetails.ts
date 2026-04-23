@@ -21,6 +21,7 @@ export interface ExamQuestion {
   points: number;
   sequence: number;
   explanation: string;
+  image_url?: string | null;
   options: ExamQuestionOption[];
 }
 

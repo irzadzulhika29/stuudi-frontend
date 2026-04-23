@@ -5,6 +5,7 @@ import { SharedQuestion, QuestionRendererProps } from "@/shared/types/questionTy
 import { SingleChoiceQuestion } from "./SingleChoiceQuestion";
 import { MultipleChoiceQuestion } from "./MultipleChoiceQuestion";
 import { MatchingQuestion } from "./MatchingQuestion";
+import { MathText } from "@/shared/components/math";
 
 interface BaseQuestionCardProps extends QuestionRendererProps {
   className?: string; // Additional styling
@@ -37,9 +38,9 @@ export function BaseQuestionCard({
       )}
 
       <div className="flex flex-1 flex-col overflow-y-auto p-6">
-        <p className="mb-6 text-lg leading-relaxed font-medium text-neutral-800 md:text-xl">
-          {question.text}
-        </p>
+        <div className="mb-6 text-lg leading-relaxed font-medium text-neutral-800 md:text-xl">
+          <MathText content={question.text} />
+        </div>
 
         <div className="flex-1">
           {renderQuestionContent({ question, selectedAnswer, onSelectAnswer, disabled, isCorrect })}

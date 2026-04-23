@@ -3,6 +3,7 @@
 import { BaseQuestionCard } from "@/shared/components/questions/BaseQuestionCard";
 import { SharedQuestion, QuestionType, QuestionAnswer } from "@/shared/types/questionTypes";
 import { ExamQuestion } from "../types/examTypes";
+import { hasMeaningfulAnswer } from "../utils/answerState";
 
 interface QuestionCardProps {
   question: ExamQuestion;
@@ -17,6 +18,8 @@ export function QuestionCard({
   onSelectAnswer,
   onClearAnswer,
 }: QuestionCardProps) {
+  const options = question.options ?? [];
+
   // Map ExamQuestion to SharedQuestion
   const sharedQuestion: SharedQuestion = {
     id: question.question_id,
@@ -24,7 +27,7 @@ export function QuestionCard({
     type: mapQuestionType(question.question_type),
     image: question.question_image,
     points: question.points,
-    options: question.options.map((o) => ({
+    options: options.map((o) => ({
       id: o.option_id,
       text: o.option_text,
       sequence: o.sequence,
@@ -33,7 +36,7 @@ export function QuestionCard({
     })),
   };
 
-  const hasAnswer = selectedAnswer !== null && selectedAnswer !== undefined;
+  const hasAnswer = hasMeaningfulAnswer(selectedAnswer);
 
   return (
     <div className="flex flex-col gap-4">
@@ -47,7 +50,7 @@ export function QuestionCard({
         <div className="flex justify-start">
           <button
             onClick={onClearAnswer}
-            className="text-xs text-white/50 transition-colors hover:text-white"
+            className="text-xs text-neutral-500 transition-colors hover:text-neutral-900"
           >
             Reset Jawaban
           </button>

@@ -2,23 +2,26 @@
 
 import { QuestionRendererProps } from "@/shared/types/questionTypes";
 import { useState } from "react";
+import { MathText } from "@/shared/components/math";
 
 export function MatchingQuestion({
   question,
   selectedAnswer,
   onSelectAnswer,
 }: QuestionRendererProps) {
+  const options = question.options ?? [];
+
   // selectedAnswer is Record<string, string> (LeftID -> RightID)
   const currentAnswers: Record<string, string> =
     selectedAnswer && typeof selectedAnswer === "object" && !Array.isArray(selectedAnswer)
       ? (selectedAnswer as Record<string, string>)
       : {};
 
-  const leftOptions = question.options
+  const leftOptions = options
     .filter((o) => o.side === "left")
     .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
 
-  const rightOptions = question.options.filter((o) => o.side === "right");
+  const rightOptions = options.filter((o) => o.side === "right");
 
   const [activeLeftId, setActiveLeftId] = useState<string | null>(null);
   const [draggedRightId, setDraggedRightId] = useState<string | null>(null);
@@ -117,13 +120,17 @@ export function MatchingQuestion({
                   : ""
               } `}
             >
-              <span className="font-medium text-neutral-800">{opt.text}</span>
+              <span className="font-medium text-neutral-800">
+                <MathText content={opt.text} />
+              </span>
 
               {/* Paired Item Display (Droppable Zone Feedback) */}
               {isPaired && pairedRightOption && (
                 <div className="group/item mt-3 flex items-center justify-between gap-2 rounded-r-lg border border-l-4 border-neutral-200 border-l-orange-500 bg-white p-3 text-sm font-medium text-neutral-700 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <span>{pairedRightOption.text}</span>
+                    <span>
+                      <MathText content={pairedRightOption.text} />
+                    </span>
                   </div>
                   <button
                     onClick={(e) => handleUnmatch(opt.id, e)}
@@ -225,7 +232,7 @@ export function MatchingQuestion({
                 </div>
 
                 <span className={`font-medium ${isUsed ? "text-neutral-500" : "text-neutral-800"}`}>
-                  {opt.text}
+                  <MathText content={opt.text} />
                 </span>
 
                 {isUsed && (
@@ -237,7 +244,7 @@ export function MatchingQuestion({
             );
           })}
         </div>
-        <p className="mt-2 text-center text-xs text-neutral-400">
+        <p className="mt-2 text-center text-xs text-neutral-700">
           Geser jawaban ke pertanyaan yang sesuai atau klik untuk memilih.
         </p>
       </div>

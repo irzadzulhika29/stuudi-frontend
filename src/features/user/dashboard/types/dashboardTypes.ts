@@ -1,6 +1,13 @@
 export interface UpcomingExam {
   title: string;
   start_at: string;
+  status?: string;
+}
+
+export interface UpcomingExamCollection {
+  ongoing_exams?: UpcomingExam | UpcomingExam[] | null;
+  upcoming_exams?: UpcomingExam[] | null;
+  past_exams?: UpcomingExam[] | null;
 }
 
 export interface ExamAccessData {
@@ -35,6 +42,8 @@ export interface Question {
   question_type: "matching" | "multiple" | "single" | "short_answer" | "true_false";
   points: number;
   sequence: number;
+  image_url?: string | null;
+  question_image?: string | null;
   options: QuestionOption[];
   saved_answer?: string | number | string[] | Record<string, string> | null;
 }

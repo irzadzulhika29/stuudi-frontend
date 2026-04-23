@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
 import { setLives } from "@/shared/store/slices/examSlice";
 import { examService } from "../services/examService";
@@ -26,6 +26,7 @@ export function useFullscreenGuard(options: UseFullscreenGuardOptions = {}) {
   const [showOverlay, setShowOverlay] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [violationCount, setViolationCount] = useState(0);
+  const lastViolationTimestampRef = useRef<number>(0);
 
   // Request fullscreen
   const enterFullscreen = useCallback(async () => {
@@ -54,6 +55,35 @@ export function useFullscreenGuard(options: UseFullscreenGuardOptions = {}) {
     return !!document.fullscreenElement;
   }, []);
 
+  const attemptId = examData?.attempt_id;
+
+  const recordViolation = useCallback(async () => {
+    if (!attemptId) return;
+
+    const now = Date.now();
+    if (now - lastViolationTimestampRef.current < 1000) {
+      return;
+    }
+
+    lastViolationTimestampRef.current = now;
+
+    try {
+      const result = await examService.recordTabSwitch(attemptId);
+
+      if (result) {
+        const nextLives = result.is_disqualified ? 0 : result.lives_remaining;
+        dispatch(setLives(nextLives));
+        setViolationCount((prev) => prev + 1);
+
+        if (onViolation) {
+          onViolation(nextLives);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to record tab switch", e);
+    }
+  }, [dispatch, attemptId, onViolation]);
+
   useEffect(() => {
     if (!enabled || view === "finished") return;
 
@@ -67,21 +97,8 @@ export function useFullscreenGuard(options: UseFullscreenGuardOptions = {}) {
     };
 
     const handleVisibilityChange = async () => {
-      if (document.hidden && hasInteracted && examData?.attempt_id) {
-        try {
-          const result = await examService.recordTabSwitch(examData.attempt_id);
-
-          if (result) {
-            dispatch(setLives(result.lives_remaining));
-            setViolationCount((prev) => prev + 1);
-
-            if (onViolation) {
-              onViolation(result.lives_remaining);
-            }
-          }
-        } catch (e) {
-          console.error("Failed to record tab switch", e);
-        }
+      if (document.hidden && hasInteracted) {
+        void recordViolation();
       }
     };
 
@@ -100,7 +117,7 @@ export function useFullscreenGuard(options: UseFullscreenGuardOptions = {}) {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [enabled, view, showOverlay, hasInteracted, examData?.attempt_id, dispatch, onViolation]);
+  }, [enabled, view, showOverlay, hasInteracted, recordViolation]);
 
   return {
     showOverlay,
