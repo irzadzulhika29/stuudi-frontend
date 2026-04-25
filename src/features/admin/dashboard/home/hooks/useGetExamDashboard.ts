@@ -32,12 +32,25 @@ interface GetExamDashboardResponse {
   data: ExamDashboard;
 }
 
-export const useGetExamDashboard = (examId: string) => {
+export const DEFAULT_EXAM_DASHBOARD_LIMIT = 10;
+
+export const useGetExamDashboard = (
+  examId: string,
+  limit: number = DEFAULT_EXAM_DASHBOARD_LIMIT
+) => {
+  const normalizedLimit =
+    Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : DEFAULT_EXAM_DASHBOARD_LIMIT;
+
   return useQuery<ExamDashboard>({
-    queryKey: ["examDashboard", examId],
+    queryKey: ["examDashboard", examId, normalizedLimit],
     queryFn: async () => {
       const response = await api.get<GetExamDashboardResponse>(
-        API_ENDPOINTS.TEACHER.GET_EXAM_DASHBOARD(examId)
+        API_ENDPOINTS.TEACHER.GET_EXAM_DASHBOARD(examId),
+        {
+          params: {
+            limit: normalizedLimit,
+          },
+        }
       );
       return response.data.data;
     },

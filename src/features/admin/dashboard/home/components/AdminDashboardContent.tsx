@@ -5,7 +5,7 @@ import { AdminLeaderboard } from "./AdminLeaderboard";
 import { AdminStatsCards } from "./AdminStatsCards";
 import { AdminExamStats } from "./AdminExamStats";
 import { useGetAllExams } from "../hooks/useGetAllExams";
-import { useGetExamDashboard } from "../hooks/useGetExamDashboard";
+import { DEFAULT_EXAM_DASHBOARD_LIMIT, useGetExamDashboard } from "../hooks/useGetExamDashboard";
 import { useGetExamResults } from "../hooks/useGetExamResults";
 
 interface DropdownOption {
@@ -108,9 +108,12 @@ function GlassDropdown({
 
 export function AdminDashboardContent() {
   const [selectedExamId, setSelectedExamId] = useState<string>("");
+  const [leaderboardLimit, setLeaderboardLimit] = useState<number>(DEFAULT_EXAM_DASHBOARD_LIMIT);
   const { data: exams, isLoading: isLoadingExams } = useGetAllExams();
-  const { data: examDashboard, isLoading: isLoadingDashboard } =
-    useGetExamDashboard(selectedExamId);
+  const { data: examDashboard, isLoading: isLoadingDashboard } = useGetExamDashboard(
+    selectedExamId,
+    leaderboardLimit
+  );
   const { data: examResults, isLoading: isLoadingResults } = useGetExamResults(selectedExamId);
 
   const examOptions =
@@ -173,17 +176,14 @@ export function AdminDashboardContent() {
           </div>
         )}
 
-        {/* Leaderboard Section */}
-        <div className="">
-          <h2 className="mb-5 text-3xl font-bold text-white">
-            {examDashboard?.exam_title
-              ? `Leaderboard - ${examDashboard.exam_title}`
-              : "Leaderboard Top 10 Teams"}
-          </h2>
-        </div>
         <AdminLeaderboard
           data={examDashboard?.leaderboard}
           isLoading={isLoadingDashboard && !!selectedExamId}
+          title={examDashboard?.exam_title}
+          limit={leaderboardLimit}
+          onLimitChange={setLeaderboardLimit}
+          hasSelectedExam={!!selectedExamId}
+          isLimitDisabled={!selectedExamId}
         />
       </div>
     </div>
