@@ -7,7 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:auth": "playwright test auth.spec.ts",
+    "test:e2e:cbt": "playwright test cbt-exam.spec.ts",
+    "test:e2e:api": "playwright test api.spec.ts",
+    "test:e2e:admin": "playwright test admin.spec.ts",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
     "prepare": "husky"
   },
   "dependencies": {
@@ -33,10 +42,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -46,12 +54,10 @@
     "eslint-config-next": "16.0.10",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
-    "jsdom": "^28.0.0",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "vitest": "^4.0.18"
+    "typescript": "^5"
   }
 }
